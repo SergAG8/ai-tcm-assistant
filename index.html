@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         /* Estilos CSS del Asistente */
         body {
@@ -252,7 +253,7 @@
             'opt_first_diagnose': '-- Сначала диагностика --',
             'step3_header': '3. Визуализация Питча (Вывод AI)',
             'status_pitch_placeholder': 'Аргумент для продажи появится здесь. Выберите курс и нажмите "Сгенерировать Питч".',
-            'status_loading': 'Загрузка анализа AI и данных о доступности...',
+            'status_loading': 'Загрузка анализа AI y данных о доступности...',
             'output_details_title': 'КРИТИЧЕСКИЕ ДЕТАЛИ ГРУППЫ:',
             'output_pitch_title': 'СГЕНЕРИРОВАННЫЙ АРГУМЕНТ ДЛЯ ПРОДАЖИ:',
             'output_schedule': 'Фиксированное расписание:',
@@ -283,7 +284,7 @@
         return translations[currentLang][key] || translations['es'][key];
     }
     
-    // Función para traducir los elementos dinámicos
+    // Función para actualizar los elementos dinámicos
     function updateDynamicElements() {
         // 1. Traducir opciones de Select (Interés)
         const interestSelect = document.getElementById('student_interest');
@@ -401,7 +402,7 @@
                                `<ul class="ml-4 list-disc text-sm text-gray-700">` +
                                `<li>⏰ <b>${getTranslation('output_schedule')}</b> ${course.next_start}</li>` +
                                `<li class="${urgencyClass}">${getTranslation('output_slots')}: ${course.enrolled}/${course.capacity} (${remainingSlots} ${getTranslation('output_remaining')})</li>` +
-                               `<li>${getTranslation('output_teacher')}: ${course.teacher}</li>` +
+                               `<li>👨‍🏫 <b>${getTranslation('output_teacher')}:</b> ${course.teacher}</li>` +
                                `${isCritical ? '<li class="text-red-600 font-bold">🚨 ' + getTranslation('output_max_urgency') + ' 🚨</li>' : ''}` +
                                `</ul><hr class="my-2 border-gray-200">`;
             });
@@ -443,7 +444,7 @@
         
         const pitchLanguage = currentLang === 'ru' ? 'ruso' : (currentLang === 'en' ? 'inglés' : 'español');
         
-        // CAMBIO CRÍTICO: Pitch general centrado en el contenido y valor, NO en la urgencia de BO.
+        // Pitch general centrado en el contenido y valor.
         const systemPrompt = `Actúa como un vendedor (TCM) experto en Kodland. Tu objetivo es generar un argumento de venta (pitch) persuasivo. El pitch debe ser en ${pitchLanguage}, conciso (máximo 150 palabras), y debe centrarse en el **valor educativo y los logros** del curso (${course.topic}). NO menciones el cupo o la fecha de inicio a menos que sea para generar urgencia.`;
         
         const userQuery = `Genera un pitch de venta enfocado en el contenido y valor para el curso ${getCourseName(course)}. El estudiante tiene ${document.getElementById('student_age').value} años. Las características clave del contenido son: [Tópicos: ${course.topic}], [Nivel: ${course.level}].`;
@@ -532,4 +533,3 @@
 
 </body>
 </html>
-
