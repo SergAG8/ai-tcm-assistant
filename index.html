@@ -170,13 +170,21 @@
             'output_schedule': 'Horario Fijo:',
             'output_slots': 'Cupos:',
             'output_teacher': 'Tutor:',
-            'output_strategy': 'Estrategia: ¡Asignación IN-GROUP inmediata para garantizar el cupo!',
-            'output_max_urgency': '🚨 MÁXIMA URGENCIA DE LLENADO 🚨',
+            'output_remaining': 'restantes',
+            'output_option': 'OPCIÓN',
+            'output_critical': 'CRÍTICO',
             'error_no_groups': '⚠️ No se encontraron grupos disponibles para este perfil que no estén llenos.',
             'error_invalid_age': 'Por favor, ingresa una edad válida.',
             'error_no_option': 'Por favor, selecciona un curso de la lista.',
             'error_ai_fail': 'Error al conectar con el asistente de IA. Usando datos de BO.', 
             'error_ai_fail_full': 'Error al conectar con el asistente de IA. Intenta de nuevo.', 
+            'error_ai_fail_details': 'El sistema no pudo generar el argumento de venta, pero aquí están los datos de disponibilidad de BO:',
+            'label_options_coding': 'Programación (Lógica)',
+            'label_options_design': 'Diseño / Arte Digital',
+            'label_options_games': 'Creación de Videojuegos',
+            'label_options_beginner': 'Principiante (Cero experiencia)',
+            'label_options_intermediate': 'Intermedio (Sabe bloques/Scratch)',
+            'label_options_advanced': 'Avanzado (Sabe Python básico/Roblox)',
         },
         'en': {
             'title_main': '🤖 AI Course Matchmaker (TCM Assistant)',
@@ -206,13 +214,21 @@
             'output_schedule': 'Fixed Schedule:',
             'output_slots': 'Slots:',
             'output_teacher': 'Tutor:',
-            'output_strategy': 'Strategy: Immediate IN-GROUP assignment to guarantee slot!',
-            'output_max_urgency': '🚨 MAXIMUM URGENCY TO FILL 🚨',
+            'output_remaining': 'remaining',
+            'output_option': 'OPTION',
+            'output_critical': 'CRITICAL',
             'error_no_groups': '⚠️ No available groups found for this profile that are not full.',
             'error_invalid_age': 'Please enter a valid age.',
             'error_no_option': 'Please select a course from the list.',
             'error_ai_fail': 'Error connecting to the AI assistant. Using BO data.',
             'error_ai_fail_full': 'Error connecting to the AI assistant. Try again.', 
+            'error_ai_fail_details': 'The system failed to generate the sales pitch, but here is the BO availability data:',
+            'label_options_coding': 'Coding (Logic)',
+            'label_options_design': 'Design / Digital Art',
+            'label_options_games': 'Video Game Creation',
+            'label_options_beginner': 'Beginner (Zero experience)',
+            'label_options_intermediate': 'Intermediate (Knows blocks/Scratch)',
+            'label_options_advanced': 'Advanced (Knows basic Python/Roblox)',
         },
         'ru': {
             'title_main': '🤖 AI Помощник для TCM (Подбор Курсов)',
@@ -242,13 +258,21 @@
             'output_schedule': 'Фиксированное расписание:',
             'output_slots': 'Места:',
             'output_teacher': 'Преподаватель:',
-            'output_strategy': 'Стратегия: Немедленное назначение в группу (IN-GROUP) для гарантии места!',
-            'output_max_urgency': '🚨 МАКСИМАЛЬНАЯ СРОЧНОСТЬ НАБОРА 🚨',
+            'output_remaining': 'оставшиеся',
+            'output_option': 'ВАРИАНТ',
+            'output_critical': 'КРИТИЧЕСКИЙ',
             'error_no_groups': '⚠️ Не найдено доступных групп для этого профиля.',
             'error_invalid_age': 'Пожалуйста, введите действительный возраст.',
             'error_no_option': 'Пожалуйста, выберите курс из списка.',
             'error_ai_fail': 'Ошибка подключения к AI-помощнику. Использую данные BO.',
             'error_ai_fail_full': 'Ошибка подключения к AI-помощнику. Попробуйте еще раз.',
+            'error_ai_fail_details': 'Система не смогла сгенерировать аргумент для продажи, но вот данные о доступности BO:',
+            'label_options_coding': 'Программирование (Логика)',
+            'label_options_design': 'Дизайн / Цифровое Искусство',
+            'label_options_games': 'Создание видеоигр',
+            'label_options_beginner': 'Начальный (Нет опыта)',
+            'label_options_intermediate': 'Средний (Знает блоки/Scratch)',
+            'label_options_advanced': 'Продвинутый (Знает базовый Python/Roblox)',
         }
     };
     
@@ -259,6 +283,25 @@
         return translations[currentLang][key] || translations['es'][key];
     }
     
+    // Función para traducir los elementos dinámicos
+    function updateDynamicElements() {
+        // 1. Traducir opciones de Select (Interés)
+        const interestSelect = document.getElementById('student_interest');
+        interestSelect.options[0].textContent = getTranslation('opt_coding');
+        interestSelect.options[1].textContent = getTranslation('opt_design');
+        interestSelect.options[2].textContent = getTranslation('opt_games');
+        
+        // 2. Traducir opciones de Select (Experiencia)
+        const levelSelect = document.getElementById('student_level');
+        levelSelect.options[0].textContent = getTranslation('opt_beginner');
+        levelSelect.options[1].textContent = getTranslation('opt_intermediate');
+        levelSelect.options[2].textContent = getTranslation('opt_advanced');
+        
+        // 3. Re-ejecutar diagnóstico para traducir los nombres de los cursos en la lista de sugerencias y en el SELECT de Pitch.
+        // Esto también actualiza el estado "Esperando diagnóstico..." con el idioma correcto.
+        diagnoseAndMatch();
+    }
+
     function setLanguage(lang) {
         currentLang = lang;
         const dict = translations[lang];
@@ -269,8 +312,9 @@
                 element.textContent = dict[key];
             }
         });
-        // La traducción de los cursos y la interfaz debe ocurrir aquí.
-        diagnoseAndMatch();
+        
+        // Actualizar la lista de cursos sugeridos y opciones de select con el nuevo idioma
+        updateDynamicElements();
     }
     
     // --- 2. LÓGICA DEL ASISTENTE (Funcionalidad Principal) ---
@@ -399,9 +443,10 @@
         
         const pitchLanguage = currentLang === 'ru' ? 'ruso' : (currentLang === 'en' ? 'inglés' : 'español');
         
-        const systemPrompt = `Actúa como un vendedor (TCM) experto en Kodland. Tu objetivo es generar un argumento de venta (pitch) persuasivo para un cliente. El pitch debe ser en ${pitchLanguage}, conciso (máximo 150 palabras), y debe incorporar estos 3 puntos: 1) El valor educativo del curso (usando el 'topic' y 'level'). 2) La urgencia de la asignación inmediata (usando los cupos y la fecha de inicio). 3) El beneficio de la colocación 'in-group' (clases garantizadas con el mismo tutor).`;
+        // CAMBIO CRÍTICO: Pitch general centrado en el contenido y valor, NO en la urgencia de BO.
+        const systemPrompt = `Actúa como un vendedor (TCM) experto en Kodland. Tu objetivo es generar un argumento de venta (pitch) persuasivo. El pitch debe ser en ${pitchLanguage}, conciso (máximo 150 palabras), y debe centrarse en el **valor educativo y los logros** del curso (${course.topic}). NO menciones el cupo o la fecha de inicio a menos que sea para generar urgencia.`;
         
-        const userQuery = `Genera un pitch de venta para el curso ${course.name_es}. El estudiante tiene ${document.getElementById('student_age').value} años. Las características clave del curso son: [Tópicos: ${course.topic}], [Nivel: ${course.level}], [Inscritos: ${course.enrolled}/${course.capacity}], [Cupos restantes: ${remainingSlots}], [Horario: ${course.next_start}], [Tutor: ${course.teacher}].`;
+        const userQuery = `Genera un pitch de venta enfocado en el contenido y valor para el curso ${getCourseName(course)}. El estudiante tiene ${document.getElementById('student_age').value} años. Las características clave del contenido son: [Tópicos: ${course.topic}], [Nivel: ${course.level}].`;
         
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -487,3 +532,4 @@
 
 </body>
 </html>
+
