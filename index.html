@@ -175,8 +175,8 @@
             'error_no_groups': '⚠️ No se encontraron grupos disponibles para este perfil que no estén llenos.',
             'error_invalid_age': 'Por favor, ingresa una edad válida.',
             'error_no_option': 'Por favor, selecciona un curso de la lista.',
-            'error_ai_fail': 'Error al conectar con el asistente de IA. Usando datos de BO.', // Mensaje de fallback
-            'error_ai_fail_full': 'Error al conectar con el asistente de IA. Intenta de nuevo.', // Mensaje de error completo
+            'error_ai_fail': 'Error al conectar con el asistente de IA. Usando datos de BO.', 
+            'error_ai_fail_full': 'Error al conectar con el asistente de IA. Intenta de nuevo.', 
         },
         'en': {
             'title_main': '🤖 AI Course Matchmaker (TCM Assistant)',
@@ -254,19 +254,11 @@
     
     let currentLang = 'es';
 
-    function setLanguage(lang) {
-        currentLang = lang;
-        const dict = translations[lang];
-
-        document.querySelectorAll('[data-lang-key]').forEach(element => {
-            const key = element.getAttribute('data-lang-key');
-            if (dict[key]) {
-                element.textContent = dict[key];
-            }
-        });
-        diagnoseAndMatch();
+    // Función para obtener traducciones de forma segura
+    function getTranslation(key) {
+        return translations[currentLang][key] || translations['es'][key];
     }
-
+    
     // --- 2. LÓGICA DEL ASISTENTE (Funcionalidad Principal) ---
     
     const COURSE_DATA = [
@@ -469,9 +461,11 @@
     // Inicializar el idioma por defecto y el diagnóstico
     window.onload = () => {
         setLanguage('es');
-        diagnoseAndMatch();
+        // NOTA: No llamamos a diagnoseAndMatch() aquí para evitar la carga automática antes del click.
+        // La información de "Esperando diagnóstico..." se carga por defecto.
     };
 </script>
 
 </body>
 </html>
+
