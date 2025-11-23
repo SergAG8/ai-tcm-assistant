@@ -52,6 +52,11 @@
             padding: 15px;
             border-radius: 6px;
         }
+        .error-message {
+            color: #b91c1c;
+            font-weight: 600;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -151,7 +156,7 @@
             'opt_intermediate': 'Intermedio (Sabe bloques/Scratch)',
             'opt_advanced': 'Avanzado (Sabe Python básico/Roblox)',
             'btn_suggest': '🔍 Sugerir Cursos (AI Match)',
-            'btn_pitch': '🎤 Generar Pitch (AI Venta)', // Added missing translation
+            'btn_pitch': '🎤 Generar Pitch (AI Venta)', 
             'step2_header': '2. Tres Mejores Opciones y Pitch',
             'label_suggested_courses': 'Cursos Sugeridos (Top 3 Priorizados):',
             'status_waiting': 'Esperando diagnóstico...',
@@ -170,7 +175,8 @@
             'error_no_groups': '⚠️ No se encontraron grupos disponibles para este perfil que no estén llenos.',
             'error_invalid_age': 'Por favor, ingresa una edad válida.',
             'error_no_option': 'Por favor, selecciona un curso de la lista.',
-            'error_ai_fail': 'Error al conectar con el asistente de IA. Intenta de nuevo.',
+            'error_ai_fail': 'Error al conectar con el asistente de IA. Usando datos de BO.', // Mensaje de fallback
+            'error_ai_fail_full': 'Error al conectar con el asistente de IA. Intenta de nuevo.', // Mensaje de error completo
         },
         'en': {
             'title_main': '🤖 AI Course Matchmaker (TCM Assistant)',
@@ -183,7 +189,7 @@
             'opt_design': 'Design / Digital Art',
             'opt_games': 'Video Game Creation',
             'btn_suggest': '🔍 Suggest Courses (AI Match)',
-            'btn_pitch': '🎤 Generate Pitch (AI Sale)', // Added missing translation
+            'btn_pitch': '🎤 Generate Pitch (AI Sale)',
             'opt_beginner': 'Beginner (Zero experience)',
             'opt_intermediate': 'Intermediate (Knows blocks/Scratch)',
             'opt_advanced': 'Advanced (Knows basic Python/Roblox)',
@@ -205,7 +211,8 @@
             'error_no_groups': '⚠️ No available groups found for this profile that are not full.',
             'error_invalid_age': 'Please enter a valid age.',
             'error_no_option': 'Please select a course from the list.',
-            'error_ai_fail': 'Error connecting to the AI assistant. Try again.',
+            'error_ai_fail': 'Error connecting to the AI assistant. Using BO data.',
+            'error_ai_fail_full': 'Error connecting to the AI assistant. Try again.', 
         },
         'ru': {
             'title_main': '🤖 AI Помощник для TCM (Подбор Курсов)',
@@ -218,7 +225,7 @@
             'opt_design': 'Дизайн / Цифровое Искусство',
             'opt_games': 'Создание видеоигр',
             'btn_suggest': '🔍 Предложить курсы (AI Match)',
-            'btn_pitch': '🎤 Сгенерировать Питч (AI Продажа)', // Added missing translation
+            'btn_pitch': '🎤 Сгенерировать Питч (AI Продажа)', 
             'opt_beginner': 'Начальный (Нет опыта)',
             'opt_intermediate': 'Средний (Знает блоки/Scratch)',
             'opt_advanced': 'Продвинутый (Знает базовый Python/Roblox)',
@@ -240,7 +247,8 @@
             'error_no_groups': '⚠️ Не найдено доступных групп для этого профиля.',
             'error_invalid_age': 'Пожалуйста, введите действительный возраст.',
             'error_no_option': 'Пожалуйста, выберите курс из списка.',
-            'error_ai_fail': 'Ошибка подключения к AI-помощнику. Попробуйте еще раз.',
+            'error_ai_fail': 'Ошибка подключения к AI-помощнику. Использую данные BO.',
+            'error_ai_fail_full': 'Ошибка подключения к AI-помощнику. Попробуйте еще раз.',
         }
     };
     
@@ -250,22 +258,17 @@
         currentLang = lang;
         const dict = translations[lang];
 
-        // 1. Traducir elementos de la UI (labels, headers, buttons)
         document.querySelectorAll('[data-lang-key]').forEach(element => {
             const key = element.getAttribute('data-lang-key');
             if (dict[key]) {
-                // Traducir texto de botones, títulos, labels, y opciones estáticas
                 element.textContent = dict[key];
             }
         });
-
-        // 2. Ejecutar diagnóstico para forzar la re-traducción de nombres de curso y resultados
         diagnoseAndMatch();
     }
 
     // --- 2. LÓGICA DEL ASISTENTE (Funcionalidad Principal) ---
     
-    // Nombres de cursos traducidos para la visualización
     const COURSE_DATA = [
         // Python Nivel 1 (Coding/Beginner - Edad 10-14)
         { id: 'PYT1A', name_es: 'Python Nivel 1', name_en: 'Python Level 1', name_ru: 'Python Уровень 1', topic: 'Fundamentos de Python y desarrollo de juegos simples.', min_age: 10, max_age: 14, interest: 'coding', level: 'beginner', enrolled: 9, capacity: 10, next_start: '2025-12-14 | Sábados 10:00 (COL)', teacher: 'David T.' },
@@ -294,8 +297,9 @@
         return course.enrolled / course.capacity;
     }
 
-    function getTranslation(key) {
-        return translations[currentLang][key] || translations['es'][key];
+    function getCourseName(course) {
+        const nameField = 'name_' + currentLang;
+        return course[nameField] || course.name_es; // Fallback to Spanish
     }
 
     function diagnoseAndMatch() {
@@ -304,9 +308,6 @@
         const level = document.getElementById('student_level').value;
         const resultsDiv = document.getElementById('course_recommendation');
         const selectElement = document.getElementById('selected_course');
-        
-        // Determinar el campo de nombre a usar (e.g., name_es, name_en)
-        const nameField = 'name_' + currentLang;
 
         if (isNaN(age) || age < 7 || age > 17) {
             resultsDiv.innerHTML = getTranslation('error_invalid_age');
@@ -339,7 +340,7 @@
             
             top3Options.forEach((course, index) => {
                 const remainingSlots = course.capacity - course.enrolled;
-                const courseName = course[nameField] || course.name_es;
+                const courseName = getCourseName(course);
                 const isCritical = remainingSlots <= 2;
                 const urgencyClass = isCritical ? 'text-orange-600 font-bold' : 'text-gray-600';
                 
@@ -357,7 +358,7 @@
             // --- Actualizar el SELECT para el Pitch de Venta ---
             selectElement.innerHTML = `<option value="">-- ${getTranslation('opt_first_diagnose')} --</option>`;
             top3Options.forEach(course => {
-                const courseName = course[nameField] || course.name_es;
+                const courseName = getCourseName(course);
                 const urgency = (course.capacity - course.enrolled) <= 2 ? ` (CRÍTICO - ${course.capacity - course.enrolled} cupos)` : '';
                 selectElement.innerHTML += `<option value="${course.id}">${courseName} - ${course.next_start}${urgency}</option>`;
             });
@@ -387,12 +388,11 @@
         loadingIndicator.classList.remove('hidden');
         pitchOutputDiv.innerHTML = '';
         
-        // El idioma del pitch se basa en el idioma seleccionado en la UI
         const pitchLanguage = currentLang === 'ru' ? 'ruso' : (currentLang === 'en' ? 'inglés' : 'español');
         
         const systemPrompt = `Actúa como un vendedor (TCM) experto en Kodland. Tu objetivo es generar un argumento de venta (pitch) persuasivo para un cliente. El pitch debe ser en ${pitchLanguage}, conciso (máximo 150 palabras), y debe incorporar estos 3 puntos: 1) El valor educativo del curso (usando el 'topic' y 'level'). 2) La urgencia de la asignación inmediata (usando los cupos y la fecha de inicio). 3) El beneficio de la colocación 'in-group' (clases garantizadas con el mismo tutor).`;
         
-        const userQuery = `Genera un pitch de venta para el curso ${course.name_es || course.name_en}. El estudiante tiene ${document.getElementById('student_age').value} años. Las características clave del curso son: [Tópicos: ${course.topic}], [Nivel: ${course.level}], [Inscritos: ${course.enrolled}/${course.capacity}], [Cupos restantes: ${remainingSlots}], [Horario: ${course.next_start}], [Tutor: ${course.teacher}].`;
+        const userQuery = `Genera un pitch de venta para el curso ${course.name_es}. El estudiante tiene ${document.getElementById('student_age').value} años. Las características clave del curso son: [Tópicos: ${course.topic}], [Nivel: ${course.level}], [Inscritos: ${course.enrolled}/${course.capacity}], [Cupos restantes: ${remainingSlots}], [Horario: ${course.next_start}], [Tutor: ${course.teacher}].`;
         
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
@@ -414,13 +414,19 @@
                 if (response.ok) {
                     break;
                 } else if (attempt === maxRetries - 1) {
+                    // Si falla el fetch después de los reintentos, lanzamos el error.
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
             }
 
             const result = await response.json();
-            const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || getTranslation('error_ai_fail');
+            const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            // FALLBACK A INFORMACIÓN DE BO SI LA IA NO DEVUELVE TEXTO
+            if (!generatedText) {
+                 throw new Error("API returned no text content.");
+            }
 
             // 3. Incluir la información crítica del BO antes del pitch de IA (en el idioma actual)
             const bo_info = `
@@ -441,7 +447,20 @@
 
         } catch (error) {
             console.error("Error al llamar a la API de Gemini:", error);
-            pitchOutputDiv.innerHTML = getTranslation('error_ai_fail');
+            
+            // Lógica de FALLBACK: Mostrar datos de BO incluso si la IA falla.
+            const bo_fallback = `
+<div class="mb-4 p-2 bg-red-100 rounded-lg">
+    <b class="text-red-700">⚠️ ${getTranslation('error_ai_fail')}</b>
+    <p>El sistema no pudo generar el argumento de venta, pero aquí están los datos de disponibilidad de BO:</p>
+    <ul>
+        <li>📅 <b>${getTranslation('output_schedule')}</b> ${course.next_start}</li>
+        <li>🧑‍💻 <b>${getTranslation('output_slots')}:</b> ${remainingSlots} de ${course.capacity} restantes.</li>
+        <li>👨‍🏫 <b>${getTranslation('output_teacher')}:</b> ${course.teacher}</li>
+    </ul>
+</div>
+            `;
+            pitchOutputDiv.innerHTML = bo_fallback;
         } finally {
             loadingIndicator.classList.add('hidden');
         }
