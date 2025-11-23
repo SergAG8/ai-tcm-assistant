@@ -259,6 +259,20 @@
         return translations[currentLang][key] || translations['es'][key];
     }
     
+    function setLanguage(lang) {
+        currentLang = lang;
+        const dict = translations[lang];
+
+        document.querySelectorAll('[data-lang-key]').forEach(element => {
+            const key = element.getAttribute('data-lang-key');
+            if (dict[key]) {
+                element.textContent = dict[key];
+            }
+        });
+        // La traducción de los cursos y la interfaz debe ocurrir aquí.
+        diagnoseAndMatch();
+    }
+    
     // --- 2. LÓGICA DEL ASISTENTE (Funcionalidad Principal) ---
     
     const COURSE_DATA = [
@@ -295,14 +309,16 @@
     }
 
     function diagnoseAndMatch() {
-        const age = parseInt(document.getElementById('student_age').value);
+        const ageInput = document.getElementById('student_age');
+        const age = parseInt(ageInput.value);
         const interest = document.getElementById('student_interest').value;
         const level = document.getElementById('student_level').value;
         const resultsDiv = document.getElementById('course_recommendation');
         const selectElement = document.getElementById('selected_course');
 
         if (isNaN(age) || age < 7 || age > 17) {
-            resultsDiv.innerHTML = getTranslation('error_invalid_age');
+            resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">${getTranslation('error_invalid_age')}</span>`;
+            selectElement.innerHTML = `<option value="">-- ${getTranslation('opt_first_diagnose')} --</option>`;
             return;
         }
 
@@ -337,10 +353,10 @@
                 const urgencyClass = isCritical ? 'text-orange-600 font-bold' : 'text-gray-600';
                 
                 htmlContent += `<p class="mb-1 ${isCritical ? 'bg-red-50 p-1 rounded-md' : ''}">` +
-                               `<b>OPCIÓN ${index + 1}: ${courseName}</b></p>` +
+                               `<b>${getTranslation('output_option')} ${index + 1}: ${courseName}</b></p>` +
                                `<ul class="ml-4 list-disc text-sm text-gray-700">` +
                                `<li>⏰ <b>${getTranslation('output_schedule')}</b> ${course.next_start}</li>` +
-                               `<li class="${urgencyClass}">${getTranslation('output_slots')}: ${course.enrolled}/${course.capacity} (${remainingSlots} restantes)</li>` +
+                               `<li class="${urgencyClass}">${getTranslation('output_slots')}: ${course.enrolled}/${course.capacity} (${remainingSlots} ${getTranslation('output_remaining')})</li>` +
                                `<li>${getTranslation('output_teacher')}: ${course.teacher}</li>` +
                                `${isCritical ? '<li class="text-red-600 font-bold">🚨 ' + getTranslation('output_max_urgency') + ' 🚨</li>' : ''}` +
                                `</ul><hr class="my-2 border-gray-200">`;
@@ -351,8 +367,9 @@
             selectElement.innerHTML = `<option value="">-- ${getTranslation('opt_first_diagnose')} --</option>`;
             top3Options.forEach(course => {
                 const courseName = getCourseName(course);
-                const urgency = (course.capacity - course.enrolled) <= 2 ? ` (CRÍTICO - ${course.capacity - course.enrolled} cupos)` : '';
-                selectElement.innerHTML += `<option value="${course.id}">${courseName} - ${course.next_start}${urgency}</option>`;
+                const remaining = course.capacity - course.enrolled;
+                const urgencyTag = remaining <= 2 ? ` (${getTranslation('output_critical')} - ${remaining} ${getTranslation('output_slots')})` : '';
+                selectElement.innerHTML += `<option value="${course.id}">${courseName} - ${course.next_start}${urgencyTag}</option>`;
             });
         }
         
@@ -426,7 +443,7 @@
     <b>${getTranslation('output_details_title')}</b>
     <ul>
         <li>📅 <b>${getTranslation('output_schedule')}</b> ${course.next_start}</li>
-        <li>🧑‍💻 <b>${getTranslation('output_slots')}:</b> ${remainingSlots} de ${course.capacity} restantes.</li>
+        <li>🧑‍💻 <b>${getTranslation('output_slots')}:</b> ${remainingSlots} de ${course.capacity} ${getTranslation('output_remaining')}.</li>
         <li>👨‍🏫 <b>${getTranslation('output_teacher')}:</b> ${course.teacher}</li>
     </ul>
 </div>
@@ -444,10 +461,10 @@
             const bo_fallback = `
 <div class="mb-4 p-2 bg-red-100 rounded-lg">
     <b class="text-red-700">⚠️ ${getTranslation('error_ai_fail')}</b>
-    <p>El sistema no pudo generar el argumento de venta, pero aquí están los datos de disponibilidad de BO:</p>
+    <p>${getTranslation('error_ai_fail_details')}</p>
     <ul>
         <li>📅 <b>${getTranslation('output_schedule')}</b> ${course.next_start}</li>
-        <li>🧑‍💻 <b>${getTranslation('output_slots')}:</b> ${remainingSlots} de ${course.capacity} restantes.</li>
+        <li>🧑‍💻 <b>${getTranslation('output_slots')}:</b> ${remainingSlots} de ${course.capacity} ${getTranslation('output_remaining')}.</li>
         <li>👨‍🏫 <b>${getTranslation('output_teacher')}:</b> ${course.teacher}</li>
     </ul>
 </div>
@@ -461,11 +478,12 @@
     // Inicializar el idioma por defecto y el diagnóstico
     window.onload = () => {
         setLanguage('es');
-        // NOTA: No llamamos a diagnoseAndMatch() aquí para evitar la carga automática antes del click.
-        // La información de "Esperando diagnóstico..." se carga por defecto.
+        // Aseguramos que los inputs tengan un valor inicial para la primera ejecución
+        document.getElementById('student_age').value = 10;
+        document.getElementById('student_interest').value = 'coding';
+        document.getElementById('student_level').value = 'beginner';
     };
 </script>
 
 </body>
 </html>
-
