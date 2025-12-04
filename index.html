@@ -166,11 +166,14 @@
     </div>
 
 <script>
-    // ---------- CONFIG ----------
-    const SHEET_CSV_URL =
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/pub?gid=2084392899&single=true&output=csv";
+    // ---------- CONFIG (IMPORTANTE) ----------
+    // Usamos GViz JSONP para evitar CORS.
+    // Esta URL está basada en tu link publicado:
+    // https://docs.google.com/spreadsheets/d/e/2PACX-.../pubhtml?gid=2084392899&single=true
+    const SHEET_GVIZ_BASE =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/gviz/tq?gid=2084392899&headers=1";
 
-    const API_KEY = ""; // <-- si no quieres usar Gemini, déjalo vacío
+    const API_KEY = ""; // si no quieres usar Gemini, déjalo vacío
     const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
@@ -228,6 +231,8 @@
             warning_title: "🚨 CARGANDO DATOS EN TIEMPO REAL:",
             warning_detail:
                 "Presione Sugerir Cursos para iniciar el diagnóstico con datos de Google Sheets.",
+            error_sheet:
+                "Error al conectar con Google Sheets. Verifica que el documento esté publicado y accesible.",
         },
         en: {
             title_main: "🤖 AI Course Matchmaker (TCM Assistant)",
@@ -254,8 +259,7 @@
             step3_header: "3. Sales Pitch Visualization (AI Output)",
             status_pitch_placeholder:
                 "The sales pitch will appear here. Select a course and press 'Generate Pitch'.",
-            status_loading:
-                "Loading AI analysis and availability data...",
+            status_loading: "Loading AI analysis and availability data...",
             output_details_title: "CRITICAL GROUP DETAILS:",
             output_pitch_title: "AI-GENERATED SALES ARGUMENT:",
             output_schedule: "Fixed Schedule:",
@@ -278,6 +282,8 @@
             warning_title: "🚨 LOADING LIVE DATA:",
             warning_detail:
                 "Press Suggest Courses to load and diagnose using Google Sheets data.",
+            error_sheet:
+                "Error connecting to Google Sheets. Please verify the document is published and accessible.",
         },
         ru: {
             title_main: "🤖 AI Помощник для TCM (Подбор Курсов)",
@@ -328,6 +334,8 @@
             warning_title: "🚨 ТРЕБУЕТСЯ КОНФИГУРАЦИЯ:",
             warning_detail:
                 "Нажмите 'Sugerir Cursos', чтобы загрузить данные Google Sheets.",
+            error_sheet:
+                "Ошибка подключения к Google Sheets. Проверьте настройки публикации.",
         },
     };
 
@@ -362,32 +370,19 @@
         updateDynamicElements();
     }
 
-    // ---------- PARSEO CSV ----------
-
-    function parseCsvLine(line) {
-        const result = [];
-        let current = "";
-        let inQuotes = false;
-
-        for (let i = 0; i < line.length; i++) {
-            const ch = line[i];
-            if (ch === '"') {
-                if (inQuotes && line[i + 1] === '"') {
-                    current += '"';
-                    i++;
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (ch === "," && !inQuotes) {
-                result.push(current);
-                current = "";
-            } else {
-                current += ch;
-            }
-        }
-        result.push(current);
-        return result;
-    }
+    // ---------- PARSEO GVIZ JSONP ----------
+    // Columnas de tu sheet:
+    // A: bo_link (0) - no usamos
+    // B: group_title (1)
+    // C: group_type (2)
+    // D: course_title (3)
+    // E: course_age (4)
+    // F: capacity (5)
+    // G: enrolled_students (6)
+    // H: status (7)
+    // I: teacher (8)
+    // J: first_lesson_date_gmt_5 (9)
+    // K: first_lesson_time_fl_utc_date (10)
 
     function inferInterest(courseTitle) {
         const t = (courseTitle || "").toLowerCase();
@@ -406,36 +401,23 @@
         return { min: 7, max: 17 };
     }
 
-    function parseCsvData(csvText) {
-        const lines = csvText.trim().split(/\r?\n/);
-        if (lines.length < 2) return [];
+    function parseGvizData(gvizData) {
+        if (!gvizData || !gvizData.table || !gvizData.table.rows) return [];
+        const rows = gvizData.table.rows;
 
-        const rows = lines.slice(1).filter((l) => l.trim().length > 0);
+        const courses = rows.map((row, idx) => {
+            const c = row.c || [];
+            const v = (i) => (c[i] ? (c[i].f || c[i].v || "") : "");
 
-        const courses = rows.map((line, idx) => {
-            const c = parseCsvLine(line);
-
-            // A: bo_link (0) – no usamos
-            // B: group_title (1)
-            // C: group_type (2)
-            // D: course_title (3)
-            // E: course_age (4)
-            // F: capacity (5)
-            // G: enrolled_students (6)
-            // H: status (7)
-            // I: teacher (8)
-            // J: first_lesson_date_gmt_5 (9)
-            // K: first_lesson_time_fl_utc_date (10)
-
-            const group_title = c[1] || "";
-            const course_title = c[3] || "";
-            const course_age = c[4] || "";
-            const capacity = parseInt(c[5] || "0", 10) || 0;
-            const enrolled = parseInt(c[6] || "0", 10) || 0;
-            const status = c[7] || "";
-            const teacher = c[8] || "Tutor N/A";
-            const first_date = c[9] || "";
-            const first_time = c[10] || "";
+            const group_title = v(1);
+            const course_title = v(3);
+            const course_age = v(4);
+            const capacity = parseInt(v(5) || "0", 10) || 0;
+            const enrolled = parseInt(v(6) || "0", 10) || 0;
+            const status = v(7);
+            const teacher = v(8) || "Tutor N/A";
+            const first_date = v(9);
+            const first_time = v(10);
 
             const ageRange = parseAgeRange(course_age);
 
@@ -448,41 +430,76 @@
                 min_age: ageRange.min,
                 max_age: ageRange.max,
                 interest: inferInterest(course_title),
-                level: "beginner", // de momento todos como beginner
+                level: "beginner",
                 enrolled,
                 capacity,
-                next_start: first_date && first_time
-                    ? `${first_date} | ${first_time}`
-                    : first_date || "N/A",
+                next_start:
+                    first_date && first_time
+                        ? `${first_date} | ${first_time}`
+                        : first_date || "N/A",
                 teacher,
                 status,
             };
         });
 
-        // solo grupos con cupos
-        return courses.filter((c) => c.capacity > c.enrolled);
+        // cursos con cupos y, opcionalmente, status no vacío
+        return courses.filter(
+            (c) => c.capacity > c.enrolled && (!c.status || c.status.toLowerCase() !== "closed")
+        );
+    }
+
+    function loadGvizData() {
+        return new Promise((resolve, reject) => {
+            const callbackName = "gvizCallback_" + Date.now();
+            const script = document.createElement("script");
+
+            window[callbackName] = function (data) {
+                try {
+                    LIVE_COURSE_DATA = parseGvizData(data);
+                    if (!LIVE_COURSE_DATA.length) {
+                        throw new Error("GViz no devolvió cursos válidos.");
+                    }
+                    resolve();
+                } catch (err) {
+                    console.error("Error procesando GViz:", err);
+                    reject(err);
+                } finally {
+                    delete window[callbackName];
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                }
+            };
+
+            script.src =
+                SHEET_GVIZ_BASE + "&tqx=responseHandler:" + callbackName;
+            script.onerror = function () {
+                reject(new Error("No se pudo cargar el script GViz."));
+                delete window[callbackName];
+                if (script && script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+            };
+
+            document.body.appendChild(script);
+        });
     }
 
     async function fetchCourseData() {
         try {
-            const resp = await fetch(SHEET_CSV_URL);
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const text = await resp.text();
-            LIVE_COURSE_DATA = parseCsvData(text);
-            if (!LIVE_COURSE_DATA.length) {
-                throw new Error("El CSV no devolvió cursos válidos.");
-            }
+            await loadGvizData();
         } catch (err) {
             console.error("Error leyendo Google Sheets:", err);
             const box = document.getElementById("course_recommendation");
             box.innerHTML =
-                '<span class="text-red-600 font-semibold">Error al leer Google Sheets. Revisa que el documento esté publicado como CSV y accesible públicamente.</span>';
+                '<span class="text-red-600 font-semibold">' +
+                getTranslation("error_sheet") +
+                "</span>";
             throw err;
         }
     }
 
     // ---------- MATCH ----------
-
     function getFillRatio(course) {
         if (!course.capacity) return 0;
         return course.enrolled / course.capacity;
@@ -502,7 +519,11 @@
                 '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ' +
                 getTranslation("status_loading") +
                 "</span>";
-            await fetchCourseData();
+            try {
+                await fetchCourseData();
+            } catch (_) {
+                return;
+            }
         }
 
         const age = parseInt(document.getElementById("student_age").value, 10);
@@ -525,13 +546,13 @@
                 c.interest === interest
         );
 
-        // de momento la lógica de nivel es simple
+        // Por ahora, la lógica de level es sencilla. Podemos refinar luego.
         if (level === "beginner") {
-            // todos ok
+            // todos
         } else if (level === "intermediate") {
-            // podríamos filtrar en el futuro
+            // futuro: excluir algunos
         } else if (level === "advanced") {
-            // idem
+            // futuro: sólo cursos más avanzados
         }
 
         filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
@@ -543,9 +564,7 @@
                 getTranslation("error_no_groups") +
                 "</span>";
             selectElement.innerHTML =
-                '<option value="">' +
-                getTranslation("opt_first_diagnose") +
-                "</option>";
+                '<option value="">' + getTranslation("opt_first_diagnose") + "</option>";
             return;
         }
 
@@ -600,7 +619,6 @@
     }
 
     // ---------- PITCH ----------
-
     async function generatePitch() {
         const selectedId = document.getElementById("selected_course").value;
         const loading = document.getElementById("loading_indicator");
@@ -638,7 +656,7 @@
 </div>
 `;
 
-        // si no hay API key, solo mostramos info de BO
+        // Si no hay API key, mostramos sólo datos de BO
         if (!API_KEY) {
             out.innerHTML =
                 baseInfo +
@@ -710,6 +728,7 @@
             getTranslation("status_loading") +
             "</span>";
 
+        // precargamos datos para que la primera vez ya estén
         fetchCourseData()
             .then(() => {
                 resultsDiv.innerHTML = getTranslation("status_waiting");
@@ -720,6 +739,5 @@
 
 </body>
 </html>
-
 
 
