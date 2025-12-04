@@ -52,7 +52,7 @@
             padding: 15px;
             border-radius: 6px;
         }
-        /* Tarjetas de cada curso sugerido */
+        /* Tarjeta de cada opción */
         .course-option {
             border-radius: 10px;
             border: 1px solid #e5e7eb;
@@ -98,7 +98,6 @@
         </select>
     </div>
 
-    <!-- Contenedor principal -->
     <div id="app-container">
         <h1 class="text-3xl font-extrabold text-gray-900 mb-4 text-center" data-lang-key="title_main">
             🤖 AI Course Matchmaker (TCM Assistant)
@@ -200,11 +199,12 @@
 
 <script>
     // ---------- CONFIG ----------
-    // MISMO sheet, pero en formato CSV (esto sí pasa CORS desde GitHub Pages)
-    const SHEET_CSV_URL =
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/pub?gid=2084392899&single=true&output=csv";
 
-    const API_KEY = ""; // déjalo vacío si no quieres usar Gemini todavía
+    // MISMA hoja pero usando GViz JSON (esto fue lo que ya te funcionó)
+    const SHEET_GVIZ_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/gviz/tq?gid=2084392899&tqx=out:json";
+
+    const API_KEY = ""; // si no usas Gemini aún, déjalo vacío
     const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
@@ -215,8 +215,7 @@
     const translations = {
         es: {
             title_main: "🤖 AI Course Matchmaker (TCM Assistant)",
-            subtitle_main:
-                "Herramienta de diagnóstico de ventas para asegurar la colocación correcta y reducir el churn por expectativas.",
+            subtitle_main: "Herramienta de diagnóstico de ventas para asegurar la colocación correcta y reducir el churn por expectativas.",
             step1_header: "1. Diagnóstico del Estudiante",
             label_age: "Edad del Estudiante (7-17 años):",
             label_interest: "Interés Principal:",
@@ -232,14 +231,11 @@
             step2_header: "2. Tres Mejores Opciones y Pitch",
             label_suggested_courses: "Cursos Sugeridos (Top 3 Priorizados):",
             status_waiting: "Esperando diagnóstico...",
-            label_select_pitch:
-                "Selecciona la Opción para Generar el Pitch (Ver Pitch de Venta):",
+            label_select_pitch: "Selecciona la Opción para Generar el Pitch (Ver Pitch de Venta):",
             opt_first_diagnose: "-- Primero Diagnosticar --",
             step3_header: "3. Argumento de Venta (Output de IA)",
-            status_pitch_placeholder:
-                "El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.",
-            status_loading:
-                "Cargando análisis de IA y datos de disponibilidad...",
+            status_pitch_placeholder: "El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.",
+            status_loading: "Cargando análisis de IA y datos de disponibilidad...",
             output_details_title: "DETALLES CRÍTICOS DEL GRUPO:",
             output_pitch_title: "ARGUMENTO DE VENTA GENERADO POR IA:",
             output_schedule: "Horario Fijo:",
@@ -249,26 +245,19 @@
             output_option: "OPCIÓN",
             output_critical: "CRÍTICO",
             output_max_urgency: "MÁXIMA URGENCIA DE LLENADO",
-            error_no_groups:
-                "⚠️ No se encontraron grupos disponibles para este perfil que no estén llenos y sean de hoy en adelante.",
+            error_no_groups: "⚠️ No se encontraron grupos disponibles para este perfil (no llenos y con fecha desde hoy en adelante).",
             error_invalid_age: "Por favor, ingresa una edad válida.",
             error_no_option: "Por favor, selecciona un curso de la lista.",
-            error_ai_fail:
-                "Error al conectar con el asistente de IA. Usando datos de BO.",
-            error_ai_fail_full:
-                "Error al conectar con el asistente de IA. Intenta de nuevo.",
-            error_ai_fail_details:
-                "El sistema no pudo generar el argumento de venta, pero aquí están los datos de disponibilidad de BO:",
+            error_ai_fail: "Error al conectar con el asistente de IA. Usando datos de BO.",
+            error_ai_fail_full: "Error al conectar con el asistente de IA. Intenta de nuevo.",
+            error_ai_fail_details: "El sistema no pudo generar el argumento de venta, pero aquí están los datos de disponibilidad de BO:",
             warning_title: "🚨 CARGANDO DATOS EN TIEMPO REAL:",
-            warning_detail:
-                "Presione Sugerir Cursos para iniciar el diagnóstico con datos de Google Sheets.",
-            error_sheet:
-                "Error al conectar con Google Sheets. Verifica que el documento esté publicado y accesible.",
+            warning_detail: "Presione Sugerir Cursos para iniciar el diagnóstico con datos de Google Sheets.",
+            error_sheet: "Error al conectar con Google Sheets. Verifica que el documento esté publicado y accesible."
         },
         en: {
             title_main: "🤖 AI Course Matchmaker (TCM Assistant)",
-            subtitle_main:
-                "Sales diagnostic tool to ensure correct placement and reduce churn due to expectations.",
+            subtitle_main: "Sales diagnostic tool to ensure correct placement and reduce churn due to expectations.",
             step1_header: "1. Student Diagnosis",
             label_age: "Student Age (7-17 years):",
             label_interest: "Main Interest:",
@@ -284,12 +273,10 @@
             step2_header: "2. Top Three Options & Pitch",
             label_suggested_courses: "Suggested Courses (Top 3 Prioritized):",
             status_waiting: "Awaiting diagnosis...",
-            label_select_pitch:
-                "Select Option to Generate Pitch (View Sales Pitch):",
+            label_select_pitch: "Select Option to Generate Pitch (View Sales Pitch):",
             opt_first_diagnose: "-- Diagnose First --",
             step3_header: "3. Sales Pitch Visualization (AI Output)",
-            status_pitch_placeholder:
-                "The sales pitch will appear here. Select a course and press 'Generate Pitch'.",
+            status_pitch_placeholder: "The sales pitch will appear here. Select a course and press 'Generate Pitch'.",
             status_loading: "Loading AI analysis and availability data...",
             output_details_title: "CRITICAL GROUP DETAILS:",
             output_pitch_title: "AI-GENERATED SALES ARGUMENT:",
@@ -300,26 +287,19 @@
             output_option: "OPTION",
             output_critical: "CRITICAL",
             output_max_urgency: "MAX FILLING URGENCY",
-            error_no_groups:
-                "⚠️ No available groups found for this profile that are not full and start today or later.",
+            error_no_groups: "⚠️ No available groups found for this profile (not full and starting today or later).",
             error_invalid_age: "Please enter a valid age.",
             error_no_option: "Please select a course from the list.",
-            error_ai_fail:
-                "Error connecting to the AI assistant. Using BO data.",
-            error_ai_fail_full:
-                "Error connecting to the AI assistant. Try again.",
-            error_ai_fail_details:
-                "The system failed to generate the sales pitch, but here is the BO availability data:",
+            error_ai_fail: "Error connecting to the AI assistant. Using BO data.",
+            error_ai_fail_full: "Error connecting to the AI assistant. Try again.",
+            error_ai_fail_details: "The system failed to generate the sales pitch, but here is the BO availability data:",
             warning_title: "🚨 LOADING LIVE DATA:",
-            warning_detail:
-                "Press Suggest Courses to load and diagnose using Google Sheets data.",
-            error_sheet:
-                "Error connecting to Google Sheets. Please verify the document is published and accessible.",
+            warning_detail: "Press Suggest Courses to load and diagnose using Google Sheets data.",
+            error_sheet: "Error connecting to Google Sheets. Please verify the document is published and accessible."
         },
         ru: {
             title_main: "🤖 AI Помощник для TCM (Подбор Курсов)",
-            subtitle_main:
-                "Инструмент для диагностики продаж: обеспечивает правильное размещение и снижает отток из-за завышенных ожиданий.",
+            subtitle_main: "Инструмент для диагностики продаж: обеспечивает правильное размещение и снижает отток из-за завышенных ожиданий.",
             step1_header: "1. Диагностика ученика",
             label_age: "Возраст ученика (7-17 лет):",
             label_interest: "Основной интерес:",
@@ -335,14 +315,11 @@
             step2_header: "2. Три лучших варианта и Питч",
             label_suggested_courses: "Предложенные курсы (Топ-3):",
             status_waiting: "Ожидание диагностики...",
-            label_select_pitch:
-                "Выберите вариант, чтобы сгенерировать Питч (Просмотр Аргумента):",
+            label_select_pitch: "Выберите вариант, чтобы сгенерировать Питч (Просмотр Аргумента):",
             opt_first_diagnose: "-- Сначала диагностика --",
             step3_header: "3. Визуализация Питча (Вывод AI)",
-            status_pitch_placeholder:
-                "Аргумент для продажи появится здесь. Выберите курс и нажмите 'Сгенерировать Питч'.",
-            status_loading:
-                "Загрузка анализа AI и данных о доступности...",
+            status_pitch_placeholder: "Аргумент для продажи появится здесь. Выберите курс и нажмите 'Сгенерировать Питч'.",
+            status_loading: "Загрузка анализа AI и данных о доступности...",
             output_details_title: "КРИТИЧЕСКИЕ ДЕТАЛИ ГРУППЫ:",
             output_pitch_title: "СГЕНЕРИРОВАННЫЙ АРГУМЕНТ ДЛЯ ПРОДАЖИ:",
             output_schedule: "Фиксированное расписание:",
@@ -352,22 +329,16 @@
             output_option: "ВАРИАНТ",
             output_critical: "КРИТИЧЕСКИЙ",
             output_max_urgency: "МАКСИМАЛЬНАЯ СРОЧНОСТЬ ЗАПОЛНЕНИЯ",
-            error_no_groups:
-                "⚠️ Не найдено доступных групп для этого профиля с датой от сегодня и позже.",
+            error_no_groups: "⚠️ Не найдено доступных групп для этого профиля (не заполнены и с датой от сегодня и позже).",
             error_invalid_age: "Пожалуйста, введите действительный возраст.",
             error_no_option: "Пожалуйста, выберите курс из списка.",
-            error_ai_fail:
-                "Ошибка подключения к AI-помощнику. Использую данные BO.",
-            error_ai_fail_full:
-                "Ошибка подключения к AI-помощнику. Попробуйте еще раз.",
-            error_ai_fail_details:
-                "Система не смогла сгенерировать аргумент для продажи, но здесь данные о доступности из BO:",
+            error_ai_fail: "Ошибка подключения к AI-помощнику. Использую данные BO.",
+            error_ai_fail_full: "Ошибка подключения к AI-помощнику. Попробуйте еще раз.",
+            error_ai_fail_details: "Система не смогла сгенерировать аргумент для продажи, но здесь данные о доступности из BO:",
             warning_title: "🚨 ТРЕБУЕТСЯ КОНФИГУРАЦИЯ:",
-            warning_detail:
-                "Нажмите 'Sugerir Cursos', чтобы загрузить данные Google Sheets.",
-            error_sheet:
-                "Ошибка подключения к Google Sheets. Проверьте настройки публикации.",
-        },
+            warning_detail: "Нажмите 'Sugerir Cursos', чтобы загрузить данные Google Sheets.",
+            error_sheet: "Ошибка подключения к Google Sheets. Проверьте настройки публикации."
+        }
     };
 
     function getTranslation(key) {
@@ -401,36 +372,7 @@
         updateDynamicElements();
     }
 
-    // ---------- PARSEO CSV ----------
-    // Columnas:
-    // 0: bo_link
-    // 1: group_title
-    // 2: group_type
-    // 3: course_title
-    // 4: course_age
-    // 5: capacity
-    // 6: enrolled_students
-    // 7: status
-    // 8: teacher
-    // 9: first_lesson_date_gmt_5 (YYYY-MM-DD)
-    // 10: first_lesson_time_fl_utc_date (hh:mm:ss o similar)
-
-    function simpleCsvParse(text) {
-        // Asumimos que no hay comas dentro de campos (en tu sheet actual es así).
-        const lines = text.trim().split(/\r?\n/);
-        const rows = lines.map((line) => line.split(","));
-        const headers = rows.shift(); // primera fila
-        return { headers, rows };
-    }
-
-    function inferInterest(courseTitle) {
-        const t = (courseTitle || "").toLowerCase();
-        if (t.includes("roblox") || t.includes("minecraft") || t.includes("game"))
-            return "games";
-        if (t.includes("design") || t.includes("figma") || t.includes("art"))
-            return "design";
-        return "coding";
-    }
+    // ---------- PARSEO GViz ----------
 
     function parseAgeRange(ageStr) {
         const m = (ageStr || "").match(/(\d+)\D+(\d+)/);
@@ -440,37 +382,56 @@
         return { min: 7, max: 17 };
     }
 
-    function toDateOrNull(dateStr) {
-        if (!dateStr) return null;
-        const d = new Date(dateStr);
+    function inferInterest(courseTitle) {
+        const t = (courseTitle || "").toLowerCase();
+        if (t.includes("roblox") || t.includes("minecraft") || t.includes("game")) return "games";
+        if (t.includes("design") || t.includes("figma") || t.includes("art")) return "design";
+        return "coding";
+    }
+
+    function extractIsoDate(str) {
+        if (!str) return null;
+        const m = String(str).match(/(\d{4}-\d{2}-\d{2})/);
+        if (!m) return null;
+        const d = new Date(m[1]);
         return isNaN(d.getTime()) ? null : d;
     }
 
-    function parseCoursesFromCsv(csvText) {
-        const parsed = simpleCsvParse(csvText);
-        const rows = parsed.rows || [];
+    function parseCoursesFromGviz(rawText) {
+        const m = rawText.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
+        if (!m || m.length < 2) {
+            throw new Error("No se pudo extraer JSON de GViz.");
+        }
+        const obj = JSON.parse(m[1]);
+        if (!obj.table || !obj.table.rows) {
+            throw new Error("GViz sin tabla válida.");
+        }
 
+        const rows = obj.table.rows;
         const today = new Date();
         const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-        const courses = rows.map((cols, idx) => {
-            const v = (i) => (cols[i] || "").trim();
+        const courses = rows.map((row, idx) => {
+            const c = row.c || [];
 
-            const group_title = v(1);
-            const course_title = v(3);
-            const course_age = v(4);
-            const capacity = parseInt(v(5) || "0", 10) || 0;
-            const enrolled = parseInt(v(6) || "0", 10) || 0;
-            const status = v(7);
-            const teacher = v(8) || "Tutor N/A";
-            const first_date = v(9);  // YYYY-MM-DD
-            const first_time = v(10);
+            const group_title  = c[1]?.v || "";
+            const course_title = c[3]?.v || "";
+            const course_age   = c[4]?.v || "";
+            const capacity     = c[5]?.v != null ? parseInt(c[5].v, 10) : 0;
+            const enrolled     = c[6]?.v != null ? parseInt(c[6].v, 10) : 0;
+            const status       = c[7]?.v || "";
+            const teacher      = c[8]?.v || "Tutor N/A";
+            const dateCell     = c[9];
+            const timeCell     = c[10];
+
+            const dateStr = dateCell ? (dateCell.f || dateCell.v || "") : "";
+            const timeStr = timeCell ? (timeCell.f || timeCell.v || "") : "";
 
             const ageRange = parseAgeRange(course_age);
-            const startDateObj = toDateOrNull(first_date);
+            const startDateObj = extractIsoDate(dateStr);
 
             return {
-                id: `${idx}_${group_title}_${first_date}_${first_time}`,
+                id: `${idx}_${group_title}_${dateStr}_${timeStr}`,
                 name_es: group_title || course_title || "N/A",
                 name_en: group_title || course_title || "N/A",
                 name_ru: group_title || course_title || "N/A",
@@ -479,21 +440,20 @@
                 max_age: ageRange.max,
                 interest: inferInterest(course_title),
                 level: "beginner",
-                enrolled,
-                capacity,
-                next_start:
-                    first_date && first_time
-                        ? `${first_date} | ${first_time}`
-                        : first_date || "N/A",
+                enrolled: enrolled || 0,
+                capacity: capacity || 0,
+                next_start: (dateStr && timeStr) ? `${dateStr} | ${timeStr}` : (dateStr || "N/A"),
                 teacher,
                 status,
-                startDateObj,
+                startDateObj
             };
         });
 
-        return courses.filter((c) => {
+        // filtros: no llenos, status no CLOSED, fecha >= hoy
+        return courses.filter(c => {
+            if (!c.name_es) return false;
             if (c.capacity <= c.enrolled) return false;
-            if (c.status && c.status.toLowerCase() === "closed") return false;
+            if (c.status && String(c.status).toLowerCase() === "closed") return false;
             if (c.startDateObj && c.startDateObj < todayMidnight) return false;
             return true;
         });
@@ -501,18 +461,16 @@
 
     async function fetchCourseData() {
         try {
-            const resp = await fetch(SHEET_CSV_URL);
-            if (!resp.ok) {
-                throw new Error("HTTP " + resp.status);
-            }
+            const resp = await fetch(SHEET_GVIZ_URL);
+            if (!resp.ok) throw new Error("HTTP " + resp.status);
             const text = await resp.text();
-            LIVE_COURSE_DATA = parseCoursesFromCsv(text);
+            LIVE_COURSE_DATA = parseCoursesFromGviz(text);
 
             if (!LIVE_COURSE_DATA.length) {
-                throw new Error("CSV sin cursos válidos (quizás todos son pasados o llenos).");
+                throw new Error("No hay cursos válidos (todos llenos o pasado).");
             }
         } catch (err) {
-            console.error("Error leyendo Google Sheets CSV:", err);
+            console.error("Error leyendo Google Sheets:", err);
             const box = document.getElementById("course_recommendation");
             box.innerHTML =
                 '<span class="text-red-600 font-semibold">' +
@@ -523,6 +481,7 @@
     }
 
     // ---------- MATCH ----------
+
     function getFillRatio(course) {
         if (!course.capacity) return 0;
         return course.enrolled / course.capacity;
@@ -569,13 +528,13 @@
                 c.interest === interest
         );
 
-        // Futuro: filtrar más por level si quieres.
+        // (si quisieras filtrar por level, aquí)
         if (level === "beginner") {
-            // ok todos
+            // dejamos todos
         } else if (level === "intermediate") {
-            // etc
+            // podrías excluir algunos si quieres
         } else if (level === "advanced") {
-            // etc
+            // idem
         }
 
         filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
@@ -624,7 +583,7 @@
 
         resultsDiv.innerHTML = html;
 
-        // selector para pitch
+        // selector de pitch
         selectElement.innerHTML =
             '<option value="">' + getTranslation("opt_first_diagnose") + "</option>";
         top3.forEach((course) => {
@@ -645,6 +604,7 @@
     }
 
     // ---------- PITCH ----------
+
     async function generatePitch() {
         const selectedId = document.getElementById("selected_course").value;
         const loading = document.getElementById("loading_indicator");
@@ -689,7 +649,7 @@
         if (!API_KEY) {
             out.innerHTML =
                 baseInfo +
-                "<p><i>(Mostrando solo datos de BO)</i></p>";
+                "<p><i>(Gemini API key vacía: mostrando solo datos de BO)</i></p>";
             loading.classList.add("hidden");
             return;
         }
@@ -745,6 +705,7 @@
     }
 
     // ---------- INIT ----------
+
     window.onload = () => {
         setLanguage("es");
         document.getElementById("student_age").value = 10;
@@ -757,7 +718,6 @@
             getTranslation("status_loading") +
             "</span>";
 
-        // precarga de datos para que la primera vez ya estén listos
         fetchCourseData()
             .then(() => {
                 resultsDiv.innerHTML = getTranslation("status_waiting");
@@ -768,5 +728,6 @@
 
 </body>
 </html>
+
 
 
