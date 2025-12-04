@@ -199,12 +199,12 @@
     </div>
 
 <script>
-    // ---------- CONFIG (IMPORTANTE) ----------
-    // GViz JSONP para evitar CORS.
-    const SHEET_GVIZ_BASE =
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/gviz/tq?gid=2084392899&headers=1";
+    // ---------- CONFIG ----------
+    // MISMO sheet, pero en formato CSV (esto sí pasa CORS desde GitHub Pages)
+    const SHEET_CSV_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/pub?gid=2084392899&single=true&output=csv";
 
-    const API_KEY = ""; // si no quieres usar Gemini, déjalo vacío
+    const API_KEY = ""; // déjalo vacío si no quieres usar Gemini todavía
     const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
@@ -401,19 +401,27 @@
         updateDynamicElements();
     }
 
-    // ---------- PARSEO GVIZ JSONP ----------
+    // ---------- PARSEO CSV ----------
     // Columnas:
-    // A: bo_link (0)
-    // B: group_title (1)
-    // C: group_type (2)
-    // D: course_title (3)
-    // E: course_age (4)
-    // F: capacity (5)
-    // G: enrolled_students (6)
-    // H: status (7)
-    // I: teacher (8)
-    // J: first_lesson_date_gmt_5 (9)
-    // K: first_lesson_time_fl_utc_date (10)
+    // 0: bo_link
+    // 1: group_title
+    // 2: group_type
+    // 3: course_title
+    // 4: course_age
+    // 5: capacity
+    // 6: enrolled_students
+    // 7: status
+    // 8: teacher
+    // 9: first_lesson_date_gmt_5 (YYYY-MM-DD)
+    // 10: first_lesson_time_fl_utc_date (hh:mm:ss o similar)
+
+    function simpleCsvParse(text) {
+        // Asumimos que no hay comas dentro de campos (en tu sheet actual es así).
+        const lines = text.trim().split(/\r?\n/);
+        const rows = lines.map((line) => line.split(","));
+        const headers = rows.shift(); // primera fila
+        return { headers, rows };
+    }
 
     function inferInterest(courseTitle) {
         const t = (courseTitle || "").toLowerCase();
@@ -438,16 +446,15 @@
         return isNaN(d.getTime()) ? null : d;
     }
 
-    function parseGvizData(gvizData) {
-        if (!gvizData || !gvizData.table || !gvizData.table.rows) return [];
-        const rows = gvizData.table.rows;
+    function parseCoursesFromCsv(csvText) {
+        const parsed = simpleCsvParse(csvText);
+        const rows = parsed.rows || [];
 
         const today = new Date();
         const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-        const courses = rows.map((row, idx) => {
-            const c = row.c || [];
-            const v = (i) => (c[i] ? (c[i].f || c[i].v || "") : "");
+        const courses = rows.map((cols, idx) => {
+            const v = (i) => (cols[i] || "").trim();
 
             const group_title = v(1);
             const course_title = v(3);
@@ -456,7 +463,7 @@
             const enrolled = parseInt(v(6) || "0", 10) || 0;
             const status = v(7);
             const teacher = v(8) || "Tutor N/A";
-            const first_date = v(9);   // ISO yyyy-mm-dd
+            const first_date = v(9);  // YYYY-MM-DD
             const first_time = v(10);
 
             const ageRange = parseAgeRange(course_age);
@@ -484,10 +491,6 @@
             };
         });
 
-        // Filtramos:
-        // - que tengan cupos
-        // - status != closed
-        // - fecha >= hoy (si la fecha existe)
         return courses.filter((c) => {
             if (c.capacity <= c.enrolled) return false;
             if (c.status && c.status.toLowerCase() === "closed") return false;
@@ -496,48 +499,20 @@
         });
     }
 
-    function loadGvizData() {
-        return new Promise((resolve, reject) => {
-            const callbackName = "gvizCallback_" + Date.now();
-            const script = document.createElement("script");
-
-            window[callbackName] = function (data) {
-                try {
-                    LIVE_COURSE_DATA = parseGvizData(data);
-                    if (!LIVE_COURSE_DATA.length) {
-                        throw new Error("GViz no devolvió cursos válidos.");
-                    }
-                    resolve();
-                } catch (err) {
-                    console.error("Error procesando GViz:", err);
-                    reject(err);
-                } finally {
-                    delete window[callbackName];
-                    if (script && script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-                }
-            };
-
-            script.src =
-                SHEET_GVIZ_BASE + "&tqx=responseHandler:" + callbackName;
-            script.onerror = function () {
-                reject(new Error("No se pudo cargar el script GViz."));
-                delete window[callbackName];
-                if (script && script.parentNode) {
-                    script.parentNode.removeChild(script);
-                }
-            };
-
-            document.body.appendChild(script);
-        });
-    }
-
     async function fetchCourseData() {
         try {
-            await loadGvizData();
+            const resp = await fetch(SHEET_CSV_URL);
+            if (!resp.ok) {
+                throw new Error("HTTP " + resp.status);
+            }
+            const text = await resp.text();
+            LIVE_COURSE_DATA = parseCoursesFromCsv(text);
+
+            if (!LIVE_COURSE_DATA.length) {
+                throw new Error("CSV sin cursos válidos (quizás todos son pasados o llenos).");
+            }
         } catch (err) {
-            console.error("Error leyendo Google Sheets:", err);
+            console.error("Error leyendo Google Sheets CSV:", err);
             const box = document.getElementById("course_recommendation");
             box.innerHTML =
                 '<span class="text-red-600 font-semibold">' +
@@ -594,13 +569,13 @@
                 c.interest === interest
         );
 
-        // (Dejamos la lógica de level simple por ahora)
+        // Futuro: filtrar más por level si quieres.
         if (level === "beginner") {
-            // todos ok
+            // ok todos
         } else if (level === "intermediate") {
-            // futuro: filtrar por cursos intermedios
+            // etc
         } else if (level === "advanced") {
-            // futuro: filtrar por avanzados
+            // etc
         }
 
         filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
@@ -711,7 +686,6 @@
 </div>
 `;
 
-        // Si no hay API key, mostramos solo datos de BO
         if (!API_KEY) {
             out.innerHTML =
                 baseInfo +
@@ -783,7 +757,7 @@
             getTranslation("status_loading") +
             "</span>";
 
-        // precargamos datos para que la primera vez ya estén
+        // precarga de datos para que la primera vez ya estén listos
         fetchCourseData()
             .then(() => {
                 resultsDiv.innerHTML = getTranslation("status_waiting");
@@ -794,7 +768,5 @@
 
 </body>
 </html>
-
-
 
 
