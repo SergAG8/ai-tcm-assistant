@@ -38,19 +38,52 @@
             margin-bottom: 15px;
         }
         .result-box {
-            min-height: 150px;
-            background-color: #f0f9ff;
-            border-left: 4px solid #3b82f6;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 15px;
-            white-space: pre-wrap;
+            min-height: 120px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-top: 8px;
+            border: 1px solid #e5e7eb;
+            white-space: normal;
         }
         .ai-result-box {
             background-color: #ecfdf5;
             border-left: 4px solid #10b981;
             padding: 15px;
             border-radius: 6px;
+        }
+        /* Tarjetas de cada curso sugerido */
+        .course-option {
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+        .course-option.critical {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+        }
+        .course-option-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #111827;
+        }
+        .course-option-row {
+            font-size: 0.875rem;
+            color: #374151;
+            margin-bottom: 2px;
+        }
+        .course-option-row strong {
+            font-weight: 600;
+        }
+        .course-option-urgency {
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .course-option-urgency.critical-text {
+            color: #b91c1c;
+            font-weight: 700;
         }
     </style>
 </head>
@@ -167,9 +200,7 @@
 
 <script>
     // ---------- CONFIG (IMPORTANTE) ----------
-    // Usamos GViz JSONP para evitar CORS.
-    // Esta URL está basada en tu link publicado:
-    // https://docs.google.com/spreadsheets/d/e/2PACX-.../pubhtml?gid=2084392899&single=true
+    // GViz JSONP para evitar CORS.
     const SHEET_GVIZ_BASE =
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/gviz/tq?gid=2084392899&headers=1";
 
@@ -219,7 +250,7 @@
             output_critical: "CRÍTICO",
             output_max_urgency: "MÁXIMA URGENCIA DE LLENADO",
             error_no_groups:
-                "⚠️ No se encontraron grupos disponibles para este perfil que no estén llenos.",
+                "⚠️ No se encontraron grupos disponibles para este perfil que no estén llenos y sean de hoy en adelante.",
             error_invalid_age: "Por favor, ingresa una edad válida.",
             error_no_option: "Por favor, selecciona un curso de la lista.",
             error_ai_fail:
@@ -270,7 +301,7 @@
             output_critical: "CRITICAL",
             output_max_urgency: "MAX FILLING URGENCY",
             error_no_groups:
-                "⚠️ No available groups found for this profile that are not full.",
+                "⚠️ No available groups found for this profile that are not full and start today or later.",
             error_invalid_age: "Please enter a valid age.",
             error_no_option: "Please select a course from the list.",
             error_ai_fail:
@@ -322,7 +353,7 @@
             output_critical: "КРИТИЧЕСКИЙ",
             output_max_urgency: "МАКСИМАЛЬНАЯ СРОЧНОСТЬ ЗАПОЛНЕНИЯ",
             error_no_groups:
-                "⚠️ Не найдено доступных групп для этого профиля.",
+                "⚠️ Не найдено доступных групп для этого профиля с датой от сегодня и позже.",
             error_invalid_age: "Пожалуйста, введите действительный возраст.",
             error_no_option: "Пожалуйста, выберите курс из списка.",
             error_ai_fail:
@@ -371,8 +402,8 @@
     }
 
     // ---------- PARSEO GVIZ JSONP ----------
-    // Columnas de tu sheet:
-    // A: bo_link (0) - no usamos
+    // Columnas:
+    // A: bo_link (0)
     // B: group_title (1)
     // C: group_type (2)
     // D: course_title (3)
@@ -401,9 +432,18 @@
         return { min: 7, max: 17 };
     }
 
+    function toDateOrNull(dateStr) {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
     function parseGvizData(gvizData) {
         if (!gvizData || !gvizData.table || !gvizData.table.rows) return [];
         const rows = gvizData.table.rows;
+
+        const today = new Date();
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
         const courses = rows.map((row, idx) => {
             const c = row.c || [];
@@ -416,10 +456,11 @@
             const enrolled = parseInt(v(6) || "0", 10) || 0;
             const status = v(7);
             const teacher = v(8) || "Tutor N/A";
-            const first_date = v(9);
+            const first_date = v(9);   // ISO yyyy-mm-dd
             const first_time = v(10);
 
             const ageRange = parseAgeRange(course_age);
+            const startDateObj = toDateOrNull(first_date);
 
             return {
                 id: `${idx}_${group_title}_${first_date}_${first_time}`,
@@ -439,13 +480,20 @@
                         : first_date || "N/A",
                 teacher,
                 status,
+                startDateObj,
             };
         });
 
-        // cursos con cupos y, opcionalmente, status no vacío
-        return courses.filter(
-            (c) => c.capacity > c.enrolled && (!c.status || c.status.toLowerCase() !== "closed")
-        );
+        // Filtramos:
+        // - que tengan cupos
+        // - status != closed
+        // - fecha >= hoy (si la fecha existe)
+        return courses.filter((c) => {
+            if (c.capacity <= c.enrolled) return false;
+            if (c.status && c.status.toLowerCase() === "closed") return false;
+            if (c.startDateObj && c.startDateObj < todayMidnight) return false;
+            return true;
+        });
     }
 
     function loadGvizData() {
@@ -546,13 +594,13 @@
                 c.interest === interest
         );
 
-        // Por ahora, la lógica de level es sencilla. Podemos refinar luego.
+        // (Dejamos la lógica de level simple por ahora)
         if (level === "beginner") {
-            // todos
+            // todos ok
         } else if (level === "intermediate") {
-            // futuro: excluir algunos
+            // futuro: filtrar por cursos intermedios
         } else if (level === "advanced") {
-            // futuro: sólo cursos más avanzados
+            // futuro: filtrar por avanzados
         }
 
         filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
@@ -573,27 +621,30 @@
             const remaining = course.capacity - course.enrolled;
             const name = getCourseName(course);
             const critical = remaining <= 2;
-            const urgencyClass = critical
-                ? "text-orange-600 font-bold"
-                : "text-gray-600";
 
             html += `
-            <div class="mb-3 ${critical ? "bg-red-50 p-2 rounded-md" : ""}">
-                <p class="font-semibold">${getTranslation("output_option")} ${idx + 1}: ${name}</p>
-                <ul class="ml-4 list-disc text-sm text-gray-700">
-                    <li>⏰ <b>${getTranslation("output_schedule")}</b> ${course.next_start}</li>
-                    <li class="${urgencyClass}">
-                        💻 <b>${getTranslation("output_slots")}</b> ${course.enrolled}/${course.capacity} (${remaining} ${getTranslation("output_remaining")})
-                    </li>
-                    <li>👨‍🏫 <b>${getTranslation("output_teacher")}</b> ${course.teacher}</li>
-                    ${
-                        critical
-                            ? `<li class="text-red-600 font-bold">🚨 ${getTranslation("output_max_urgency")} 🚨</li>`
-                            : ""
-                    }
-                </ul>
-            </div>
-            <hr class="my-2 border-gray-200">`;
+            <div class="course-option ${critical ? "critical" : ""}">
+                <div class="course-option-title">
+                    ${getTranslation("output_option")} ${idx + 1}: ${name}
+                </div>
+                <div class="course-option-row">
+                    ⏰ <strong>${getTranslation("output_schedule")}</strong> ${course.next_start}
+                </div>
+                <div class="course-option-row ${critical ? "text-orange-600 font-semibold" : ""}">
+                    💻 <strong>${getTranslation("output_slots")}</strong>
+                    ${course.enrolled}/${course.capacity} (${remaining} ${getTranslation("output_remaining")})
+                </div>
+                <div class="course-option-row">
+                    👨‍🏫 <strong>${getTranslation("output_teacher")}</strong> ${course.teacher}
+                </div>
+                ${
+                    critical
+                        ? `<div class="course-option-urgency critical-text">🚨 ${getTranslation(
+                              "output_max_urgency"
+                          )} 🚨</div>`
+                        : ""
+                }
+            </div>`;
         });
 
         resultsDiv.innerHTML = html;
@@ -646,21 +697,25 @@
         const baseInfo = `
 <div class="mb-4 p-2 bg-blue-100 rounded-lg">
   <b>${getTranslation("output_details_title")}</b>
-  <ul>
-    <li>📅 <b>${getTranslation("output_schedule")}</b> ${course.next_start}</li>
-    <li>🧑‍💻 <b>${getTranslation("output_slots")}</b> ${remaining} ${getTranslation(
+  <div class="course-option-row">
+    📅 <strong>${getTranslation("output_schedule")}</strong> ${course.next_start}
+  </div>
+  <div class="course-option-row">
+    🧑‍💻 <strong>${getTranslation("output_slots")}</strong> ${remaining} ${getTranslation(
             "output_remaining"
-        )} (de ${course.capacity})</li>
-    <li>👨‍🏫 <b>${getTranslation("output_teacher")}</b> ${course.teacher}</li>
-  </ul>
+        )} (de ${course.capacity})
+  </div>
+  <div class="course-option-row">
+    👨‍🏫 <strong>${getTranslation("output_teacher")}</strong> ${course.teacher}
+  </div>
 </div>
 `;
 
-        // Si no hay API key, mostramos sólo datos de BO
+        // Si no hay API key, mostramos solo datos de BO
         if (!API_KEY) {
             out.innerHTML =
                 baseInfo +
-                "<p><i>(Gemini API key vacía: mostrando solo datos de BO)</i></p>";
+                "<p><i>(Mostrando solo datos de BO)</i></p>";
             loading.classList.add("hidden");
             return;
         }
@@ -739,5 +794,7 @@
 
 </body>
 </html>
+
+
 
 
