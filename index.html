@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-lang-key="title_main">AI Course Matchmaker (TCM Assistant)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     #app-container { max-width: 1000px; margin: 40px auto; padding: 20px; background-color: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
@@ -24,11 +23,12 @@
     .course-option-row strong { font-weight: 600; }
     .course-option-urgency { font-size: 0.85rem; margin-top: 4px; }
     .course-option-urgency.critical-text { color: #b91c1c; font-weight: 700; }
+    .hint { font-size: 12px; color: #64748b; margin-top: 8px; }
   </style>
 </head>
-
 <body>
-  <!-- Selector de idioma -->
+
+  <!-- Language selector -->
   <div id="language-selector" class="flex justify-end max-w-5xl mx-auto mt-4 px-4">
     <select onchange="setLanguage(this.value)" class="p-2 border border-gray-300 rounded-lg text-sm">
       <option value="es" selected>Español (ES)</option>
@@ -46,6 +46,7 @@
     </p>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
       <!-- STEP 1 -->
       <div class="card">
         <div class="step-header" data-lang-key="step1_header">1. Diagnóstico del Estudiante</div>
@@ -82,6 +83,10 @@
                 data-lang-key="btn_suggest">
           🔍 Sugerir Cursos (AI Match)
         </button>
+
+        <div class="hint">
+          Data source: <b>Google Sheets (GViz, live)</b>
+        </div>
       </div>
 
       <!-- STEP 2 -->
@@ -120,9 +125,7 @@
       <!-- STEP 3 -->
       <div class="lg:col-span-2 card">
         <div class="step-header" data-lang-key="step3_header">3. Argumento de Venta (Output de IA)</div>
-
-        <div id="pitch_output" class="ai-result-box text-gray-800 text-sm"
-             data-lang-key="status_pitch_placeholder">
+        <div id="pitch_output" class="ai-result-box text-gray-800 text-sm" data-lang-key="status_pitch_placeholder">
           El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.
         </div>
 
@@ -131,27 +134,24 @@
              data-lang-key="status_loading">
           Cargando análisis de IA y datos de disponibilidad...
         </div>
-
-        <!-- DEBUG opcional (muestra qué headers detectó) -->
-        <div id="debug_box" class="mt-4 text-xs text-gray-500 hidden"></div>
       </div>
+
     </div>
   </div>
 
 <script>
-  // ---------- CONFIG ----------
-  // Tu spreadsheet publicado + GViz JSON
+  // ---------------- CONFIG ----------------
   const SHEET_GVIZ_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/gviz/tq?gid=2084392899&tqx=out:json";
 
-  const API_KEY = ""; // si no usas Gemini aún, déjalo vacío
+  const API_KEY = ""; // keep empty if not using Gemini
   const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
   let currentLang = "es";
   let LIVE_COURSE_DATA = [];
 
-  // ---------- TRADUCCIONES ----------
+  // ---------------- TRANSLATIONS ----------------
   const translations = {
     es: {
       title_main: "🤖 AI Course Matchmaker (TCM Assistant)",
@@ -175,22 +175,22 @@
       opt_first_diagnose: "-- Primero Diagnosticar --",
       step3_header: "3. Argumento de Venta (Output de IA)",
       status_pitch_placeholder: "El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.",
-      status_loading: "Cargando datos de Google Sheets...",
-      output_details_title: "DETALLES DEL GRUPO:",
+      status_loading: "Cargando análisis de IA y datos de disponibilidad...",
+      output_details_title: "DETALLES CRÍTICOS DEL GRUPO:",
       output_pitch_title: "ARGUMENTO DE VENTA GENERADO POR IA:",
-      output_schedule: "Horario (primera lección):",
+      output_schedule: "Horario Fijo:",
       output_slots: "Cupos:",
       output_teacher: "Tutor:",
       output_remaining: "restantes",
       output_option: "OPCIÓN",
       output_critical: "CRÍTICO",
       output_max_urgency: "MÁXIMA URGENCIA DE LLENADO",
-      error_no_groups: "⚠️ No se encontraron grupos disponibles para este perfil (no llenos y con primera lección desde hoy en adelante).",
+      error_no_groups: "⚠️ No se encontraron grupos disponibles para este perfil (no llenos y con fecha desde hoy en adelante).",
       error_invalid_age: "Por favor, ingresa una edad válida.",
       error_no_option: "Por favor, selecciona un curso de la lista.",
       error_ai_fail: "Error al conectar con el asistente de IA. Usando datos de BO.",
-      error_ai_fail_details: "El sistema no pudo generar el argumento de venta, pero aquí están los datos del grupo:",
-      error_sheet: "Error al conectar con Google Sheets o no se encontraron columnas esperadas. Verifica publicación y headers."
+      error_ai_fail_details: "El sistema no pudo generar el argumento de venta, pero aquí están los datos de disponibilidad:",
+      error_sheet: "Error al conectar con Google Sheets. Verifica que el documento esté publicado y accesible."
     },
     en: {
       title_main: "🤖 AI Course Matchmaker (TCM Assistant)",
@@ -214,66 +214,66 @@
       opt_first_diagnose: "-- Diagnose First --",
       step3_header: "3. Sales Pitch (AI Output)",
       status_pitch_placeholder: "The sales pitch will appear here. Select a course and press 'Generate Pitch'.",
-      status_loading: "Loading Google Sheets data...",
-      output_details_title: "GROUP DETAILS:",
-      output_pitch_title: "AI-GENERATED SALES PITCH:",
-      output_schedule: "Schedule (first lesson):",
+      status_loading: "Loading AI analysis and availability data...",
+      output_details_title: "CRITICAL GROUP DETAILS:",
+      output_pitch_title: "AI-GENERATED SALES ARGUMENT:",
+      output_schedule: "Fixed Schedule:",
       output_slots: "Slots:",
       output_teacher: "Tutor:",
       output_remaining: "remaining",
       output_option: "OPTION",
       output_critical: "CRITICAL",
       output_max_urgency: "MAX FILLING URGENCY",
-      error_no_groups: "⚠️ No available groups found for this profile (not full and first lesson is today or later).",
+      error_no_groups: "⚠️ No available groups found for this profile (not full and starting today or later).",
       error_invalid_age: "Please enter a valid age.",
       error_no_option: "Please select a course from the list.",
-      error_ai_fail: "Error connecting to AI assistant. Using group data.",
-      error_ai_fail_details: "AI pitch failed, but here are the group details:",
-      error_sheet: "Error connecting to Google Sheets or missing expected headers. Please verify publication and headers."
+      error_ai_fail: "Error connecting to the AI assistant. Using BO data.",
+      error_ai_fail_details: "The system failed to generate the sales pitch, but here is availability data:",
+      error_sheet: "Error connecting to Google Sheets. Please verify the document is published and accessible."
     },
     ru: {
       title_main: "🤖 AI Помощник для TCM (Подбор Курсов)",
-      subtitle_main: "Инструмент для диагностики продаж: обеспечивает правильное размещение и снижает отток из-за ожиданий.",
+      subtitle_main: "Инструмент диагностики продаж: правильное размещение и снижение оттока из-за ожиданий.",
       step1_header: "1. Диагностика ученика",
       label_age: "Возраст ученика (7-17):",
       label_interest: "Основной интерес:",
       label_level: "Предыдущий опыт (TC):",
-      opt_coding: "Программирование (Логика)",
-      opt_design: "Дизайн / Цифровое искусство",
-      opt_games: "Создание игр",
-      opt_beginner: "Начальный (Нет опыта)",
-      opt_intermediate: "Средний (Scratch)",
-      opt_advanced: "Продвинутый (Python/Roblox)",
+      opt_coding: "Программирование",
+      opt_design: "Дизайн",
+      opt_games: "Видеоигры",
+      opt_beginner: "Начальный",
+      opt_intermediate: "Средний",
+      opt_advanced: "Продвинутый",
       btn_suggest: "🔍 Подобрать курсы",
       btn_pitch: "🎤 Сгенерировать питч",
-      step2_header: "2. Топ-3 варианта и питч",
-      label_suggested_courses: "Рекомендуемые курсы (Топ-3):",
-      status_waiting: "Ожидание диагностики...",
-      label_select_pitch: "Выберите вариант для питча:",
+      step2_header: "2. Топ-3 варианта",
+      label_suggested_courses: "Рекомендации (Топ-3):",
+      status_waiting: "Ожидание...",
+      label_select_pitch: "Выберите вариант:",
       opt_first_diagnose: "-- Сначала диагностика --",
-      step3_header: "3. Питч (AI)",
-      status_pitch_placeholder: "Питч появится здесь. Выберите курс и нажмите 'Сгенерировать питч'.",
-      status_loading: "Загрузка данных Google Sheets...",
+      step3_header: "3. Питч",
+      status_pitch_placeholder: "Питч появится здесь.",
+      status_loading: "Загрузка...",
       output_details_title: "ДЕТАЛИ ГРУППЫ:",
-      output_pitch_title: "ПИТЧ ОТ AI:",
-      output_schedule: "Расписание (первый урок):",
+      output_pitch_title: "ПИТЧ:",
+      output_schedule: "Расписание:",
       output_slots: "Места:",
-      output_teacher: "Тьютор:",
+      output_teacher: "Преподаватель:",
       output_remaining: "осталось",
       output_option: "ВАРИАНТ",
       output_critical: "КРИТИЧНО",
-      output_max_urgency: "СРОЧНО ЗАПОЛНИТЬ",
-      error_no_groups: "⚠️ Нет доступных групп (не заполнены и первый урок сегодня или позже).",
+      output_max_urgency: "СРОЧНО",
+      error_no_groups: "⚠️ Нет доступных групп для этого профиля.",
       error_invalid_age: "Введите корректный возраст.",
       error_no_option: "Выберите курс из списка.",
-      error_ai_fail: "Ошибка AI. Показываю данные группы.",
-      error_ai_fail_details: "AI не смог сгенерировать питч, но вот детали группы:",
-      error_sheet: "Ошибка Google Sheets или не найдены нужные headers."
+      error_ai_fail: "Ошибка AI. Использую данные.",
+      error_ai_fail_details: "Питч не сгенерирован, но данные доступны:",
+      error_sheet: "Ошибка Google Sheets. Проверьте публикацию."
     }
   };
 
-  function getTranslation(key) {
-    return translations[currentLang]?.[key] || translations["es"][key] || key;
+  function getT(key) {
+    return translations[currentLang]?.[key] || translations.es[key] || key;
   }
 
   function updateDynamicElements() {
@@ -287,7 +287,7 @@
       if (!select) return;
       Array.from(select.options).forEach((opt) => {
         const k = opt.getAttribute("data-lang-key");
-        if (k) opt.textContent = getTranslation(k);
+        if (k) opt.textContent = getT(k);
       });
     };
 
@@ -301,186 +301,213 @@
     updateDynamicElements();
   }
 
-  // ---------- HELPERS ----------
-  function normalizeHeader(h) {
-    return String(h || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "_");
+  // ---------------- HELPERS: header-based column map ----------------
+  function normalizeLabel(s) {
+    return String(s || "").trim().toLowerCase().replace(/\s+/g, "_");
   }
 
-  function safeCellValue(cell) {
-    if (!cell) return "";
-    return (cell.f != null ? cell.f : (cell.v != null ? cell.v : ""));
-  }
-
-  function parseAgeRange(ageStr) {
-    const s = String(ageStr || "");
-    const m = s.match(/(\d+)\D+(\d+)/);
-    if (m) return { min: parseInt(m[1], 10), max: parseInt(m[2], 10) };
-    const single = s.match(/(\d+)/);
-    if (single) {
-      const v = parseInt(single[1], 10);
-      return { min: v, max: v };
+  function getColIndex(cols, candidates) {
+    const normalizedCandidates = candidates.map(normalizeLabel);
+    for (let i = 0; i < cols.length; i++) {
+      const label = normalizeLabel(cols[i]?.label);
+      if (normalizedCandidates.includes(label)) return i;
     }
+    return -1;
+  }
+
+  // Age range like "7 - 17"
+  function parseAgeRange(ageStr) {
+    const m = (ageStr || "").match(/(\d+)\D+(\d+)/);
+    if (m) return { min: parseInt(m[1], 10), max: parseInt(m[2], 10) };
     return { min: 7, max: 17 };
   }
 
-  function inferInterest(courseTitle) {
-    const t = (courseTitle || "").toLowerCase();
-    if (t.includes("roblox") || t.includes("minecraft") || t.includes("game")) return "games";
-    if (t.includes("design") || t.includes("figma") || t.includes("art")) return "design";
-    return "coding";
-  }
+  // More robust date parsing for GViz:
+  // - "2025-12-20"
+  // - "20/12/2025" or "12/20/2025"
+  // - "Date(2025,11,20)"
+  function parseDateAny(input) {
+    if (input == null) return null;
+    const s = String(input);
 
-  function tryParseDateFromAny(val) {
-    if (!val) return null;
-    const iso = String(val).match(/(\d{4}-\d{2}-\d{2})/);
+    // Date(YYYY,MM,DD)
+    const dm = s.match(/Date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})\)/i);
+    if (dm) {
+      const y = parseInt(dm[1], 10);
+      const m = parseInt(dm[2], 10); // GViz month is 0-based
+      const d = parseInt(dm[3], 10);
+      const date = new Date(y, m, d);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // ISO YYYY-MM-DD
+    const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/);
     if (iso) {
-      const d = new Date(iso[1]);
-      return isNaN(d.getTime()) ? null : d;
+      const y = parseInt(iso[1], 10), m = parseInt(iso[2], 10) - 1, d = parseInt(iso[3], 10);
+      const date = new Date(y, m, d);
+      return isNaN(date.getTime()) ? null : date;
     }
-    const dmy = String(val).match(/(\d{2})\.(\d{2})\.(\d{4})/);
-    if (dmy) {
-      const d = new Date(`${dmy[3]}-${dmy[2]}-${dmy[1]}`);
-      return isNaN(d.getTime()) ? null : d;
+
+    // DD/MM/YYYY or MM/DD/YYYY (we’ll try DD/MM first)
+    const slash = s.match(/(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})/);
+    if (slash) {
+      const a = parseInt(slash[1], 10);
+      const b = parseInt(slash[2], 10);
+      const y = parseInt(slash[3], 10);
+
+      // heuristic: if a > 12 => DD/MM
+      let d, m;
+      if (a > 12) { d = a; m = b - 1; }
+      else if (b > 12) { d = b; m = a - 1; } // MM/DD
+      else { d = a; m = b - 1; } // default DD/MM
+      const date = new Date(y, m, d);
+      return isNaN(date.getTime()) ? null : date;
     }
-    if (val instanceof Date) return val;
+
     return null;
   }
 
-  function formatSchedule(dateStr, timeStr) {
-    const d = String(dateStr || "").trim();
-    const t = String(timeStr || "").trim();
-    if (d && t) return `${d} | ${t}`;
-    return d || t || "N/A";
-  }
+  function parseTimeAny(input) {
+    if (input == null) return "";
+    const s = String(input).trim();
 
-  // ---------- PARSEO GViz por headers ----------
-  function parseCoursesFromGviz(rawText) {
-    const m = rawText.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
-    if (!m || m.length < 2) throw new Error("GViz response parse failed.");
-
-    const obj = JSON.parse(m[1]);
-    if (!obj?.table?.cols || !obj?.table?.rows) throw new Error("GViz table missing.");
-
-    const colMap = {};
-    obj.table.cols.forEach((col, idx) => {
-      const key = normalizeHeader(col.label || col.id || `col_${idx}`);
-      colMap[key] = idx;
-    });
-
-    const debugBox = document.getElementById("debug_box");
-    if (debugBox) {
-      debugBox.classList.remove("hidden");
-      debugBox.innerHTML = `<b>Detected headers:</b> ${Object.keys(colMap).join(", ")}`;
+    // "14:00:00" or "14:00"
+    const hm = s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (hm) {
+      const hh = hm[1].padStart(2, "0");
+      const mm = hm[2].padStart(2, "0");
+      return `${hh}:${mm}`;
     }
 
-    const required = ["group_title", "course_title", "course_age", "capacity", "status", "teacher"];
-    const missing = required.filter(k => colMap[k] == null);
+    return s;
+  }
 
-    if (missing.length) {
-      console.error("Missing headers:", missing, "colMap:", colMap);
-      throw new Error("Missing expected headers: " + missing.join(", "));
+  function fmtDate(dateObj) {
+    if (!dateObj || isNaN(dateObj.getTime())) return "";
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const d = String(dateObj.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function inferInterestFromText(text) {
+    const t = String(text || "").toLowerCase();
+    if (t.includes("roblox") || t.includes("minecraft") || t.includes("game") || t.includes("unity")) return "games";
+    if (t.includes("design") || t.includes("figma") || t.includes("art") || t.includes("illustr")) return "design";
+    return "coding";
+  }
+
+  // ---------------- GViz parsing ----------------
+  function parseCoursesFromGviz(rawText) {
+    const m = rawText.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
+    if (!m || !m[1]) throw new Error("Could not extract GViz JSON.");
+
+    const obj = JSON.parse(m[1]);
+    if (!obj.table?.rows || !obj.table?.cols) throw new Error("Invalid GViz table response.");
+
+    const cols = obj.table.cols;
+
+    // Header-based indices (safe even if columns move)
+    const idx = {
+      bo_link: getColIndex(cols, ["bo_link", "bo link", "link", "bo"]),
+      group_title: getColIndex(cols, ["group_title", "group title"]),
+      group_type: getColIndex(cols, ["group_type", "group type"]),
+      course_title: getColIndex(cols, ["course_title", "course title"]),
+      course_age: getColIndex(cols, ["course_age", "course age", "age"]),
+      capacity: getColIndex(cols, ["capacity", "cap"]),
+      enrolled: getColIndex(cols, ["enrolled_stu", "enrolled", "enrolled_students"]),
+      status: getColIndex(cols, ["status"]),
+      teacher: getColIndex(cols, ["teacher", "tutor"]),
+      first_date: getColIndex(cols, ["first_lesson_date_gmt", "first lesson date gmt", "first_lesson_date"]),
+      first_time: getColIndex(cols, ["first_lesson_time_gmt", "first_lesson_time", "first lesson time"])
+    };
+
+    // Minimal required fields
+    if (idx.group_title === -1 || idx.course_age === -1 || idx.capacity === -1 || idx.enrolled === -1) {
+      console.warn("Missing required columns. Detected indices:", idx, cols.map(c => c.label));
+      throw new Error("Sheet headers changed or required columns are missing.");
     }
 
     const today = new Date();
     const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    const rows = obj.table.rows;
-
-    const courses = rows.map((row, idx) => {
+    const courses = obj.table.rows.map((row, rIndex) => {
       const c = row.c || [];
 
-      const get = (key) => {
-        const i = colMap[key];
-        return i == null ? null : c[i];
-      };
+      const group_title = c[idx.group_title]?.v ?? "";
+      const group_type  = idx.group_type !== -1 ? (c[idx.group_type]?.v ?? "") : "";
+      const course_title = idx.course_title !== -1 ? (c[idx.course_title]?.v ?? "") : "";
+      const course_age = c[idx.course_age]?.v ?? "";
+      const capacity = parseInt(c[idx.capacity]?.v ?? "0", 10) || 0;
+      const enrolled = parseInt(c[idx.enrolled]?.v ?? "0", 10) || 0;
+      const status = idx.status !== -1 ? (c[idx.status]?.v ?? "") : "";
+      const teacher = idx.teacher !== -1 ? (c[idx.teacher]?.v ?? "Tutor N/A") : "Tutor N/A";
 
-      const group_title = safeCellValue(get("group_title"));
-      const course_title = safeCellValue(get("course_title"));
-      const course_age = safeCellValue(get("course_age"));
-      const capacityRaw = safeCellValue(get("capacity"));
-      const enrolledRaw = safeCellValue(get("enrolled_stu")) || safeCellValue(get("enrolled_students")) || safeCellValue(get("enrolled"));
-      const status = safeCellValue(get("status"));
-      const teacher = safeCellValue(get("teacher")) || "Tutor N/A";
-      const bo_link = safeCellValue(get("bo_link"));
+      const dateCell = idx.first_date !== -1 ? c[idx.first_date] : null;
+      const timeCell = idx.first_time !== -1 ? c[idx.first_time] : null;
 
-      const firstDateGmt = safeCellValue(get("first_lesson_date_gmt"));
-      const firstTime = safeCellValue(get("first_lesson_time"));
-      const flUtcDate = safeCellValue(get("fl_utc_date"));
-      const flUtcTime = safeCellValue(get("fl_utc_time"));
+      // Prefer formatted "f" when present, fallback to "v"
+      const rawDate = dateCell ? (dateCell.f ?? dateCell.v ?? "") : "";
+      const rawTime = timeCell ? (timeCell.f ?? timeCell.v ?? "") : "";
 
-      const dateStr = (firstDateGmt || flUtcDate || "").trim();
-      const timeStr = (firstTime || flUtcTime || "").trim();
-
-      const cap = parseInt(String(capacityRaw || "0").replace(/[^\d]/g, ""), 10) || 0;
-      const enr = parseInt(String(enrolledRaw || "0").replace(/[^\d]/g, ""), 10) || 0;
+      const dateObj = parseDateAny(rawDate);
+      const timeStr = parseTimeAny(rawTime);
 
       const ageRange = parseAgeRange(course_age);
-      const startDateObj = tryParseDateFromAny(dateStr);
+
+      const displayDate = dateObj ? fmtDate(dateObj) : String(rawDate || "").trim();
+      const next_start = (displayDate && timeStr) ? `${displayDate} | ${timeStr}` : (displayDate || "N/A");
+
+      // Infer interest from any available labels (best-effort)
+      const interest = inferInterestFromText(`${course_title} ${group_type} ${group_title}`);
 
       return {
-        id: `${idx}_${group_title}_${dateStr}_${timeStr}`.replace(/\s+/g, "_"),
-        bo_link,
-        name_es: group_title || course_title || "N/A",
-        name_en: group_title || course_title || "N/A",
-        name_ru: group_title || course_title || "N/A",
-        topic: course_title || group_title || "Kodland Course",
+        id: `${rIndex}_${group_title}_${displayDate}_${timeStr}`,
+        group_title,
+        group_type,
+        course_title,
         min_age: ageRange.min,
         max_age: ageRange.max,
-        interest: inferInterest(course_title),
-        level: "beginner",
-        enrolled: enr,
-        capacity: cap,
-        next_start: formatSchedule(dateStr, timeStr),
-        teacher,
+        capacity,
+        enrolled,
         status,
-        startDateObj
+        teacher,
+        interest,
+        next_start,
+        startDateObj: dateObj
       };
     });
 
-    return courses.filter(course => {
-      if (!course.name_es) return false;
-      if (course.capacity > 0 && course.enrolled >= course.capacity) return false;
+    // filters: available only
+    return courses.filter((x) => {
+      if (!x.group_title) return false;
+      if (x.capacity <= x.enrolled) return false;
 
-      const st = String(course.status || "").toLowerCase().trim();
-      if (st === "archived" || st === "closed") return false;
+      const st = String(x.status || "").toLowerCase();
+      if (st === "closed" || st === "archived") return false;
 
-      if (course.startDateObj && course.startDateObj < todayMidnight) return false;
-
+      if (x.startDateObj && x.startDateObj < todayMidnight) return false;
       return true;
     });
   }
 
   async function fetchCourseData() {
-    try {
-      const resp = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
-      if (!resp.ok) throw new Error("HTTP " + resp.status);
-      const text = await resp.text();
-
-      LIVE_COURSE_DATA = parseCoursesFromGviz(text);
-
-      if (!LIVE_COURSE_DATA.length) {
-        throw new Error("No valid courses after filters (full/past/archived).");
-      }
-    } catch (err) {
-      console.error("Error reading Google Sheets:", err);
-      const box = document.getElementById("course_recommendation");
-      box.innerHTML = `<span class="text-red-600 font-semibold">${getTranslation("error_sheet")}</span>`;
-      throw err;
-    }
+    const resp = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const text = await resp.text();
+    LIVE_COURSE_DATA = parseCoursesFromGviz(text);
+    if (!LIVE_COURSE_DATA.length) throw new Error("No valid courses found after filtering.");
   }
 
-  // ---------- MATCH ----------
+  // ---------------- MATCH ----------------
   function getFillRatio(course) {
     if (!course.capacity) return 0;
     return course.enrolled / course.capacity;
   }
 
   function getCourseName(course) {
-    const key = "name_" + currentLang;
-    return course[key] || course.name_es || "Kodland Course";
+    // Show group_title (this is what your screenshot expects)
+    return course.group_title || course.course_title || "N/A";
   }
 
   async function diagnoseAndMatch(isLanguageChange = false) {
@@ -488,20 +515,21 @@
     const selectElement = document.getElementById("selected_course");
 
     if (!LIVE_COURSE_DATA.length && !isLanguageChange) {
-      resultsDiv.innerHTML = `<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ${getTranslation("status_loading")}</span>`;
-      try {
-        await fetchCourseData();
-      } catch (_) {
+      resultsDiv.innerHTML =
+        `<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ${getT("status_loading")}</span>`;
+      try { await fetchCourseData(); }
+      catch (err) {
+        console.error(err);
+        resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">${getT("error_sheet")}</span>`;
         return;
       }
     }
 
     const age = parseInt(document.getElementById("student_age").value, 10);
     const interest = document.getElementById("student_interest").value;
-    const level = document.getElementById("student_level").value;
 
     if (isNaN(age) || age < 7 || age > 17) {
-      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">${getTranslation("error_invalid_age")}</span>`;
+      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">${getT("error_invalid_age")}</span>`;
       return;
     }
 
@@ -512,104 +540,93 @@
       c.interest === interest
     );
 
-    if (level === "beginner") { /* no-op */ }
-    if (level === "intermediate") { /* opcional */ }
-    if (level === "advanced") { /* opcional */ }
+    // Fallback: if interest inference fails (sheet changed), show by age only
+    if (!filtered.length) {
+      filtered = LIVE_COURSE_DATA.filter((c) =>
+        c.capacity > c.enrolled &&
+        age >= c.min_age &&
+        age <= c.max_age
+      );
+    }
 
     filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
     const top3 = filtered.slice(0, 3);
 
     if (!top3.length) {
-      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">${getTranslation("error_no_groups")}</span>`;
-      selectElement.innerHTML = `<option value="">${getTranslation("opt_first_diagnose")}</option>`;
+      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">${getT("error_no_groups")}</span>`;
+      selectElement.innerHTML = `<option value="">${getT("opt_first_diagnose")}</option>`;
       return;
     }
 
     let html = "";
     top3.forEach((course, idx) => {
-      const remaining = (course.capacity || 0) - (course.enrolled || 0);
+      const remaining = course.capacity - course.enrolled;
       const name = getCourseName(course);
       const critical = remaining <= 2;
 
-      const titleHtml = course.bo_link
-        ? `<a href="${course.bo_link}" target="_blank" class="underline">${name}</a>`
-        : name;
-
       html += `
         <div class="course-option ${critical ? "critical" : ""}">
-          <div class="course-option-title">
-            ${getTranslation("output_option")} ${idx + 1}: ${titleHtml}
-          </div>
-          <div class="course-option-row">
-            ⏰ <strong>${getTranslation("output_schedule")}</strong> ${course.next_start}
-          </div>
+          <div class="course-option-title">${getT("output_option")} ${idx + 1}: ${name}</div>
+          <div class="course-option-row">⏰ <strong>${getT("output_schedule")}</strong> ${course.next_start}</div>
           <div class="course-option-row ${critical ? "text-orange-600 font-semibold" : ""}">
-            💻 <strong>${getTranslation("output_slots")}</strong>
-            ${course.enrolled}/${course.capacity} (${remaining} ${getTranslation("output_remaining")})
+            💻 <strong>${getT("output_slots")}</strong> ${course.enrolled}/${course.capacity} (${remaining} ${getT("output_remaining")})
           </div>
-          <div class="course-option-row">
-            👨‍🏫 <strong>${getTranslation("output_teacher")}</strong> ${course.teacher}
-          </div>
-          ${critical ? `<div class="course-option-urgency critical-text">🚨 ${getTranslation("output_max_urgency")} 🚨</div>` : ""}
-        </div>`;
+          <div class="course-option-row">👨‍🏫 <strong>${getT("output_teacher")}</strong> ${course.teacher}</div>
+          ${critical ? `<div class="course-option-urgency critical-text">🚨 ${getT("output_max_urgency")} 🚨</div>` : ""}
+        </div>
+      `;
     });
 
     resultsDiv.innerHTML = html;
 
-    selectElement.innerHTML = `<option value="">${getTranslation("opt_first_diagnose")}</option>`;
+    selectElement.innerHTML = `<option value="">${getT("opt_first_diagnose")}</option>`;
     top3.forEach((course) => {
-      const remaining = (course.capacity || 0) - (course.enrolled || 0);
-      const urgencyTag =
-        remaining <= 2
-          ? ` (${getTranslation("output_critical")} - ${remaining} ${getTranslation("output_remaining")})`
-          : "";
+      const remaining = course.capacity - course.enrolled;
+      const urgencyTag = remaining <= 2 ? ` (${getT("output_critical")} - ${remaining} ${getT("output_remaining")})` : "";
       selectElement.innerHTML += `<option value="${course.id}">${getCourseName(course)} - ${course.next_start}${urgencyTag}</option>`;
     });
 
-    document.getElementById("pitch_output").innerHTML = getTranslation("status_pitch_placeholder");
+    document.getElementById("pitch_output").innerHTML = getT("status_pitch_placeholder");
   }
 
-  // ---------- PITCH ----------
+  // ---------------- PITCH ----------------
   async function generatePitch() {
     const selectedId = document.getElementById("selected_course").value;
     const loading = document.getElementById("loading_indicator");
     const out = document.getElementById("pitch_output");
 
-    if (!selectedId) {
-      out.innerHTML = getTranslation("error_no_option");
-      return;
-    }
+    if (!selectedId) { out.innerHTML = getT("error_no_option"); return; }
 
     const course = LIVE_COURSE_DATA.find((c) => c.id === selectedId);
     if (!course) return;
 
-    const remaining = (course.capacity || 0) - (course.enrolled || 0);
+    const remaining = course.capacity - course.enrolled;
     loading.classList.remove("hidden");
     out.innerHTML = "";
 
-    const pitchLanguage =
-      currentLang === "ru" ? "ruso" : currentLang === "en" ? "inglés" : "español";
+    const pitchLanguage = currentLang === "ru" ? "ruso" : currentLang === "en" ? "inglés" : "español";
 
     const baseInfo = `
       <div class="mb-4 p-2 bg-blue-100 rounded-lg">
-        <b>${getTranslation("output_details_title")}</b>
-        <div class="course-option-row">📅 <strong>${getTranslation("output_schedule")}</strong> ${course.next_start}</div>
-        <div class="course-option-row">🧑‍💻 <strong>${getTranslation("output_slots")}</strong> ${remaining} ${getTranslation("output_remaining")} (de ${course.capacity})</div>
-        <div class="course-option-row">👨‍🏫 <strong>${getTranslation("output_teacher")}</strong> ${course.teacher}</div>
+        <b>${getT("output_details_title")}</b>
+        <div class="course-option-row">📅 <strong>${getT("output_schedule")}</strong> ${course.next_start}</div>
+        <div class="course-option-row">🧑‍💻 <strong>${getT("output_slots")}</strong> ${remaining} ${getT("output_remaining")} (de ${course.capacity})</div>
+        <div class="course-option-row">👨‍🏫 <strong>${getT("output_teacher")}</strong> ${course.teacher}</div>
       </div>
     `;
 
+    // If no API key, just show BO data
     if (!API_KEY) {
-      out.innerHTML = baseInfo + "<p><i>(Gemini API key vacía: mostrando solo datos del grupo)</i></p>";
+      out.innerHTML = baseInfo + "<p><i>(Gemini API key empty: showing live availability only)</i></p>";
       loading.classList.add("hidden");
       return;
     }
 
     const systemPrompt =
-      `Actúa como un vendedor (TCM) experto en Kodland. Genera un argumento de venta (pitch) persuasivo en ${pitchLanguage}, conciso (máx. 150 palabras), centrado en el valor educativo y logros del curso (${course.topic}).`;
+      `Actúa como un vendedor (TCM) experto en Kodland. Genera un pitch persuasivo en ${pitchLanguage}, conciso (máx. 150 palabras) y centrado en valor educativo.`;
 
     const userQuery =
-      `Genera un pitch para: ${getCourseName(course)}. Estudiante: ${document.getElementById("student_age").value} años. Tópicos: ${course.topic}.`;
+      `Genera un pitch para el grupo "${getCourseName(course)}". Edad del estudiante: ${document.getElementById("student_age").value}.`;
 
     const payload = {
       contents: [{ parts: [{ text: userQuery }] }],
@@ -625,18 +642,20 @@
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      if (!text) throw new Error("Empty AI response.");
+      if (!text) throw new Error("Empty response text.");
 
-      out.innerHTML = baseInfo + `<b>${getTranslation("output_pitch_title")}</b><p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>").trim()}</p>`;
+      out.innerHTML = baseInfo + `<b>${getT("output_pitch_title")}</b><p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>").trim()}</p>`;
     } catch (err) {
-      console.error("Gemini error:", err);
-      out.innerHTML = `<div class="mb-4 p-2 bg-red-100 rounded-lg"><b class="text-red-700">⚠️ ${getTranslation("error_ai_fail")}</b><p>${getTranslation("error_ai_fail_details")}</p></div>` + baseInfo;
+      console.error("Error Gemini:", err);
+      out.innerHTML =
+        `<div class="mb-4 p-2 bg-red-100 rounded-lg"><b class="text-red-700">⚠️ ${getT("error_ai_fail")}</b><p>${getT("error_ai_fail_details")}</p></div>` +
+        baseInfo;
     } finally {
       loading.classList.add("hidden");
     }
   }
 
-  // ---------- INIT ----------
+  // ---------------- INIT ----------------
   window.onload = () => {
     setLanguage("es");
     document.getElementById("student_age").value = 10;
@@ -644,11 +663,15 @@
     document.getElementById("student_level").value = "beginner";
 
     const resultsDiv = document.getElementById("course_recommendation");
-    resultsDiv.innerHTML = `<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ${getTranslation("status_loading")}</span>`;
+    resultsDiv.innerHTML =
+      `<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ${getT("status_loading")}</span>`;
 
     fetchCourseData()
-      .then(() => { resultsDiv.innerHTML = getTranslation("status_waiting"); })
-      .catch(() => {});
+      .then(() => { resultsDiv.innerHTML = getT("status_waiting"); })
+      .catch((err) => {
+        console.error(err);
+        resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">${getT("error_sheet")}</span>`;
+      });
   };
 </script>
 
