@@ -311,7 +311,6 @@
 
   function safeCellValue(cell) {
     if (!cell) return "";
-    // cell.v puede ser number/date; cell.f suele ser formatted
     return (cell.f != null ? cell.f : (cell.v != null ? cell.v : ""));
   }
 
@@ -319,7 +318,6 @@
     const s = String(ageStr || "");
     const m = s.match(/(\d+)\D+(\d+)/);
     if (m) return { min: parseInt(m[1], 10), max: parseInt(m[2], 10) };
-    // fallback
     const single = s.match(/(\d+)/);
     if (single) {
       const v = parseInt(single[1], 10);
@@ -337,19 +335,16 @@
 
   function tryParseDateFromAny(val) {
     if (!val) return null;
-    // 1) ISO yyyy-mm-dd
     const iso = String(val).match(/(\d{4}-\d{2}-\d{2})/);
     if (iso) {
       const d = new Date(iso[1]);
       return isNaN(d.getTime()) ? null : d;
     }
-    // 2) dd.mm.yyyy
     const dmy = String(val).match(/(\d{2})\.(\d{2})\.(\d{4})/);
     if (dmy) {
       const d = new Date(`${dmy[3]}-${dmy[2]}-${dmy[1]}`);
       return isNaN(d.getTime()) ? null : d;
     }
-    // 3) Date object from GViz
     if (val instanceof Date) return val;
     return null;
   }
@@ -369,21 +364,18 @@
     const obj = JSON.parse(m[1]);
     if (!obj?.table?.cols || !obj?.table?.rows) throw new Error("GViz table missing.");
 
-    // Mapa header->index
     const colMap = {};
     obj.table.cols.forEach((col, idx) => {
       const key = normalizeHeader(col.label || col.id || `col_${idx}`);
       colMap[key] = idx;
     });
 
-    // DEBUG opcional en UI
     const debugBox = document.getElementById("debug_box");
     if (debugBox) {
       debugBox.classList.remove("hidden");
       debugBox.innerHTML = `<b>Detected headers:</b> ${Object.keys(colMap).join(", ")}`;
     }
 
-    // Headers esperados (según tu screenshot)
     const required = ["group_title", "course_title", "course_age", "capacity", "status", "teacher"];
     const missing = required.filter(k => colMap[k] == null);
 
@@ -414,7 +406,6 @@
       const teacher = safeCellValue(get("teacher")) || "Tutor N/A";
       const bo_link = safeCellValue(get("bo_link"));
 
-      // prioridad de fecha/hora
       const firstDateGmt = safeCellValue(get("first_lesson_date_gmt"));
       const firstTime = safeCellValue(get("first_lesson_time"));
       const flUtcDate = safeCellValue(get("fl_utc_date"));
@@ -449,7 +440,6 @@
       };
     });
 
-    // filtros: no llenos, status != archived/closed, fecha >= hoy (si existe)
     return courses.filter(course => {
       if (!course.name_es) return false;
       if (course.capacity > 0 && course.enrolled >= course.capacity) return false;
@@ -498,8 +488,7 @@
     const selectElement = document.getElementById("selected_course");
 
     if (!LIVE_COURSE_DATA.length && !isLanguageChange) {
-      resultsDiv.innerHTML =
-        `<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ${getTranslation("status_loading")}</span>`;
+      resultsDiv.innerHTML = `<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ${getTranslation("status_loading")}</span>`;
       try {
         await fetchCourseData();
       } catch (_) {
@@ -523,7 +512,6 @@
       c.interest === interest
     );
 
-    // (si quisieras filtrar por level, aquí)
     if (level === "beginner") { /* no-op */ }
     if (level === "intermediate") { /* opcional */ }
     if (level === "advanced") { /* opcional */ }
@@ -568,7 +556,6 @@
 
     resultsDiv.innerHTML = html;
 
-    // selector de pitch
     selectElement.innerHTML = `<option value="">${getTranslation("opt_first_diagnose")}</option>`;
     top3.forEach((course) => {
       const remaining = (course.capacity || 0) - (course.enrolled || 0);
@@ -640,17 +627,10 @@
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       if (!text) throw new Error("Empty AI response.");
 
-      out.innerHTML =
-        baseInfo +
-        `<b>${getTranslation("output_pitch_title")}</b>
-         <p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>").trim()}</p>`;
+      out.innerHTML = baseInfo + `<b>${getTranslation("output_pitch_title")}</b><p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>").trim()}</p>`;
     } catch (err) {
       console.error("Gemini error:", err);
-      out.innerHTML =
-        `<div class="mb-4 p-2 bg-red-100 rounded-lg">
-           <b class="text-red-700">⚠️ ${getTranslation("error_ai_fail")}</b>
-           <p>${getTranslation("error_ai_fail_details")}</p>
-         </div>` + baseInfo;
+      out.innerHTML = `<div class="mb-4 p-2 bg-red-100 rounded-lg"><b class="text-red-700">⚠️ ${getTranslation("error_ai_fail")}</b><p>${getTranslation("error_ai_fail_details")}</p></div>` + baseInfo;
     } finally {
       loading.classList.add("hidden");
     }
@@ -664,8 +644,7 @@
     document.getElementById("student_level").value = "beginner";
 
     const resultsDiv = document.getElementById("course_recommendation");
-    resultsDiv.innerHTML =
-      `<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ${getTranslation("status_loading")}</span>`;
+    resultsDiv.innerHTML = `<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> ${getTranslation("status_loading")}</span>`;
 
     fetchCourseData()
       .then(() => { resultsDiv.innerHTML = getTranslation("status_waiting"); })
@@ -675,4 +654,5 @@
 
 </body>
 </html>
+
 
