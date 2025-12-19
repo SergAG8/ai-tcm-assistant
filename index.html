@@ -145,6 +145,30 @@
   const SHEET_GVIZ_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/gviz/tq?gid=2084392899&tqx=out:json";
 
+async function fetchCourseData() {
+    try {
+      const resp = await fetch(SHEET_GVIZ_URL, { cache: "no-store" });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const text = await resp.text();
+
+      console.log("Fetched data:", text);
+
+      const m = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
+      if (!m || !m[1]) throw new Error("Could not extract GViz JSON.");
+
+      const obj = JSON.parse(m[1]);
+      if (!obj.table?.rows || !obj.table?.cols) throw new Error("Invalid GViz table response.");
+
+      LIVE_COURSE_DATA = parseCoursesFromGviz(obj);
+      if (!LIVE_COURSE_DATA.length) throw new Error("No valid courses found after filtering.");
+      console.log("Parsed course data:", LIVE_COURSE_DATA);
+    } catch (error) {
+      console.error("Error fetching course data:", error.message);
+      console.error("Detailed error:", error);
+      alert("Error al obtener datos. Revisa la consola para más detalles.");
+    }
+  }
+
   const API_KEY = ""; // keep empty if not using Gemini
   const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
@@ -689,5 +713,6 @@
 
 </body>
 </html>
+
 
 
