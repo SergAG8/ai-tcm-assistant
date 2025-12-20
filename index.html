@@ -144,12 +144,12 @@
   </div>
 
 <script>
-  const SHEET_ID = "1VfyxqtBQbwkZ-FUoKbGmGK7hzmtjEk_4t-WxUzlbFkQ";
+  const SHEET_ID = "2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e";
   const SHEET_GID = "2084392899";
   
   const DATA_SOURCES = {
-    csv: `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`,
-    json: `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`
+    csv: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${SHEET_GID}&single=true&output=csv`,
+    json: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`
   };
 
   const API_KEY = "";
@@ -301,8 +301,14 @@
   }
 
   async function fetchWithCSV() {
-    const url = DATA_SOURCES.csv + "&_=" + Date.now();
-    const resp = await fetch(url, { cache: "no-store" });
+    // Usar proxy CORS para evitar bloqueos del navegador
+    const originalUrl = DATA_SOURCES.csv + "&_=" + Date.now();
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
+    
+    const resp = await fetch(proxyUrl, { 
+      cache: "no-store",
+      headers: { 'Accept': 'text/csv, text/plain, */*' }
+    });
     
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     
@@ -317,8 +323,11 @@
   }
 
   async function fetchWithGViz() {
-    const url = DATA_SOURCES.json + "&_=" + Date.now();
-    const resp = await fetch(url, { cache: "no-store" });
+    // Usar proxy CORS para GViz también
+    const originalUrl = DATA_SOURCES.json + "&_=" + Date.now();
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
+    
+    const resp = await fetch(proxyUrl, { cache: "no-store" });
     
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     
@@ -529,4 +538,5 @@
 </script>
 </body>
 </html>
+
 
