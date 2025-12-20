@@ -255,30 +255,36 @@
     return "coding";
   }
 
-  function extractCourseType(courseName) {
-    const name = String(courseName || "").toLowerCase();
+  function extractCourseType(courseName, courseTitle) {
+    // Primero intentamos extraer del course_title (Columna D)
+    const title = String(courseTitle || courseName || "").toLowerCase();
     
     // Para Videojuegos
-    if (name.includes("roblox")) return "Roblox";
-    if (name.includes("minecraft")) return "Minecraft";
-    if (name.includes("unity")) return "Unity";
-    if (name.includes("godot")) return "Godot";
+    if (title.includes("roblox")) return "Roblox";
+    if (title.includes("minecraft")) return "Minecraft";
+    if (title.includes("unity")) return "Unity";
+    if (title.includes("godot")) return "Godot";
+    if (title.includes("game")) return "Desarrollo de Videojuegos";
     
     // Para Diseño
-    if (name.includes("figma")) return "Figma";
-    if (name.includes("photoshop")) return "Photoshop";
-    if (name.includes("illustrator")) return "Illustrator";
-    if (name.includes("canva")) return "Canva";
-    if (name.includes("blender")) return "Blender 3D";
+    if (title.includes("figma")) return "Figma";
+    if (title.includes("photoshop")) return "Photoshop";
+    if (title.includes("illustrator")) return "Illustrator";
+    if (title.includes("canva")) return "Canva";
+    if (title.includes("blender")) return "Blender 3D";
+    if (title.includes("design") || title.includes("diseño")) return "Diseño Digital";
     
     // Para Programación
-    if (name.includes("python")) return "Python";
-    if (name.includes("javascript") || name.includes("js")) return "JavaScript";
-    if (name.includes("scratch")) return "Scratch";
-    if (name.includes("web")) return "Desarrollo Web";
-    if (name.includes("app")) return "Desarrollo de Apps";
+    if (title.includes("python")) return "Python";
+    if (title.includes("javascript") || title.includes("js")) return "JavaScript";
+    if (title.includes("scratch")) return "Scratch";
+    if (title.includes("web")) return "Desarrollo Web";
+    if (title.includes("app")) return "Desarrollo de Apps";
+    if (title.includes("c++")) return "C++";
+    if (title.includes("java")) return "Java";
     
-    return null;
+    // Si no encuentra nada específico, devuelve el course_title completo
+    return courseTitle || null;
   }
 
   function parseISODateOnly(s) {
@@ -334,10 +340,11 @@
         name_en: name,
         name_ru: name,
         topic: topic || name,
+        courseTitle: topic, // Guardamos el course_title original
         min_age: ageRange.min,
         max_age: ageRange.max,
         interest: inferInterest(topic),
-        courseType: extractCourseType(name),
+        courseType: extractCourseType(name, topic), // Pasamos ambos parámetros
         enrolled: enrolled,
         capacity: capacity,
         next_start: dateStr && timeStr ? `${dateStr} | ${timeStr}` : (dateStr || "N/A"),
@@ -469,6 +476,11 @@
     const interest = document.getElementById("student_interest").value;
     const courseTypeSelect = document.getElementById("course_type");
     
+    if (!LIVE_COURSE_DATA || LIVE_COURSE_DATA.length === 0) {
+      courseTypeSelect.innerHTML = '<option value="">-- Cargando tipos de curso... --</option>';
+      return;
+    }
+    
     // Obtener tipos de cursos únicos del interés seleccionado
     const availableTypes = new Set();
     
@@ -481,9 +493,15 @@
     // Actualizar el dropdown
     courseTypeSelect.innerHTML = '<option value="">-- Todos los cursos de este interés --</option>';
     
-    Array.from(availableTypes).sort().forEach(type => {
-      courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
-    });
+    if (availableTypes.size === 0) {
+      courseTypeSelect.innerHTML += '<option value="" disabled>No hay tipos específicos detectados</option>';
+    } else {
+      Array.from(availableTypes).sort().forEach(type => {
+        courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
+      });
+    }
+    
+    console.log(`Tipos de curso actualizados para "${interest}":`, Array.from(availableTypes));
   }
 
   function getFillRatio(course) {
@@ -669,5 +687,4 @@
 </script>
 </body>
 </html>
-
 
