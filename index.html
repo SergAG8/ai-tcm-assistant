@@ -301,14 +301,22 @@
   }
 
   async function fetchWithCSV() {
-    // Usar proxy CORS para evitar bloqueos del navegador
-    const originalUrl = DATA_SOURCES.csv + "&_=" + Date.now();
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
+    // Intentar primero sin proxy (a veces funciona)
+    let url = DATA_SOURCES.csv + "&_=" + Date.now();
+    let resp;
     
-    const resp = await fetch(proxyUrl, { 
-      cache: "no-store",
-      headers: { 'Accept': 'text/csv, text/plain, */*' }
-    });
+    try {
+      resp = await fetch(url, { 
+        mode: 'cors',
+        cache: "no-store",
+        headers: { 'Accept': 'text/csv, text/plain, */*' }
+      });
+    } catch (corsError) {
+      console.log("CORS bloqueado, intentando con proxy...");
+      // Si falla CORS, usar proxy alternativo
+      url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      resp = await fetch(url, { cache: "no-store" });
+    }
     
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     
@@ -323,11 +331,20 @@
   }
 
   async function fetchWithGViz() {
-    // Usar proxy CORS para GViz también
-    const originalUrl = DATA_SOURCES.json + "&_=" + Date.now();
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
+    // Intentar primero sin proxy
+    let url = DATA_SOURCES.json + "&_=" + Date.now();
+    let resp;
     
-    const resp = await fetch(proxyUrl, { cache: "no-store" });
+    try {
+      resp = await fetch(url, { 
+        mode: 'cors',
+        cache: "no-store" 
+      });
+    } catch (corsError) {
+      console.log("CORS bloqueado en GViz, intentando con proxy...");
+      url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      resp = await fetch(url, { cache: "no-store" });
+    }
     
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     
