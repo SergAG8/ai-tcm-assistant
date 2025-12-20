@@ -159,6 +159,8 @@
   let currentLang = "es";
   let LIVE_COURSE_DATA = [];
   let connectionStatus = { connected: false, method: null };
+  let lastFetchTime = null;
+  let isFetching = false;
 
   function updateConnectionStatus(status) {
     const statusEl = document.getElementById('connection-status');
@@ -363,7 +365,14 @@
     return mapRowsToCourses(headers, rows);
   }
 
-  async function fetchCourseData() {
+  async function fetchCourseData(forceRefresh = false) {
+    // Evitar múltiples llamadas simultáneas
+    if (isFetching && !forceRefresh) {
+      console.log("Ya hay una petición en curso, esperando...");
+      return;
+    }
+
+    isFetching = true;
     updateConnectionStatus('loading');
     
     const methods = [
@@ -381,10 +390,13 @@
         }
         
         connectionStatus = { connected: true, method: method.name };
+        lastFetchTime = new Date();
+        
         updateConnectionStatus('connected');
-        showSystemMessage('success', '✓ Conectado', `${method.name}: ${LIVE_COURSE_DATA.length} cursos cargados`);
+        updateDataSourceInfo();
         
         console.log(`✓ Éxito con ${method.name}: ${LIVE_COURSE_DATA.length} cursos`);
+        isFetching = false;
         return;
         
       } catch (err) {
@@ -393,12 +405,32 @@
     }
     
     connectionStatus = { connected: false, method: null };
+    isFetching = false;
     updateConnectionStatus('disconnected');
     showSystemMessage('error', '❌ Error de Conexión', 
       'No se pudo conectar con Google Sheets. Verifica:<br>1. El documento está publicado<br>2. El SHEET_ID y GID son correctos<br>3. El documento es público o compartido'
     );
     
     throw new Error("Todos los métodos de conexión fallaron");
+  }
+
+  function updateDataSourceInfo() {
+    const dataSourceEl = document.getElementById('data-source-info');
+    if (!dataSourceEl) return;
+
+    if (lastFetchTime) {
+      const now = new Date();
+      const diffMs = now - lastFetchTime;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      
+      let timeAgo = diffSec < 60 ? `${diffSec}s` : `${diffMin}m`;
+      
+      dataSourceEl.innerHTML = `Data source: <b>${connectionStatus.method}</b> (Live) | 
+        <span class="text-xs text-green-600">✓ Actualizado hace ${timeAgo}</span>`;
+    } else {
+      dataSourceEl.innerHTML = `Data source: <b>${connectionStatus.method || 'Conectando...'}</b>`;
+    }
   }
 
   function getFillRatio(course) {
@@ -410,14 +442,14 @@
     const resultsDiv = document.getElementById("course_recommendation");
     const selectElement = document.getElementById("selected_course");
 
-    if (!LIVE_COURSE_DATA.length) {
-      resultsDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</span>';
-      try {
-        await fetchCourseData();
-      } catch (err) {
-        resultsDiv.innerHTML = '<span class="text-red-600">❌ Error de conexión. Ver detalles arriba.</span>';
-        return;
-      }
+    // SIEMPRE refrescar datos antes de cada diagnóstico
+    resultsDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> 🔄 Obteniendo datos actualizados del Google Sheet...</span>';
+    
+    try {
+      await fetchCourseData(true); // forceRefresh = true
+    } catch (err) {
+      resultsDiv.innerHTML = '<span class="text-red-600">❌ Error de conexión. Ver detalles arriba.</span>';
+      return;
     }
 
     const age = parseInt(document.getElementById("student_age").value, 10);
@@ -471,6 +503,9 @@
     });
 
     document.getElementById("pitch_output").innerHTML = "El argumento de venta aparecerá aquí.";
+    
+    // Actualizar info del timestamp
+    updateDataSourceInfo();
   }
 
   async function generatePitch() {
@@ -546,14 +581,23 @@
     document.getElementById("student_age").value = 10;
     
     const resultsDiv = document.getElementById("course_recommendation");
-    resultsDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> Cargando datos iniciales...</span>';
+    resultsDiv.innerHTML = "Esperando diagnóstico...";
 
+    // Carga inicial (opcional, solo para verificar conexión)
     fetchCourseData()
-      .then(() => { resultsDiv.innerHTML = "Esperando diagnóstico..."; })
+      .then(() => { 
+        console.log("Conexión inicial exitosa"); 
+        updateDataSourceInfo();
+      })
       .catch(() => {});
+
+    // Actualizar el timestamp cada 30 segundos si hay datos cargados
+    setInterval(() => {
+      if (lastFetchTime) {
+        updateDataSourceInfo();
+      }
+    }, 30000);
   };
 </script>
 </body>
 </html>
-
-
