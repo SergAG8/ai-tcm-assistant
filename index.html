@@ -62,8 +62,15 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
+      <!-- STEP 1 -->
       <div class="card">
         <div class="step-header">1. Diagnóstico del Estudiante</div>
+
+        <label for="amo_crm_link" class="block text-sm font-medium text-gray-700 mb-1">
+          🔗 amo CRM Link:
+        </label>
+        <input type="url" id="amo_crm_link" placeholder="https://kodland.amocrm.com/leads/detail/..."
+               class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500" />
 
         <label for="student_age" class="block text-sm font-medium text-gray-700 mb-1">
           Edad del Estudiante (7-17 años):
@@ -91,8 +98,25 @@
           <option value="advanced">Avanzado (Sabe Python básico/Roblox)</option>
         </select>
 
+        <label for="group_type" class="block text-sm font-medium text-gray-700 mb-1">
+          Tipo de Grupo:
+        </label>
+        <select id="group_type"
+                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
+          <option value="regular">Regular</option>
+          <option value="premium">Premium (PRM)</option>
+        </select>
+
+        <div class="flex items-center mb-4 p-3 bg-gray-50 rounded-lg">
+          <input type="checkbox" id="is_sen" 
+                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+          <label for="is_sen" class="ml-2 text-sm font-medium text-gray-700">
+            ⭐ Estudiante SEN (Special Educational Needs)
+          </label>
+        </div>
+
         <button id="btn_suggest"
-                onclick="diagnoseAndMatch(false)"
+                onclick="diagnoseAndMatch()"
                 class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-150">
           🔍 Sugerir Cursos (AI Match)
         </button>
@@ -102,6 +126,7 @@
         </div>
       </div>
 
+      <!-- STEP 2 -->
       <div class="card">
         <div class="step-header">2. Tres Mejores Opciones y Pitch</div>
 
@@ -129,6 +154,7 @@
         </button>
       </div>
 
+      <!-- STEP 3 -->
       <div class="lg:col-span-2 card">
         <div class="step-header">3. Argumento de Venta (Output de IA)</div>
         <div id="pitch_output" class="ai-result-box text-gray-800 text-sm">
@@ -164,16 +190,12 @@
 
   function updateConnectionStatus(status) {
     const statusEl = document.getElementById('connection-status');
-    const dataSourceEl = document.getElementById('data-source-info');
-    
     statusEl.className = 'connection-status ' + status;
     
     if (status === 'connected') {
       statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Conectado';
-      if (dataSourceEl) dataSourceEl.innerHTML = `Data source: <b>${connectionStatus.method}</b> (Live)`;
     } else if (status === 'disconnected') {
       statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Sin conexión';
-      if (dataSourceEl) dataSourceEl.innerHTML = `Data source: <b>Error</b>`;
     } else {
       statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
     }
@@ -303,7 +325,6 @@
   }
 
   async function fetchWithCSV() {
-    // Intentar primero sin proxy (a veces funciona)
     let url = DATA_SOURCES.csv + "&_=" + Date.now();
     let resp;
     
@@ -315,7 +336,6 @@
       });
     } catch (corsError) {
       console.log("CORS bloqueado, intentando con proxy...");
-      // Si falla CORS, usar proxy alternativo
       url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
       resp = await fetch(url, { cache: "no-store" });
     }
@@ -326,14 +346,10 @@
     if (!text || text.length < 50) throw new Error("CSV vacío");
     
     const { headers, rows } = parseCSV(text);
-    console.log("CSV Headers:", headers);
-    console.log("CSV Rows:", rows.length);
-    
     return mapRowsToCourses(headers, rows);
   }
 
   async function fetchWithGViz() {
-    // Intentar primero sin proxy
     let url = DATA_SOURCES.json + "&_=" + Date.now();
     let resp;
     
@@ -359,59 +375,7 @@
     const headers = data.table.cols.map(col => col.label || col.id || "");
     const rows = data.table.rows.map(row => row.c.map(cell => cell ? (cell.v || "") : ""));
     
-    console.log("GViz Headers:", headers);
-    console.log("GViz Rows:", rows.length);
-    
     return mapRowsToCourses(headers, rows);
-  }
-
-  async function fetchCourseData(forceRefresh = false) {
-    // Evitar múltiples llamadas simultáneas
-    if (isFetching && !forceRefresh) {
-      console.log("Ya hay una petición en curso, esperando...");
-      return;
-    }
-
-    isFetching = true;
-    updateConnectionStatus('loading');
-    
-    const methods = [
-      { name: 'CSV Export', fn: fetchWithCSV },
-      { name: 'GViz JSON', fn: fetchWithGViz }
-    ];
-    
-    for (const method of methods) {
-      try {
-        console.log(`Intentando: ${method.name}...`);
-        LIVE_COURSE_DATA = await method.fn();
-        
-        if (!LIVE_COURSE_DATA || LIVE_COURSE_DATA.length === 0) {
-          throw new Error("No hay cursos válidos");
-        }
-        
-        connectionStatus = { connected: true, method: method.name };
-        lastFetchTime = new Date();
-        
-        updateConnectionStatus('connected');
-        updateDataSourceInfo();
-        
-        console.log(`✓ Éxito con ${method.name}: ${LIVE_COURSE_DATA.length} cursos`);
-        isFetching = false;
-        return;
-        
-      } catch (err) {
-        console.warn(`✗ Falló ${method.name}:`, err.message);
-      }
-    }
-    
-    connectionStatus = { connected: false, method: null };
-    isFetching = false;
-    updateConnectionStatus('disconnected');
-    showSystemMessage('error', '❌ Error de Conexión', 
-      'No se pudo conectar con Google Sheets. Verifica:<br>1. El documento está publicado<br>2. El SHEET_ID y GID son correctos<br>3. El documento es público o compartido'
-    );
-    
-    throw new Error("Todos los métodos de conexión fallaron");
   }
 
   function updateDataSourceInfo() {
@@ -433,6 +397,49 @@
     }
   }
 
+  async function fetchCourseData(forceRefresh = false) {
+    if (isFetching && !forceRefresh) return;
+
+    isFetching = true;
+    updateConnectionStatus('loading');
+    
+    const methods = [
+      { name: 'CSV Export', fn: fetchWithCSV },
+      { name: 'GViz JSON', fn: fetchWithGViz }
+    ];
+    
+    for (const method of methods) {
+      try {
+        LIVE_COURSE_DATA = await method.fn();
+        
+        if (!LIVE_COURSE_DATA || LIVE_COURSE_DATA.length === 0) {
+          throw new Error("No hay cursos válidos");
+        }
+        
+        connectionStatus = { connected: true, method: method.name };
+        lastFetchTime = new Date();
+        
+        updateConnectionStatus('connected');
+        updateDataSourceInfo();
+        
+        isFetching = false;
+        return;
+        
+      } catch (err) {
+        console.warn(`✗ Falló ${method.name}:`, err.message);
+      }
+    }
+    
+    connectionStatus = { connected: false, method: null };
+    isFetching = false;
+    updateConnectionStatus('disconnected');
+    showSystemMessage('error', '❌ Error de Conexión', 
+      'No se pudo conectar con Google Sheets.'
+    );
+    
+    throw new Error("Todos los métodos de conexión fallaron");
+  }
+
   function getFillRatio(course) {
     if (!course.capacity) return 0;
     return course.enrolled / course.capacity;
@@ -442,32 +449,27 @@
     const resultsDiv = document.getElementById("course_recommendation");
     const selectElement = document.getElementById("selected_course");
 
-    // SIEMPRE refrescar datos antes de cada diagnóstico
-    resultsDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> 🔄 Obteniendo datos actualizados del Google Sheet...</span>';
+    resultsDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> 🔄 Obteniendo datos actualizados...</span>';
     
     try {
-      await fetchCourseData(true); // forceRefresh = true
+      await fetchCourseData(true);
     } catch (err) {
-      resultsDiv.innerHTML = '<span class="text-red-600">❌ Error de conexión. Ver detalles arriba.</span>';
+      resultsDiv.innerHTML = '<span class="text-red-600">❌ Error de conexión.</span>';
       return;
     }
 
-    // Obtener valores de los filtros
     const age = parseInt(document.getElementById("student_age").value, 10);
     const interest = document.getElementById("student_interest").value;
     const groupType = document.getElementById("group_type").value;
     const amoCrmLink = document.getElementById("amo_crm_link").value.trim();
     const isSen = document.getElementById("is_sen").checked;
 
-    // Validaciones
     if (isNaN(age) || age < 7 || age > 17) {
-      resultsDiv.innerHTML = '<span class="text-red-600 font-semibold">Por favor, ingresa una edad válida (7-17).</span>';
+      resultsDiv.innerHTML = '<span class="text-red-600 font-semibold">Edad inválida (7-17).</span>';
       return;
     }
 
-    // Filtrar cursos según los criterios
     let filtered = LIVE_COURSE_DATA.filter(c => {
-      // Filtros básicos
       const basicMatch = c.capacity > c.enrolled &&
                         age >= c.min_age &&
                         age <= c.max_age &&
@@ -475,7 +477,6 @@
       
       if (!basicMatch) return false;
 
-      // Filtro Premium/Regular
       const courseName = (c.name_es || c.name_en || "").toUpperCase();
       const isPremiumCourse = courseName.includes("PRM");
       
@@ -490,17 +491,16 @@
 
     if (!top3.length) {
       const groupTypeText = groupType === "premium" ? "Premium (PRM)" : "Regular";
-      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">⚠️ No hay grupos ${groupTypeText} disponibles para este perfil.</span>`;
+      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">⚠️ No hay grupos ${groupTypeText} disponibles.</span>`;
       selectElement.innerHTML = '<option value="">-- Primero Diagnosticar --</option>';
       return;
     }
 
-    // Mostrar información del diagnóstico si hay datos relevantes
     let diagnosticInfo = "";
     if (amoCrmLink || isSen) {
       diagnosticInfo = '<div class="mb-3 p-2 bg-blue-50 rounded-lg text-sm">';
       if (amoCrmLink) diagnosticInfo += `<div>🔗 <strong>amo CRM:</strong> <a href="${amoCrmLink}" target="_blank" class="text-blue-600 hover:underline">Ver lead</a></div>`;
-      if (isSen) diagnosticInfo += '<div>⭐ <strong>Estudiante SEN</strong> (Necesidades Educativas Especiales)</div>';
+      if (isSen) diagnosticInfo += '<div>⭐ <strong>Estudiante SEN</strong></div>';
       diagnosticInfo += '</div>';
     }
 
@@ -531,8 +531,6 @@
     });
 
     document.getElementById("pitch_output").innerHTML = "El argumento de venta aparecerá aquí.";
-    
-    // Actualizar info del timestamp
     updateDataSourceInfo();
   }
 
@@ -542,7 +540,7 @@
     const out = document.getElementById("pitch_output");
 
     if (!selectedId) {
-      out.innerHTML = "Por favor, selecciona un curso de la lista.";
+      out.innerHTML = "Selecciona un curso primero.";
       return;
     }
 
@@ -551,36 +549,33 @@
 
     const remaining = (course.capacity || 0) - (course.enrolled || 0);
     loading.classList.remove("hidden");
-    out.innerHTML = "";
 
     const baseInfo = `
       <div class="mb-4 p-2 bg-blue-100 rounded-lg">
-        <b>DETALLES CRÍTICOS DEL GRUPO:</b>
-        <div class="course-option-row">📅 <strong>Horario:</strong> ${course.next_start}</div>
-        <div class="course-option-row">🧑‍💻 <strong>Cupos:</strong> ${remaining} restantes (de ${course.capacity})</div>
-        <div class="course-option-row">👨‍🏫 <strong>Tutor:</strong> ${course.teacher}</div>
+        <b>DETALLES:</b>
+        <div>📅 ${course.next_start}</div>
+        <div>🧑‍💻 ${remaining} cupos restantes (de ${course.capacity})</div>
+        <div>👨‍🏫 ${course.teacher}</div>
       </div>
     `;
 
     if (!API_KEY) {
-      out.innerHTML = baseInfo + "<p><i>(API key de Gemini vacía: mostrando solo datos de BO)</i></p>";
+      out.innerHTML = baseInfo + "<p><i>(API key vacía)</i></p>";
       loading.classList.add("hidden");
       return;
     }
 
-    const systemPrompt = `Actúa como vendedor TCM de Kodland. Genera un pitch persuasivo en español, conciso (máx. 150 palabras), centrado en valor educativo.`;
-    const userQuery = `Pitch para: ${course.name_es}. Tema: ${course.topic}. Edad: ${document.getElementById("student_age").value}.`;
-
-    const payload = {
-      contents: [{ parts: [{ text: userQuery }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-    };
+    const systemPrompt = `Genera pitch de venta en español, 150 palabras máx.`;
+    const userQuery = `Pitch para: ${course.name_es}. Edad: ${document.getElementById("student_age").value}.`;
 
     try {
       const resp = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userQuery }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+        }),
       });
       
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -588,13 +583,12 @@
       const data = await resp.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       
-      if (!text) throw new Error("Sin respuesta de IA");
+      if (!text) throw new Error("Sin respuesta");
 
-      out.innerHTML = baseInfo + `<b>ARGUMENTO DE VENTA (IA):</b><p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>")}</p>`;
+      out.innerHTML = baseInfo + `<b>PITCH:</b><p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>")}</p>`;
       
     } catch (err) {
-      console.error("Error Gemini:", err);
-      out.innerHTML = `<div class="mb-4 p-2 bg-red-100 rounded-lg"><b class="text-red-700">⚠️ Error de IA</b><p>Usando solo datos de BO.</p></div>` + baseInfo;
+      out.innerHTML = `<div class="mb-4 p-2 bg-red-100 rounded-lg"><b>⚠️ Error IA</b></div>` + baseInfo;
     } finally {
       loading.classList.add("hidden");
     }
@@ -608,22 +602,12 @@
     setLanguage("es");
     document.getElementById("student_age").value = 10;
     
-    const resultsDiv = document.getElementById("course_recommendation");
-    resultsDiv.innerHTML = "Esperando diagnóstico...";
-
-    // Carga inicial (opcional, solo para verificar conexión)
     fetchCourseData()
-      .then(() => { 
-        console.log("Conexión inicial exitosa"); 
-        updateDataSourceInfo();
-      })
+      .then(() => updateDataSourceInfo())
       .catch(() => {});
 
-    // Actualizar el timestamp cada 30 segundos si hay datos cargados
     setInterval(() => {
-      if (lastFetchTime) {
-        updateDataSourceInfo();
-      }
+      if (lastFetchTime) updateDataSourceInfo();
     }, 30000);
   };
 </script>
