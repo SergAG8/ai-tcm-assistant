@@ -452,31 +452,59 @@
       return;
     }
 
+    // Obtener valores de los filtros
     const age = parseInt(document.getElementById("student_age").value, 10);
     const interest = document.getElementById("student_interest").value;
+    const groupType = document.getElementById("group_type").value;
+    const amoCrmLink = document.getElementById("amo_crm_link").value.trim();
+    const isSen = document.getElementById("is_sen").checked;
 
+    // Validaciones
     if (isNaN(age) || age < 7 || age > 17) {
       resultsDiv.innerHTML = '<span class="text-red-600 font-semibold">Por favor, ingresa una edad válida (7-17).</span>';
       return;
     }
 
-    let filtered = LIVE_COURSE_DATA.filter(c =>
-      c.capacity > c.enrolled &&
-      age >= c.min_age &&
-      age <= c.max_age &&
-      c.interest === interest
-    );
+    // Filtrar cursos según los criterios
+    let filtered = LIVE_COURSE_DATA.filter(c => {
+      // Filtros básicos
+      const basicMatch = c.capacity > c.enrolled &&
+                        age >= c.min_age &&
+                        age <= c.max_age &&
+                        c.interest === interest;
+      
+      if (!basicMatch) return false;
+
+      // Filtro Premium/Regular
+      const courseName = (c.name_es || c.name_en || "").toUpperCase();
+      const isPremiumCourse = courseName.includes("PRM");
+      
+      if (groupType === "premium" && !isPremiumCourse) return false;
+      if (groupType === "regular" && isPremiumCourse) return false;
+
+      return true;
+    });
 
     filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
     const top3 = filtered.slice(0, 3);
 
     if (!top3.length) {
-      resultsDiv.innerHTML = '<span class="text-red-600 font-semibold">⚠️ No hay grupos disponibles para este perfil.</span>';
+      const groupTypeText = groupType === "premium" ? "Premium (PRM)" : "Regular";
+      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">⚠️ No hay grupos ${groupTypeText} disponibles para este perfil.</span>`;
       selectElement.innerHTML = '<option value="">-- Primero Diagnosticar --</option>';
       return;
     }
 
-    let html = "";
+    // Mostrar información del diagnóstico si hay datos relevantes
+    let diagnosticInfo = "";
+    if (amoCrmLink || isSen) {
+      diagnosticInfo = '<div class="mb-3 p-2 bg-blue-50 rounded-lg text-sm">';
+      if (amoCrmLink) diagnosticInfo += `<div>🔗 <strong>amo CRM:</strong> <a href="${amoCrmLink}" target="_blank" class="text-blue-600 hover:underline">Ver lead</a></div>`;
+      if (isSen) diagnosticInfo += '<div>⭐ <strong>Estudiante SEN</strong> (Necesidades Educativas Especiales)</div>';
+      diagnosticInfo += '</div>';
+    }
+
+    let html = diagnosticInfo;
     top3.forEach((course, idx) => {
       const remaining = (course.capacity || 0) - (course.enrolled || 0);
       const critical = remaining <= 2;
@@ -601,3 +629,4 @@
 </script>
 </body>
 </html>
+
