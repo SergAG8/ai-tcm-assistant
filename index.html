@@ -136,23 +136,14 @@
     // =========================
     // CONFIG (Sheet Connection)
     // =========================
-    const SHEET_PUBLISHED_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/pubhtml?gid=2084392899&single=true";
-    const SHEET_GID = "2084392899";
-
-    // 1) GViz JSON (fast)
-    const SHEET_GVIZ_URL = `${SHEET_PUBLISHED_BASE}/gviz/tq?gid=${SHEET_GID}&tqx=out:json`;
-
-    // 2) CSV fallback (often more stable on GitHub Pages)
-    const SHEET_CSV_URL  = `${SHEET_PUBLISHED_BASE}/pub?gid=${SHEET_GID}&single=true&output=csv`;
+    const SHEET_GVIZ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e/gviz/tq?gid=2084392899&tqx=out:json";
 
     const API_KEY = ""; // Gemini optional
     const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
-    let currentLang = "es";
+let currentLang = "es";
     let LIVE_COURSE_DATA = [];
-    let LAST_LOAD_METHOD = ""; // "gviz" | "csv"
-
     // =========================
     // TRANSLATIONS
     // =========================
@@ -841,6 +832,7 @@
   </script>
 </body>
 </html>
+
 
 
 
