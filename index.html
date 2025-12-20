@@ -24,6 +24,7 @@
 
     .course-option { border-radius:10px; border:1px solid #e5e7eb; background:#fff; padding:10px 12px; margin-bottom:10px; }
     .course-option.critical { background:#fef2f2; border-color:#fecaca; }
+    .course-option.selected { background:#dbeafe; border:2px solid #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
     .course-option-title { font-weight:600; margin-bottom:6px; color:#111827; }
     .course-option-row { font-size:.875rem; color:#374151; margin-bottom:2px; }
     .course-option-row strong { font-weight:600; }
@@ -34,6 +35,19 @@
     .connection-status.connected { background: #22c55e; color: white; }
     .connection-status.disconnected { background: #ef4444; color: white; }
     .connection-status.loading { background: #3b82f6; color: white; }
+
+    /* Modal styles */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; }
+    .modal-overlay.active { display: block; }
+    .modal-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 12px; max-width: 900px; width: 90%; max-height: 80vh; overflow-y: auto; z-index: 9999; box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: none; }
+    .modal-container.active { display: block; }
+    .modal-header { position: sticky; top: 0; background: white; padding: 20px; border-bottom: 2px solid #e5e7eb; z-index: 10; }
+    .modal-body { padding: 20px; }
+    .btn-select { padding: 8px 16px; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .btn-select.selected { background: #3b82f6; color: white; }
+    .btn-select.unselected { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+    .btn-select.unselected:hover { background: #e5e7eb; }
+    .btn-select.disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 
@@ -167,6 +181,24 @@
     </div>
   </div>
 
+  <!-- Modal para ver todos los cursos -->
+  <div id="modal-overlay" class="modal-overlay" onclick="closeCoursesModal()"></div>
+  <div id="courses-modal" class="modal-container">
+    <div class="modal-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">Todos los Cursos Disponibles</h2>
+          <p class="text-sm text-gray-600 mt-1">Selecciona hasta 2 cursos para generar pitch</p>
+        </div>
+        <button onclick="closeCoursesModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
+          ×
+        </button>
+      </div>
+      <div id="selected-count" class="mt-3 text-sm font-semibold text-blue-600"></div>
+    </div>
+    <div id="modal-courses-list" class="modal-body"></div>
+  </div>
+
 <script>
   const SHEET_ID = "2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e";
   const SHEET_GID = "2084392899";
@@ -185,6 +217,8 @@
   let connectionStatus = { connected: false, method: null };
   let lastFetchTime = null;
   let isFetching = false;
+  let allFilteredCourses = [];
+  let selectedCourses = [];
 
   function updateConnectionStatus(status) {
     const statusEl = document.getElementById('connection-status');
@@ -556,6 +590,8 @@
     });
 
     filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
+    allFilteredCourses = filtered; // Guardar todos los cursos filtrados
+    selectedCourses = []; // Resetear selección
     const top3 = filtered.slice(0, 3);
 
     if (!top3.length) {
@@ -579,9 +615,10 @@
     top3.forEach((course, idx) => {
       const remaining = (course.capacity || 0) - (course.enrolled || 0);
       const critical = remaining <= 2;
+      const isSelected = selectedCourses.some(c => c.id === course.id);
 
       html += `
-        <div class="course-option ${critical ? "critical" : ""}">
+        <div class="course-option ${critical ? "critical" : ""} ${isSelected ? "selected" : ""}" id="course-card-${course.id}">
           <div class="course-option-title">OPCIÓN ${idx + 1}: ${course.name_es}</div>
           <div class="course-option-row">⏰ <strong>Horario:</strong> ${course.next_start}</div>
           <div class="course-option-row ${critical ? "text-orange-600 font-semibold" : ""}">
@@ -589,20 +626,147 @@
           </div>
           <div class="course-option-row">👨‍🏫 <strong>Tutor:</strong> ${course.teacher}</div>
           ${critical ? '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA 🚨</div>' : ""}
+          <button onclick="toggleCourseSelection('${course.id}')" 
+                  class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}"
+                  id="btn-select-${course.id}">
+            ${isSelected ? "✓ Seleccionado" : "Seleccionar este curso"}
+          </button>
         </div>`;
     });
 
     resultsDiv.innerHTML = html;
 
-    selectElement.innerHTML = '<option value="">-- Primero Diagnosticar --</option>';
-    top3.forEach((course) => {
-      const remaining = (course.capacity || 0) - (course.enrolled || 0);
-      const urgencyTag = remaining <= 2 ? ` (CRÍTICO - ${remaining} restantes)` : "";
-      selectElement.innerHTML += `<option value="${course.id}">${course.name_es} - ${course.next_start}${urgencyTag}</option>`;
-    });
+    // Botón para ver todos los cursos (solo si hay más de 3)
+    if (allFilteredCourses.length > 3) {
+      const moreButton = `
+        <div class="mt-4 text-center">
+          <button onclick="openCoursesModal()" 
+                  class="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition duration-150">
+            📋 Ver todos los ${allFilteredCourses.length} cursos disponibles
+          </button>
+        </div>
+      `;
+      resultsDiv.innerHTML += moreButton;
+    }
 
+    updatePitchDropdown();
     document.getElementById("pitch_output").innerHTML = "El argumento de venta aparecerá aquí.";
     updateDataSourceInfo();
+  }
+
+  function toggleCourseSelection(courseId) {
+    const course = allFilteredCourses.find(c => c.id === courseId);
+    if (!course) return;
+
+    const isSelected = selectedCourses.some(c => c.id === courseId);
+
+    if (isSelected) {
+      // Deseleccionar
+      selectedCourses = selectedCourses.filter(c => c.id !== courseId);
+    } else {
+      // Seleccionar (máximo 2)
+      if (selectedCourses.length >= 2) {
+        alert("⚠️ Máximo 2 cursos permitidos. Deselecciona uno primero.");
+        return;
+      }
+      selectedCourses.push(course);
+    }
+
+    updateSelectionUI();
+    updatePitchDropdown();
+  }
+
+  function updateSelectionUI() {
+    // Actualizar todos los botones de selección (TOP 3 y modal)
+    allFilteredCourses.forEach(course => {
+      const btn = document.getElementById(`btn-select-${course.id}`);
+      const card = document.getElementById(`course-card-${course.id}`);
+      const isSelected = selectedCourses.some(c => c.id === course.id);
+
+      if (btn) {
+        btn.className = `btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}`;
+        btn.textContent = isSelected ? "✓ Seleccionado" : "Seleccionar este curso";
+        
+        // Deshabilitar si ya hay 2 seleccionados y este no está seleccionado
+        if (selectedCourses.length >= 2 && !isSelected) {
+          btn.classList.add("disabled");
+        } else {
+          btn.classList.remove("disabled");
+        }
+      }
+
+      if (card) {
+        if (isSelected) {
+          card.classList.add("selected");
+        } else {
+          card.classList.remove("selected");
+        }
+      }
+    });
+
+    // Actualizar contador en modal
+    const countEl = document.getElementById("selected-count");
+    if (countEl) {
+      countEl.textContent = `${selectedCourses.length}/2 cursos seleccionados`;
+    }
+  }
+
+  function updatePitchDropdown() {
+    const selectElement = document.getElementById("selected_course");
+    
+    if (selectedCourses.length === 0) {
+      selectElement.innerHTML = '<option value="">-- Selecciona un curso primero --</option>';
+      return;
+    }
+
+    selectElement.innerHTML = '<option value="">-- Elige cuál generar pitch --</option>';
+    selectedCourses.forEach((course, idx) => {
+      const remaining = (course.capacity || 0) - (course.enrolled || 0);
+      const urgencyTag = remaining <= 2 ? ` (CRÍTICO - ${remaining} restantes)` : "";
+      selectElement.innerHTML += `<option value="${course.id}">Curso ${idx + 1}: ${course.name_es} - ${course.next_start}${urgencyTag}</option>`;
+    });
+  }
+
+  function openCoursesModal() {
+    const modal = document.getElementById("courses-modal");
+    const overlay = document.getElementById("modal-overlay");
+    const modalBody = document.getElementById("modal-courses-list");
+
+    let html = "";
+    allFilteredCourses.forEach((course, idx) => {
+      const remaining = (course.capacity || 0) - (course.enrolled || 0);
+      const critical = remaining <= 2;
+      const isSelected = selectedCourses.some(c => c.id === course.id);
+
+      html += `
+        <div class="course-option ${critical ? "critical" : ""} ${isSelected ? "selected" : ""}" id="course-card-${course.id}">
+          <div class="course-option-title">#${idx + 1}: ${course.name_es}</div>
+          <div class="course-option-row">⏰ <strong>Horario:</strong> ${course.next_start}</div>
+          <div class="course-option-row ${critical ? "text-orange-600 font-semibold" : ""}">
+            💻 <strong>Cupos:</strong> ${course.enrolled}/${course.capacity} (${remaining} restantes)
+          </div>
+          <div class="course-option-row">👨‍🏫 <strong>Tutor:</strong> ${course.teacher}</div>
+          ${critical ? '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA 🚨</div>' : ""}
+          <button onclick="toggleCourseSelection('${course.id}')" 
+                  class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"} ${selectedCourses.length >= 2 && !isSelected ? "disabled" : ""}"
+                  id="btn-select-${course.id}">
+            ${isSelected ? "✓ Seleccionado" : "Seleccionar este curso"}
+          </button>
+        </div>`;
+    });
+
+    modalBody.innerHTML = html;
+    modal.classList.add("active");
+    overlay.classList.add("active");
+    updateSelectionUI();
+  }
+
+  function closeCoursesModal() {
+    const modal = document.getElementById("courses-modal");
+    const overlay = document.getElementById("modal-overlay");
+    
+    modal.classList.remove("active");
+    overlay.classList.remove("active");
   }
 
   async function generatePitch() {
