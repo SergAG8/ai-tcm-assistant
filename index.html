@@ -81,21 +81,19 @@
         <label for="student_interest" class="block text-sm font-medium text-gray-700 mb-1">
           Interés Principal:
         </label>
-        <select id="student_interest"
+        <select id="student_interest" onchange="updateCourseTypeOptions()"
                 class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
           <option value="coding">Programación (Lógica)</option>
           <option value="design">Diseño / Arte Digital</option>
           <option value="games">Creación de Videojuegos</option>
         </select>
 
-        <label for="student_level" class="block text-sm font-medium text-gray-700 mb-1">
-          Experiencia Previa (TC Assessment):
+        <label for="course_type" class="block text-sm font-medium text-gray-700 mb-1">
+          Tipo de Curso Específico:
         </label>
-        <select id="student_level"
+        <select id="course_type"
                 class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
-          <option value="beginner">Principiante (Cero experiencia)</option>
-          <option value="intermediate">Intermedio (Sabe bloques/Scratch)</option>
-          <option value="advanced">Avanzado (Sabe Python básico/Roblox)</option>
+          <option value="">-- Todos los cursos de este interés --</option>
         </select>
 
         <label for="group_type" class="block text-sm font-medium text-gray-700 mb-1">
@@ -252,9 +250,35 @@
 
   function inferInterest(courseTitle) {
     const t = String(courseTitle || "").toLowerCase();
-    if (t.includes("roblox") || t.includes("minecraft") || t.includes("game")) return "games";
-    if (t.includes("design") || t.includes("figma") || t.includes("art")) return "design";
+    if (t.includes("roblox") || t.includes("minecraft") || t.includes("game") || t.includes("videojuego")) return "games";
+    if (t.includes("design") || t.includes("figma") || t.includes("art") || t.includes("diseño")) return "design";
     return "coding";
+  }
+
+  function extractCourseType(courseName) {
+    const name = String(courseName || "").toLowerCase();
+    
+    // Para Videojuegos
+    if (name.includes("roblox")) return "Roblox";
+    if (name.includes("minecraft")) return "Minecraft";
+    if (name.includes("unity")) return "Unity";
+    if (name.includes("godot")) return "Godot";
+    
+    // Para Diseño
+    if (name.includes("figma")) return "Figma";
+    if (name.includes("photoshop")) return "Photoshop";
+    if (name.includes("illustrator")) return "Illustrator";
+    if (name.includes("canva")) return "Canva";
+    if (name.includes("blender")) return "Blender 3D";
+    
+    // Para Programación
+    if (name.includes("python")) return "Python";
+    if (name.includes("javascript") || name.includes("js")) return "JavaScript";
+    if (name.includes("scratch")) return "Scratch";
+    if (name.includes("web")) return "Desarrollo Web";
+    if (name.includes("app")) return "Desarrollo de Apps";
+    
+    return null;
   }
 
   function parseISODateOnly(s) {
@@ -313,6 +337,7 @@
         min_age: ageRange.min,
         max_age: ageRange.max,
         interest: inferInterest(topic),
+        courseType: extractCourseType(name),
         enrolled: enrolled,
         capacity: capacity,
         next_start: dateStr && timeStr ? `${dateStr} | ${timeStr}` : (dateStr || "N/A"),
@@ -440,6 +465,27 @@
     throw new Error("Todos los métodos de conexión fallaron");
   }
 
+  function updateCourseTypeOptions() {
+    const interest = document.getElementById("student_interest").value;
+    const courseTypeSelect = document.getElementById("course_type");
+    
+    // Obtener tipos de cursos únicos del interés seleccionado
+    const availableTypes = new Set();
+    
+    LIVE_COURSE_DATA.forEach(course => {
+      if (course.interest === interest && course.courseType) {
+        availableTypes.add(course.courseType);
+      }
+    });
+    
+    // Actualizar el dropdown
+    courseTypeSelect.innerHTML = '<option value="">-- Todos los cursos de este interés --</option>';
+    
+    Array.from(availableTypes).sort().forEach(type => {
+      courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
+    });
+  }
+
   function getFillRatio(course) {
     if (!course.capacity) return 0;
     return course.enrolled / course.capacity;
@@ -460,6 +506,7 @@
 
     const age = parseInt(document.getElementById("student_age").value, 10);
     const interest = document.getElementById("student_interest").value;
+    const courseType = document.getElementById("course_type").value;
     const groupType = document.getElementById("group_type").value;
     const amoCrmLink = document.getElementById("amo_crm_link").value.trim();
     const isSen = document.getElementById("is_sen").checked;
@@ -477,6 +524,10 @@
       
       if (!basicMatch) return false;
 
+      // Filtro por tipo de curso específico
+      if (courseType && c.courseType !== courseType) return false;
+
+      // Filtro Premium/Regular
       const courseName = (c.name_es || c.name_en || "").toUpperCase();
       const isPremiumCourse = courseName.includes("PRM");
       
@@ -491,16 +542,18 @@
 
     if (!top3.length) {
       const groupTypeText = groupType === "premium" ? "Premium (PRM)" : "Regular";
-      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">⚠️ No hay grupos ${groupTypeText} disponibles.</span>`;
+      const courseTypeText = courseType ? ` de ${courseType}` : "";
+      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">⚠️ No hay grupos ${groupTypeText}${courseTypeText} disponibles.</span>`;
       selectElement.innerHTML = '<option value="">-- Primero Diagnosticar --</option>';
       return;
     }
 
     let diagnosticInfo = "";
-    if (amoCrmLink || isSen) {
+    if (amoCrmLink || isSen || courseType) {
       diagnosticInfo = '<div class="mb-3 p-2 bg-blue-50 rounded-lg text-sm">';
       if (amoCrmLink) diagnosticInfo += `<div>🔗 <strong>amo CRM:</strong> <a href="${amoCrmLink}" target="_blank" class="text-blue-600 hover:underline">Ver lead</a></div>`;
       if (isSen) diagnosticInfo += '<div>⭐ <strong>Estudiante SEN</strong></div>';
+      if (courseType) diagnosticInfo += `<div>🎯 <strong>Tipo de Curso:</strong> ${courseType}</div>`;
       diagnosticInfo += '</div>';
     }
 
@@ -603,7 +656,10 @@
     document.getElementById("student_age").value = 10;
     
     fetchCourseData()
-      .then(() => updateDataSourceInfo())
+      .then(() => { 
+        updateDataSourceInfo();
+        updateCourseTypeOptions(); // Inicializar opciones de tipo de curso
+      })
       .catch(() => {});
 
     setInterval(() => {
