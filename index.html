@@ -569,8 +569,7 @@
     }
 
     let filtered = LIVE_COURSE_DATA.filter(c => {
-      const basicMatch = c.capacity > c.enrolled &&
-                        age >= c.min_age &&
+      const basicMatch = age >= c.min_age &&
                         age <= c.max_age &&
                         c.interest === interest;
       
@@ -614,7 +613,7 @@
     let html = diagnosticInfo;
     top3.forEach((course, idx) => {
       const remaining = (course.capacity || 0) - (course.enrolled || 0);
-      const critical = remaining <= 2;
+      const critical = remaining <= 2 && !course.isFull;
       const isSelected = selectedCourses.some(c => c.id === course.id);
 
       html += `
@@ -625,6 +624,7 @@
             💻 <strong>Cupos:</strong> ${course.enrolled}/${course.capacity} (${remaining} restantes)
           </div>
           <div class="course-option-row">👨‍🏫 <strong>Tutor:</strong> ${course.teacher}</div>
+          ${course.isFull ? '<div class="course-option-urgency" style="color:#f59e0b; font-weight:700;">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN TEACHING</div>' : ""}
           ${critical ? '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA 🚨</div>' : ""}
           <button onclick="toggleCourseSelection('${course.id}')" 
                   class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}"
@@ -735,7 +735,7 @@
     let html = "";
     allFilteredCourses.forEach((course, idx) => {
       const remaining = (course.capacity || 0) - (course.enrolled || 0);
-      const critical = remaining <= 2;
+      const critical = remaining <= 2 && !course.isFull;
       const isSelected = selectedCourses.some(c => c.id === course.id);
 
       html += `
@@ -746,6 +746,7 @@
             💻 <strong>Cupos:</strong> ${course.enrolled}/${course.capacity} (${remaining} restantes)
           </div>
           <div class="course-option-row">👨‍🏫 <strong>Tutor:</strong> ${course.teacher}</div>
+          ${course.isFull ? '<div class="course-option-urgency" style="color:#f59e0b; font-weight:700;">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN TEACHING</div>' : ""}
           ${critical ? '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA 🚨</div>' : ""}
           <button onclick="toggleCourseSelection('${course.id}')" 
                   class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"} ${selectedCourses.length >= 2 && !isSelected ? "disabled" : ""}"
