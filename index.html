@@ -74,7 +74,7 @@
 
     <div id="system-messages"></div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       <!-- STEP 1 -->
       <div class="card">
@@ -178,7 +178,35 @@
         </div>
       </div>
 
+      <!-- STEP 3: GRUPOS POSIBLES -->
+      <div class="card">
+        <div class="step-header">3. Grupos Posibles (Out of Group)</div>
+
+        <div class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+          <strong>⚠️ Pendiente de conexión</strong>
+          <p class="text-xs mt-1">Esta sección mostrará grupos creados desde el formulario "Possible Groups"</p>
+        </div>
+
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Grupos Creados por Demanda:
+        </label>
+        <div id="possible_groups_list" class="result-box text-gray-600 text-sm">
+          <div class="text-center py-4">
+            <i class="fas fa-link-slash text-gray-400 text-2xl mb-2"></i>
+            <p>Conecta el Google Sheet "Possible Groups" para ver opciones aquí</p>
+          </div>
+        </div>
+
+        <button onclick="openPreferredScheduleModal()" 
+                class="w-full bg-orange-600 text-white p-3 rounded-lg font-semibold hover:bg-orange-700 transition duration-150 mt-4">
+          🕐 No encuentro horario - Ver Preferred Schedule
+        </button>
+      </div>
+
     </div>
+
+    <!-- SECCIÓN DE PITCH Y ENVÍO -->
+    <div class="grid grid-cols-1 gap-6 mt-6">
   </div>
 
   <!-- Modal para ver todos los cursos -->
@@ -200,8 +228,16 @@
   </div>
 
 <script>
+  // CONFIG
   const SHEET_ID = "2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e";
   const SHEET_GID = "2084392899";
+  
+  // TODO: Conectar "Possible Groups" sheet
+  const POSSIBLE_GROUPS_SHEET_ID = ""; // Llenar cuando tengas el link
+  const POSSIBLE_GROUPS_GID = ""; // Llenar cuando tengas el GID
+  
+  // TODO: Conectar Google Apps Script para guardar ventas
+  const SALES_SCRIPT_URL = ""; // Llenar con la URL del Apps Script
   
   const DATA_SOURCES = {
     csv: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${SHEET_GID}&single=true&output=csv`,
@@ -219,6 +255,7 @@
   let isFetching = false;
   let allFilteredCourses = [];
   let selectedCourses = [];
+  let preferredSchedule = [];
 
   function updateConnectionStatus(status) {
     const statusEl = document.getElementById('connection-status');
@@ -652,6 +689,7 @@
     updatePitchDropdown();
     document.getElementById("pitch_output").innerHTML = "El argumento de venta aparecerá aquí.";
     updateDataSourceInfo();
+    updateSaleSummary();
   }
 
   function toggleCourseSelection(courseId) {
@@ -674,6 +712,7 @@
 
     updateSelectionUI();
     updatePitchDropdown();
+    updateSaleSummary();
   }
 
   function updateSelectionUI() {
@@ -713,9 +752,11 @@
 
   function updatePitchDropdown() {
     const selectElement = document.getElementById("selected_course");
+    const submitBtn = document.getElementById("btn_submit_sale");
     
     if (selectedCourses.length === 0) {
       selectElement.innerHTML = '<option value="">-- Selecciona un curso primero --</option>';
+      submitBtn.disabled = true;
       return;
     }
 
@@ -725,6 +766,151 @@
       const urgencyTag = remaining <= 2 ? ` (CRÍTICO - ${remaining} restantes)` : "";
       selectElement.innerHTML += `<option value="${course.id}">Curso ${idx + 1}: ${course.name_es} - ${course.next_start}${urgencyTag}</option>`;
     });
+    
+    submitBtn.disabled = false;
+  }
+
+  function updateSaleSummary() {
+    const summaryContent = document.getElementById("summary-content");
+    
+    const amoCrm = document.getElementById("amo_crm_link").value.trim();
+    const age = document.getElementById("student_age").value;
+    const interest = document.getElementById("student_interest").value;
+    const groupType = document.getElementById("group_type").value;
+    const isSen = document.getElementById("is_sen").checked;
+    
+    if (selectedCourses.length === 0) {
+      summaryContent.innerHTML = '<p class="text-gray-500">Completa el diagnóstico y selecciona un curso.</p>';
+      return;
+    }
+    
+    let html = '<div class="space-y-2">';
+    if (amoCrm) html += `<div><strong>amo CRM:</strong> ${amoCrm}</div>`;
+    html += `<div><strong>Edad:</strong> ${age} años</div>`;
+    html += `<div><strong>Interés:</strong> ${interest}</div>`;
+    html += `<div><strong>Tipo:</strong> ${groupType}</div>`;
+    if (isSen) html += `<div><strong>SEN:</strong> ⭐ Sí</div>`;
+    html += `<div><strong>Cursos seleccionados:</strong> ${selectedCourses.length}</div>`;
+    selectedCourses.forEach((c, i) => {
+      html += `<div class="text-sm pl-4">• ${c.name_es}</div>`;
+    });
+    html += '</div>';
+    
+    summaryContent.innerHTML = html;
+  }
+
+  function openPreferredScheduleModal() {
+    const modal = document.getElementById("schedule-modal");
+    const overlay = document.getElementById("schedule-modal-overlay");
+    const tbody = document.getElementById("schedule-table-body");
+    
+    // Generar tabla de horarios (06:00 - 22:00)
+    let html = "";
+    const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+    
+    for (let hour = 6; hour <= 22; hour++) {
+      const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+      html += `<tr><td class="border p-2 font-medium">${timeStr}</td>`;
+      
+      days.forEach(day => {
+        const checkId = `schedule-${day}-${hour}`;
+        html += `<td class="border p-2 text-center">
+          <input type="checkbox" id="${checkId}" class="w-5 h-5 cursor-pointer schedule-checkbox" 
+                 data-day="${day}" data-hour="${hour}" />
+        </td>`;
+      });
+      
+      html += "</tr>";
+    }
+    
+    tbody.innerHTML = html;
+    modal.classList.add("active");
+    overlay.classList.add("active");
+  }
+
+  function closeScheduleModal() {
+    const modal = document.getElementById("schedule-modal");
+    const overlay = document.getElementById("schedule-modal-overlay");
+    
+    modal.classList.remove("active");
+    overlay.classList.remove("active");
+  }
+
+  function submitPreferredSchedule() {
+    const checkboxes = document.querySelectorAll('.schedule-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+      alert("⚠️ Por favor selecciona al menos un horario.");
+      return;
+    }
+    
+    preferredSchedule = [];
+    checkboxes.forEach(cb => {
+      preferredSchedule.push({
+        day: cb.dataset.day,
+        hour: parseInt(cb.dataset.hour)
+      });
+    });
+    
+    alert(`✅ Horarios seleccionados: ${checkboxes.length}\n\nEsta solicitud se enviará al crear el registro.`);
+    closeScheduleModal();
+    updateSaleSummary();
+  }
+
+  async function submitSale() {
+    if (selectedCourses.length === 0) {
+      alert("⚠️ Debes seleccionar al menos un curso.");
+      return;
+    }
+    
+    if (!SALES_SCRIPT_URL) {
+      alert("⚠️ El sistema aún no está conectado al Google Sheet.\n\nContacta al administrador para configurar la URL del Apps Script.");
+      console.error("SALES_SCRIPT_URL no configurada");
+      return;
+    }
+    
+    const saleData = {
+      timestamp: new Date().toISOString(),
+      amo_crm_link: document.getElementById("amo_crm_link").value.trim(),
+      student_age: document.getElementById("student_age").value,
+      interest: document.getElementById("student_interest").value,
+      course_type: document.getElementById("course_type").value,
+      group_type: document.getElementById("group_type").value,
+      is_sen: document.getElementById("is_sen").checked,
+      selected_courses: selectedCourses.map(c => ({
+        id: c.id,
+        name: c.name_es,
+        schedule: c.next_start,
+        teacher: c.teacher,
+        enrolled: c.enrolled,
+        capacity: c.capacity
+      })),
+      preferred_schedule: preferredSchedule.length > 0 ? preferredSchedule : null
+    };
+    
+    console.log("Enviando venta:", saleData);
+    
+    try {
+      const response = await fetch(SALES_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saleData)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert("✅ ¡Venta registrada exitosamente!\n\nLa información se guardó en el Google Sheet.");
+        // Resetear formulario
+        location.reload();
+      } else {
+        throw new Error(result.message || "Error desconocido");
+      }
+      
+    } catch (error) {
+      console.error("Error al enviar venta:", error);
+      alert("❌ Error al guardar la venta.\n\n" + error.message);
+    }
   }
 
   function openCoursesModal() {
@@ -852,4 +1038,5 @@
 </script>
 </body>
 </html>
+
 
