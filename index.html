@@ -13,7 +13,7 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; background-color:#f8fafc; }
-    #app-container { max-width:1000px; margin:40px auto; padding:20px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.05); }
+    #app-container { max-width:1400px; margin:40px auto; padding:20px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.05); }
     .card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,.05); margin-bottom:20px; }
     .step-header { background:#f1f5f9; padding:10px 15px; border-radius:8px; font-weight:600; color:#1e293b; margin-bottom:15px; }
     .result-box { min-height:120px; background:#f9fafb; border-radius:8px; padding:12px 14px; margin-top:8px; border:1px solid #e5e7eb; white-space:normal; }
@@ -21,7 +21,6 @@
     .error-box { background:#fef2f2; border-left:4px solid #ef4444; padding:15px; border-radius:6px; margin:10px 0; }
     .warning-box { background:#fffbeb; border-left:4px solid #f59e0b; padding:15px; border-radius:6px; margin:10px 0; }
     .success-box { background:#f0fdf4; border-left:4px solid #22c55e; padding:15px; border-radius:6px; margin:10px 0; }
-
     .course-option { border-radius:10px; border:1px solid #e5e7eb; background:#fff; padding:10px 12px; margin-bottom:10px; }
     .course-option.critical { background:#fef2f2; border-color:#fecaca; }
     .course-option.selected { background:#dbeafe; border:2px solid #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
@@ -30,13 +29,10 @@
     .course-option-row strong { font-weight:600; }
     .course-option-urgency { font-size:.85rem; margin-top:4px; }
     .course-option-urgency.critical-text { color:#b91c1c; font-weight:700; }
-    
     .connection-status { position: fixed; top: 20px; right: 20px; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; z-index: 1000; }
     .connection-status.connected { background: #22c55e; color: white; }
     .connection-status.disconnected { background: #ef4444; color: white; }
     .connection-status.loading { background: #3b82f6; color: white; }
-
-    /* Modal styles */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; }
     .modal-overlay.active { display: block; }
     .modal-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 12px; max-width: 900px; width: 90%; max-height: 80vh; overflow-y: auto; z-index: 9999; box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: none; }
@@ -56,7 +52,7 @@
     <i class="fas fa-spinner fa-spin"></i> Conectando...
   </div>
 
-  <div id="language-selector" class="flex justify-end max-w-5xl mx-auto mt-4 px-4">
+  <div id="language-selector" class="flex justify-end max-w-7xl mx-auto mt-4 px-4">
     <select onchange="setLanguage(this.value)" class="p-2 border border-gray-300 rounded-lg text-sm">
       <option value="es" selected>Español (ES)</option>
       <option value="en">English (EN)</option>
@@ -74,9 +70,10 @@
 
     <div id="system-messages"></div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- FILA SUPERIOR: 3 COLUMNAS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
-      <!-- STEP 1 -->
+      <!-- COLUMNA 1: Diagnóstico -->
       <div class="card">
         <div class="step-header">1. Diagnóstico del Estudiante</div>
 
@@ -138,7 +135,7 @@
         </div>
       </div>
 
-      <!-- STEP 2 -->
+      <!-- COLUMNA 2: TOP 3 -->
       <div class="card">
         <div class="step-header">2. Tres Mejores Opciones y Pitch</div>
 
@@ -148,37 +145,9 @@
         <div id="course_recommendation" class="result-box text-gray-800 text-sm">
           Esperando diagnóstico...
         </div>
-
-        <div class="mt-4">
-          <label for="selected_course" class="block text-sm font-medium text-gray-700 mb-1">
-            Selecciona la Opción para Generar el Pitch:
-          </label>
-          <select id="selected_course"
-                  class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-            <option value="">-- Primero Diagnosticar --</option>
-          </select>
-        </div>
-
-        <button id="btn_pitch"
-                onclick="generatePitch()"
-                class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition duration-150 mt-4">
-          🎤 Generar Pitch (AI Venta)
-        </button>
       </div>
 
-      <!-- STEP 3 -->
-      <div class="lg:col-span-2 card">
-        <div class="step-header">3. Argumento de Venta (Output de IA)</div>
-        <div id="pitch_output" class="ai-result-box text-gray-800 text-sm">
-          El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.
-        </div>
-
-        <div id="loading_indicator" class="mt-4 hidden text-center text-blue-600 font-semibold">
-          Cargando análisis de IA y datos de disponibilidad...
-        </div>
-      </div>
-
-      <!-- STEP 3: GRUPOS POSIBLES -->
+      <!-- COLUMNA 3: GRUPOS POSIBLES -->
       <div class="card">
         <div class="step-header">3. Grupos Posibles (Out of Group)</div>
 
@@ -205,8 +174,60 @@
 
     </div>
 
-    <!-- SECCIÓN DE PITCH Y ENVÍO -->
-    <div class="grid grid-cols-1 gap-6 mt-6">
+    <!-- FILA INFERIOR: 2 COLUMNAS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- COLUMNA 1: ARGUMENTO DE VENTA -->
+      <div class="card">
+        <div class="step-header">4. Argumento de Venta (Output de IA)</div>
+
+        <label for="selected_course" class="block text-sm font-medium text-gray-700 mb-1">
+          Selecciona la Opción para Generar el Pitch:
+        </label>
+        <select id="selected_course"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-4">
+          <option value="">-- Selecciona un curso primero --</option>
+        </select>
+
+        <button id="btn_pitch"
+                onclick="generatePitch()"
+                class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition duration-150">
+          🎤 Generar Pitch (AI Venta)
+        </button>
+
+        <div id="pitch_output" class="ai-result-box text-gray-800 text-sm mt-4">
+          El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.
+        </div>
+
+        <div id="loading_indicator" class="mt-4 hidden text-center text-blue-600 font-semibold">
+          Cargando análisis de IA y datos de disponibilidad...
+        </div>
+      </div>
+
+      <!-- COLUMNA 2: ENVIAR VENTA -->
+      <div class="card bg-gradient-to-br from-blue-50 to-purple-50">
+        <div class="step-header bg-blue-100">5. Confirmar y Enviar Venta</div>
+
+        <div id="sale-summary" class="mb-4 p-3 bg-white rounded-lg border border-blue-200">
+          <h3 class="font-semibold text-gray-800 mb-2">📋 Resumen de la Venta:</h3>
+          <div id="summary-content" class="text-sm text-gray-600">
+            Completa el diagnóstico y selecciona un curso para ver el resumen.
+          </div>
+        </div>
+
+        <button id="btn_submit_sale"
+                onclick="submitSale()"
+                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition duration-150 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled>
+          📤 Enviar Venta y Guardar Registro
+        </button>
+
+        <p class="text-xs text-gray-500 mt-2 text-center">
+          Los datos se guardarán en el Google Sheet de TCM Sales
+        </p>
+      </div>
+
+    </div>
   </div>
 
   <!-- Modal para ver todos los cursos -->
@@ -227,814 +248,603 @@
     <div id="modal-courses-list" class="modal-body"></div>
   </div>
 
-<script>
-  // CONFIG
-  const SHEET_ID = "2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e";
-  const SHEET_GID = "2084392899";
-  
-  // TODO: Conectar "Possible Groups" sheet
-  const POSSIBLE_GROUPS_SHEET_ID = ""; // Llenar cuando tengas el link
-  const POSSIBLE_GROUPS_GID = ""; // Llenar cuando tengas el GID
-  
-  // TODO: Conectar Google Apps Script para guardar ventas
-  const SALES_SCRIPT_URL = ""; // Llenar con la URL del Apps Script
-  
-  const DATA_SOURCES = {
-    csv: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${SHEET_GID}&single=true&output=csv`,
-    json: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`
-  };
-
-  const API_KEY = "";
-  const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
-
-  let currentLang = "es";
-  let LIVE_COURSE_DATA = [];
-  let connectionStatus = { connected: false, method: null };
-  let lastFetchTime = null;
-  let isFetching = false;
-  let allFilteredCourses = [];
-  let selectedCourses = [];
-  let preferredSchedule = [];
-
-  function updateConnectionStatus(status) {
-    const statusEl = document.getElementById('connection-status');
-    statusEl.className = 'connection-status ' + status;
-    
-    if (status === 'connected') {
-      statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Conectado';
-    } else if (status === 'disconnected') {
-      statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Sin conexión';
-    } else {
-      statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
-    }
-  }
-
-  function showSystemMessage(type, title, message) {
-    const container = document.getElementById('system-messages');
-    const msgId = 'msg-' + Date.now();
-    
-    const html = `
-      <div id="${msgId}" class="${type}-box">
-        <div style="display: flex; justify-content: space-between; align-items: start;">
-          <div>
-            <strong>${title}</strong>
-            <p class="text-sm mt-1">${message}</p>
-          </div>
-          <button onclick="document.getElementById('${msgId}').remove()" class="text-gray-500 hover:text-gray-700">
-            <i class="fas fa-times"></i>
-          </button>
+  <!-- Modal para Preferred Schedule -->
+  <div id="schedule-modal-overlay" class="modal-overlay" onclick="closeScheduleModal()"></div>
+  <div id="schedule-modal" class="modal-container">
+    <div class="modal-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">🕐 Selecciona tu Horario Preferido</h2>
+          <p class="text-sm text-gray-600 mt-1">Marca los horarios que te funcionan (puedes seleccionar varios)</p>
         </div>
+        <button onclick="closeScheduleModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
+          ×
+        </button>
       </div>
-    `;
-    
-    container.innerHTML = html + container.innerHTML;
-    
-    if (type === 'success') {
-      setTimeout(() => {
-        const el = document.getElementById(msgId);
-        if (el) el.remove();
-      }, 5000);
-    }
-  }
-
-  function parseCSV(text) {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
-    const rows = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
-      if (values.length === headers.length) {
-        rows.push(values);
-      }
-    }
-    
-    return { headers, rows };
-  }
-
-  function parseAgeRange(ageStr) {
-    const m = String(ageStr || "").match(/(\d+)\D+(\d+)/);
-    if (m) return { min: parseInt(m[1],10), max: parseInt(m[2],10) };
-    return { min: 7, max: 17 };
-  }
-
-  function inferInterest(courseTitle) {
-    const t = String(courseTitle || "").toLowerCase();
-    if (t.includes("roblox") || t.includes("minecraft") || t.includes("game") || t.includes("videojuego")) return "games";
-    if (t.includes("design") || t.includes("figma") || t.includes("art") || t.includes("diseño")) return "design";
-    return "coding";
-  }
-
-  function extractCourseType(courseName, courseTitle) {
-    // Primero intentamos extraer del course_title (Columna D)
-    const title = String(courseTitle || courseName || "").toLowerCase();
-    
-    // Para Videojuegos
-    if (title.includes("roblox")) return "Roblox";
-    if (title.includes("minecraft")) return "Minecraft";
-    if (title.includes("unity")) return "Unity";
-    if (title.includes("godot")) return "Godot";
-    if (title.includes("game")) return "Desarrollo de Videojuegos";
-    
-    // Para Diseño
-    if (title.includes("figma")) return "Figma";
-    if (title.includes("photoshop")) return "Photoshop";
-    if (title.includes("illustrator")) return "Illustrator";
-    if (title.includes("canva")) return "Canva";
-    if (title.includes("blender")) return "Blender 3D";
-    if (title.includes("design") || title.includes("diseño")) return "Diseño Digital";
-    
-    // Para Programación
-    if (title.includes("python")) return "Python";
-    if (title.includes("javascript") || title.includes("js")) return "JavaScript";
-    if (title.includes("scratch")) return "Scratch";
-    if (title.includes("web")) return "Desarrollo Web";
-    if (title.includes("app")) return "Desarrollo de Apps";
-    if (title.includes("c++")) return "C++";
-    if (title.includes("java")) return "Java";
-    
-    // Si no encuentra nada específico, devuelve el course_title completo
-    return courseTitle || null;
-  }
-
-  function parseISODateOnly(s) {
-    const m = String(s || "").match(/(\d{4}-\d{2}-\d{2})/);
-    if (!m) return null;
-    const d = new Date(m[1] + "T00:00:00");
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  function mapRowsToCourses(headers, rows) {
-    const findCol = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
-    
-    const idx_group = findCol("group_title");
-    const idx_course = findCol("course_title");
-    const idx_age = findCol("age");
-    const idx_capacity = findCol("capacity");
-    const idx_enrolled = findCol("enrolled");
-    const idx_status = findCol("status");
-    const idx_teacher = findCol("teacher") >= 0 ? findCol("teacher") : findCol("tutor");
-    const idx_date = findCol("date");
-    const idx_time = findCol("time");
-
-    const today = new Date();
-    today.setHours(0,0,0,0);
-
-    const courses = [];
-
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      
-      const name = (idx_group >= 0 ? r[idx_group] : "") || (idx_course >= 0 ? r[idx_course] : "");
-      const topic = idx_course >= 0 ? r[idx_course] : name;
-      const ageStr = idx_age >= 0 ? r[idx_age] : "";
-      const capacity = idx_capacity >= 0 ? parseInt(r[idx_capacity] || "0") : 0;
-      const enrolled = idx_enrolled >= 0 ? parseInt(r[idx_enrolled] || "0") : 0;
-      const status = idx_status >= 0 ? r[idx_status] : "";
-      const teacher = idx_teacher >= 0 ? r[idx_teacher] : "Tutor N/A";
-      const dateStr = idx_date >= 0 ? r[idx_date] : "";
-      const timeStr = idx_time >= 0 ? r[idx_time] : "";
-
-      if (!name) continue;
-      if (capacity && enrolled >= capacity) continue;
-      if (status.toLowerCase() === "closed") continue;
-
-      const startDate = parseISODateOnly(dateStr);
-      if (startDate && startDate < today) continue;
-
-      const ageRange = parseAgeRange(ageStr);
-
-      courses.push({
-        id: `${i}_${name}_${dateStr}`,
-        name_es: name,
-        name_en: name,
-        name_ru: name,
-        topic: topic || name,
-        courseTitle: topic, // Guardamos el course_title original
-        min_age: ageRange.min,
-        max_age: ageRange.max,
-        interest: inferInterest(topic),
-        courseType: extractCourseType(name, topic), // Pasamos ambos parámetros
-        enrolled: enrolled,
-        capacity: capacity,
-        next_start: dateStr && timeStr ? `${dateStr} | ${timeStr}` : (dateStr || "N/A"),
-        teacher: teacher,
-        startDateObj: startDate
-      });
-    }
-
-    return courses;
-  }
-
-  async function fetchWithCSV() {
-    let url = DATA_SOURCES.csv + "&_=" + Date.now();
-    let resp;
-    
-    try {
-      resp = await fetch(url, { 
-        mode: 'cors',
-        cache: "no-store",
-        headers: { 'Accept': 'text/csv, text/plain, */*' }
-      });
-    } catch (corsError) {
-      console.log("CORS bloqueado, intentando con proxy...");
-      url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-      resp = await fetch(url, { cache: "no-store" });
-    }
-    
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    
-    const text = await resp.text();
-    if (!text || text.length < 50) throw new Error("CSV vacío");
-    
-    const { headers, rows } = parseCSV(text);
-    return mapRowsToCourses(headers, rows);
-  }
-
-  async function fetchWithGViz() {
-    let url = DATA_SOURCES.json + "&_=" + Date.now();
-    let resp;
-    
-    try {
-      resp = await fetch(url, { 
-        mode: 'cors',
-        cache: "no-store" 
-      });
-    } catch (corsError) {
-      console.log("CORS bloqueado en GViz, intentando con proxy...");
-      url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-      resp = await fetch(url, { cache: "no-store" });
-    }
-    
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    
-    let text = await resp.text();
-    text = text.replace(/^.*?google\.visualization\.Query\.setResponse\(/, '').replace(/\);?\s*$/, '');
-    
-    const data = JSON.parse(text);
-    if (!data.table || !data.table.rows) throw new Error("Formato GViz inválido");
-    
-    const headers = data.table.cols.map(col => col.label || col.id || "");
-    const rows = data.table.rows.map(row => row.c.map(cell => cell ? (cell.v || "") : ""));
-    
-    return mapRowsToCourses(headers, rows);
-  }
-
-  function updateDataSourceInfo() {
-    const dataSourceEl = document.getElementById('data-source-info');
-    if (!dataSourceEl) return;
-
-    if (lastFetchTime) {
-      const now = new Date();
-      const diffMs = now - lastFetchTime;
-      const diffSec = Math.floor(diffMs / 1000);
-      const diffMin = Math.floor(diffSec / 60);
-      
-      let timeAgo = diffSec < 60 ? `${diffSec}s` : `${diffMin}m`;
-      
-      dataSourceEl.innerHTML = `Data source: <b>${connectionStatus.method}</b> (Live) | 
-        <span class="text-xs text-green-600">✓ Actualizado hace ${timeAgo}</span>`;
-    } else {
-      dataSourceEl.innerHTML = `Data source: <b>${connectionStatus.method || 'Conectando...'}</b>`;
-    }
-  }
-
-  async function fetchCourseData(forceRefresh = false) {
-    if (isFetching && !forceRefresh) return;
-
-    isFetching = true;
-    updateConnectionStatus('loading');
-    
-    const methods = [
-      { name: 'CSV Export', fn: fetchWithCSV },
-      { name: 'GViz JSON', fn: fetchWithGViz }
-    ];
-    
-    for (const method of methods) {
-      try {
-        LIVE_COURSE_DATA = await method.fn();
-        
-        if (!LIVE_COURSE_DATA || LIVE_COURSE_DATA.length === 0) {
-          throw new Error("No hay cursos válidos");
-        }
-        
-        connectionStatus = { connected: true, method: method.name };
-        lastFetchTime = new Date();
-        
-        updateConnectionStatus('connected');
-        updateDataSourceInfo();
-        
-        isFetching = false;
-        return;
-        
-      } catch (err) {
-        console.warn(`✗ Falló ${method.name}:`, err.message);
-      }
-    }
-    
-    connectionStatus = { connected: false, method: null };
-    isFetching = false;
-    updateConnectionStatus('disconnected');
-    showSystemMessage('error', '❌ Error de Conexión', 
-      'No se pudo conectar con Google Sheets.'
-    );
-    
-    throw new Error("Todos los métodos de conexión fallaron");
-  }
-
-  function updateCourseTypeOptions() {
-    const interest = document.getElementById("student_interest").value;
-    const courseTypeSelect = document.getElementById("course_type");
-    
-    if (!LIVE_COURSE_DATA || LIVE_COURSE_DATA.length === 0) {
-      courseTypeSelect.innerHTML = '<option value="">-- Cargando tipos de curso... --</option>';
-      return;
-    }
-    
-    // Obtener tipos de cursos únicos del interés seleccionado
-    const availableTypes = new Set();
-    
-    LIVE_COURSE_DATA.forEach(course => {
-      if (course.interest === interest && course.courseType) {
-        availableTypes.add(course.courseType);
-      }
-    });
-    
-    // Actualizar el dropdown
-    courseTypeSelect.innerHTML = '<option value="">-- Todos los cursos de este interés --</option>';
-    
-    if (availableTypes.size === 0) {
-      courseTypeSelect.innerHTML += '<option value="" disabled>No hay tipos específicos detectados</option>';
-    } else {
-      Array.from(availableTypes).sort().forEach(type => {
-        courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
-      });
-    }
-    
-    console.log(`Tipos de curso actualizados para "${interest}":`, Array.from(availableTypes));
-  }
-
-  function getFillRatio(course) {
-    if (!course.capacity) return 0;
-    return course.enrolled / course.capacity;
-  }
-
-  async function diagnoseAndMatch() {
-    const resultsDiv = document.getElementById("course_recommendation");
-    const selectElement = document.getElementById("selected_course");
-
-    resultsDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> 🔄 Obteniendo datos actualizados...</span>';
-    
-    try {
-      await fetchCourseData(true);
-    } catch (err) {
-      resultsDiv.innerHTML = '<span class="text-red-600">❌ Error de conexión.</span>';
-      return;
-    }
-
-    const age = parseInt(document.getElementById("student_age").value, 10);
-    const interest = document.getElementById("student_interest").value;
-    const courseType = document.getElementById("course_type").value;
-    const groupType = document.getElementById("group_type").value;
-    const amoCrmLink = document.getElementById("amo_crm_link").value.trim();
-    const isSen = document.getElementById("is_sen").checked;
-
-    if (isNaN(age) || age < 7 || age > 17) {
-      resultsDiv.innerHTML = '<span class="text-red-600 font-semibold">Edad inválida (7-17).</span>';
-      return;
-    }
-
-    let filtered = LIVE_COURSE_DATA.filter(c => {
-      const basicMatch = age >= c.min_age &&
-                        age <= c.max_age &&
-                        c.interest === interest;
-      
-      if (!basicMatch) return false;
-
-      // Filtro por tipo de curso específico
-      if (courseType && c.courseType !== courseType) return false;
-
-      // Filtro Premium/Regular
-      const courseName = (c.name_es || c.name_en || "").toUpperCase();
-      const isPremiumCourse = courseName.includes("PRM");
-      
-      if (groupType === "premium" && !isPremiumCourse) return false;
-      if (groupType === "regular" && isPremiumCourse) return false;
-
-      return true;
-    });
-
-    filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
-    allFilteredCourses = filtered; // Guardar todos los cursos filtrados
-    selectedCourses = []; // Resetear selección
-    const top3 = filtered.slice(0, 3);
-
-    if (!top3.length) {
-      const groupTypeText = groupType === "premium" ? "Premium (PRM)" : "Regular";
-      const courseTypeText = courseType ? ` de ${courseType}` : "";
-      resultsDiv.innerHTML = `<span class="text-red-600 font-semibold">⚠️ No hay grupos ${groupTypeText}${courseTypeText} disponibles.</span>`;
-      selectElement.innerHTML = '<option value="">-- Primero Diagnosticar --</option>';
-      return;
-    }
-
-    let diagnosticInfo = "";
-    if (amoCrmLink || isSen || courseType) {
-      diagnosticInfo = '<div class="mb-3 p-2 bg-blue-50 rounded-lg text-sm">';
-      if (amoCrmLink) diagnosticInfo += `<div>🔗 <strong>amo CRM:</strong> <a href="${amoCrmLink}" target="_blank" class="text-blue-600 hover:underline">Ver lead</a></div>`;
-      if (isSen) diagnosticInfo += '<div>⭐ <strong>Estudiante SEN</strong></div>';
-      if (courseType) diagnosticInfo += `<div>🎯 <strong>Tipo de Curso:</strong> ${courseType}</div>`;
-      diagnosticInfo += '</div>';
-    }
-
-    let html = diagnosticInfo;
-    top3.forEach((course, idx) => {
-      const remaining = (course.capacity || 0) - (course.enrolled || 0);
-      const critical = remaining <= 2 && !course.isFull;
-      const isSelected = selectedCourses.some(c => c.id === course.id);
-
-      html += `
-        <div class="course-option ${critical ? "critical" : ""} ${isSelected ? "selected" : ""}" id="course-card-${course.id}">
-          <div class="course-option-title">OPCIÓN ${idx + 1}: ${course.name_es}</div>
-          <div class="course-option-row">⏰ <strong>Horario:</strong> ${course.next_start}</div>
-          <div class="course-option-row ${critical ? "text-orange-600 font-semibold" : ""}">
-            💻 <strong>Cupos:</strong> ${course.enrolled}/${course.capacity} (${remaining} restantes)
-          </div>
-          <div class="course-option-row">👨‍🏫 <strong>Tutor:</strong> ${course.teacher}</div>
-          ${course.isFull ? '<div class="course-option-urgency" style="color:#f59e0b; font-weight:700;">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN TEACHING</div>' : ""}
-          ${critical ? '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA 🚨</div>' : ""}
-          <button onclick="toggleCourseSelection('${course.id}')" 
-                  class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}"
-                  id="btn-select-${course.id}">
-            ${isSelected ? "✓ Seleccionado" : "Seleccionar este curso"}
-          </button>
-        </div>`;
-    });
-
-    resultsDiv.innerHTML = html;
-
-    // Botón para ver todos los cursos (solo si hay más de 3)
-    if (allFilteredCourses.length > 3) {
-      const moreButton = `
-        <div class="mt-4 text-center">
-          <button onclick="openCoursesModal()" 
-                  class="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition duration-150">
-            📋 Ver todos los ${allFilteredCourses.length} cursos disponibles
-          </button>
-        </div>
-      `;
-      resultsDiv.innerHTML += moreButton;
-    }
-
-    updatePitchDropdown();
-    document.getElementById("pitch_output").innerHTML = "El argumento de venta aparecerá aquí.";
-    updateDataSourceInfo();
-    updateSaleSummary();
-  }
-
-  function toggleCourseSelection(courseId) {
-    const course = allFilteredCourses.find(c => c.id === courseId);
-    if (!course) return;
-
-    const isSelected = selectedCourses.some(c => c.id === courseId);
-
-    if (isSelected) {
-      // Deseleccionar
-      selectedCourses = selectedCourses.filter(c => c.id !== courseId);
-    } else {
-      // Seleccionar (máximo 2)
-      if (selectedCourses.length >= 2) {
-        alert("⚠️ Máximo 2 cursos permitidos. Deselecciona uno primero.");
-        return;
-      }
-      selectedCourses.push(course);
-    }
-
-    updateSelectionUI();
-    updatePitchDropdown();
-    updateSaleSummary();
-  }
-
-  function updateSelectionUI() {
-    // Actualizar todos los botones de selección (TOP 3 y modal)
-    allFilteredCourses.forEach(course => {
-      const btn = document.getElementById(`btn-select-${course.id}`);
-      const card = document.getElementById(`course-card-${course.id}`);
-      const isSelected = selectedCourses.some(c => c.id === course.id);
-
-      if (btn) {
-        btn.className = `btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}`;
-        btn.textContent = isSelected ? "✓ Seleccionado" : "Seleccionar este curso";
-        
-        // Deshabilitar si ya hay 2 seleccionados y este no está seleccionado
-        if (selectedCourses.length >= 2 && !isSelected) {
-          btn.classList.add("disabled");
-        } else {
-          btn.classList.remove("disabled");
-        }
-      }
-
-      if (card) {
-        if (isSelected) {
-          card.classList.add("selected");
-        } else {
-          card.classList.remove("selected");
-        }
-      }
-    });
-
-    // Actualizar contador en modal
-    const countEl = document.getElementById("selected-count");
-    if (countEl) {
-      countEl.textContent = `${selectedCourses.length}/2 cursos seleccionados`;
-    }
-  }
-
-  function updatePitchDropdown() {
-    const selectElement = document.getElementById("selected_course");
-    const submitBtn = document.getElementById("btn_submit_sale");
-    
-    if (selectedCourses.length === 0) {
-      selectElement.innerHTML = '<option value="">-- Selecciona un curso primero --</option>';
-      submitBtn.disabled = true;
-      return;
-    }
-
-    selectElement.innerHTML = '<option value="">-- Elige cuál generar pitch --</option>';
-    selectedCourses.forEach((course, idx) => {
-      const remaining = (course.capacity || 0) - (course.enrolled || 0);
-      const urgencyTag = remaining <= 2 ? ` (CRÍTICO - ${remaining} restantes)` : "";
-      selectElement.innerHTML += `<option value="${course.id}">Curso ${idx + 1}: ${course.name_es} - ${course.next_start}${urgencyTag}</option>`;
-    });
-    
-    submitBtn.disabled = false;
-  }
-
-  function updateSaleSummary() {
-    const summaryContent = document.getElementById("summary-content");
-    
-    const amoCrm = document.getElementById("amo_crm_link").value.trim();
-    const age = document.getElementById("student_age").value;
-    const interest = document.getElementById("student_interest").value;
-    const groupType = document.getElementById("group_type").value;
-    const isSen = document.getElementById("is_sen").checked;
-    
-    if (selectedCourses.length === 0) {
-      summaryContent.innerHTML = '<p class="text-gray-500">Completa el diagnóstico y selecciona un curso.</p>';
-      return;
-    }
-    
-    let html = '<div class="space-y-2">';
-    if (amoCrm) html += `<div><strong>amo CRM:</strong> ${amoCrm}</div>`;
-    html += `<div><strong>Edad:</strong> ${age} años</div>`;
-    html += `<div><strong>Interés:</strong> ${interest}</div>`;
-    html += `<div><strong>Tipo:</strong> ${groupType}</div>`;
-    if (isSen) html += `<div><strong>SEN:</strong> ⭐ Sí</div>`;
-    html += `<div><strong>Cursos seleccionados:</strong> ${selectedCourses.length}</div>`;
-    selectedCourses.forEach((c, i) => {
-      html += `<div class="text-sm pl-4">• ${c.name_es}</div>`;
-    });
-    html += '</div>';
-    
-    summaryContent.innerHTML = html;
-  }
-
-  function openPreferredScheduleModal() {
-    const modal = document.getElementById("schedule-modal");
-    const overlay = document.getElementById("schedule-modal-overlay");
-    const tbody = document.getElementById("schedule-table-body");
-    
-    // Generar tabla de horarios (06:00 - 22:00)
-    let html = "";
-    const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-    
-    for (let hour = 6; hour <= 22; hour++) {
-      const timeStr = `${hour.toString().padStart(2, '0')}:00`;
-      html += `<tr><td class="border p-2 font-medium">${timeStr}</td>`;
-      
-      days.forEach(day => {
-        const checkId = `schedule-${day}-${hour}`;
-        html += `<td class="border p-2 text-center">
-          <input type="checkbox" id="${checkId}" class="w-5 h-5 cursor-pointer schedule-checkbox" 
-                 data-day="${day}" data-hour="${hour}" />
-        </td>`;
-      });
-      
-      html += "</tr>";
-    }
-    
-    tbody.innerHTML = html;
-    modal.classList.add("active");
-    overlay.classList.add("active");
-  }
-
-  function closeScheduleModal() {
-    const modal = document.getElementById("schedule-modal");
-    const overlay = document.getElementById("schedule-modal-overlay");
-    
-    modal.classList.remove("active");
-    overlay.classList.remove("active");
-  }
-
-  function submitPreferredSchedule() {
-    const checkboxes = document.querySelectorAll('.schedule-checkbox:checked');
-    
-    if (checkboxes.length === 0) {
-      alert("⚠️ Por favor selecciona al menos un horario.");
-      return;
-    }
-    
-    preferredSchedule = [];
-    checkboxes.forEach(cb => {
-      preferredSchedule.push({
-        day: cb.dataset.day,
-        hour: parseInt(cb.dataset.hour)
-      });
-    });
-    
-    alert(`✅ Horarios seleccionados: ${checkboxes.length}\n\nEsta solicitud se enviará al crear el registro.`);
-    closeScheduleModal();
-    updateSaleSummary();
-  }
-
-  async function submitSale() {
-    if (selectedCourses.length === 0) {
-      alert("⚠️ Debes seleccionar al menos un curso.");
-      return;
-    }
-    
-    if (!SALES_SCRIPT_URL) {
-      alert("⚠️ El sistema aún no está conectado al Google Sheet.\n\nContacta al administrador para configurar la URL del Apps Script.");
-      console.error("SALES_SCRIPT_URL no configurada");
-      return;
-    }
-    
-    const saleData = {
-      timestamp: new Date().toISOString(),
-      amo_crm_link: document.getElementById("amo_crm_link").value.trim(),
-      student_age: document.getElementById("student_age").value,
-      interest: document.getElementById("student_interest").value,
-      course_type: document.getElementById("course_type").value,
-      group_type: document.getElementById("group_type").value,
-      is_sen: document.getElementById("is_sen").checked,
-      selected_courses: selectedCourses.map(c => ({
-        id: c.id,
-        name: c.name_es,
-        schedule: c.next_start,
-        teacher: c.teacher,
-        enrolled: c.enrolled,
-        capacity: c.capacity
-      })),
-      preferred_schedule: preferredSchedule.length > 0 ? preferredSchedule : null
-    };
-    
-    console.log("Enviando venta:", saleData);
-    
-    try {
-      const response = await fetch(SALES_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(saleData)
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        alert("✅ ¡Venta registrada exitosamente!\n\nLa información se guardó en el Google Sheet.");
-        // Resetear formulario
-        location.reload();
-      } else {
-        throw new Error(result.message || "Error desconocido");
-      }
-      
-    } catch (error) {
-      console.error("Error al enviar venta:", error);
-      alert("❌ Error al guardar la venta.\n\n" + error.message);
-    }
-  }
-
-  function openCoursesModal() {
-    const modal = document.getElementById("courses-modal");
-    const overlay = document.getElementById("modal-overlay");
-    const modalBody = document.getElementById("modal-courses-list");
-
-    let html = "";
-    allFilteredCourses.forEach((course, idx) => {
-      const remaining = (course.capacity || 0) - (course.enrolled || 0);
-      const critical = remaining <= 2 && !course.isFull;
-      const isSelected = selectedCourses.some(c => c.id === course.id);
-
-      html += `
-        <div class="course-option ${critical ? "critical" : ""} ${isSelected ? "selected" : ""}" id="course-card-${course.id}">
-          <div class="course-option-title">#${idx + 1}: ${course.name_es}</div>
-          <div class="course-option-row">⏰ <strong>Horario:</strong> ${course.next_start}</div>
-          <div class="course-option-row ${critical ? "text-orange-600 font-semibold" : ""}">
-            💻 <strong>Cupos:</strong> ${course.enrolled}/${course.capacity} (${remaining} restantes)
-          </div>
-          <div class="course-option-row">👨‍🏫 <strong>Tutor:</strong> ${course.teacher}</div>
-          ${course.isFull ? '<div class="course-option-urgency" style="color:#f59e0b; font-weight:700;">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN TEACHING</div>' : ""}
-          ${critical ? '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA 🚨</div>' : ""}
-          <button onclick="toggleCourseSelection('${course.id}')" 
-                  class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"} ${selectedCourses.length >= 2 && !isSelected ? "disabled" : ""}"
-                  id="btn-select-${course.id}">
-            ${isSelected ? "✓ Seleccionado" : "Seleccionar este curso"}
-          </button>
-        </div>`;
-    });
-
-    modalBody.innerHTML = html;
-    modal.classList.add("active");
-    overlay.classList.add("active");
-    updateSelectionUI();
-  }
-
-  function closeCoursesModal() {
-    const modal = document.getElementById("courses-modal");
-    const overlay = document.getElementById("modal-overlay");
-    
-    modal.classList.remove("active");
-    overlay.classList.remove("active");
-  }
-
-  async function generatePitch() {
-    const selectedId = document.getElementById("selected_course").value;
-    const loading = document.getElementById("loading_indicator");
-    const out = document.getElementById("pitch_output");
-
-    if (!selectedId) {
-      out.innerHTML = "Selecciona un curso primero.";
-      return;
-    }
-
-    const course = LIVE_COURSE_DATA.find(c => c.id === selectedId);
-    if (!course) return;
-
-    const remaining = (course.capacity || 0) - (course.enrolled || 0);
-    loading.classList.remove("hidden");
-
-    const baseInfo = `
-      <div class="mb-4 p-2 bg-blue-100 rounded-lg">
-        <b>DETALLES:</b>
-        <div>📅 ${course.next_start}</div>
-        <div>🧑‍💻 ${remaining} cupos restantes (de ${course.capacity})</div>
-        <div>👨‍🏫 ${course.teacher}</div>
+    </div>
+    <div class="modal-body">
+      <div style="overflow-x: auto;">
+        <table class="w-full border-collapse text-sm">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border p-2 font-semibold">Hora</th>
+              <th class="border p-2 font-semibold">Lun</th>
+              <th class="border p-2 font-semibold">Mar</th>
+              <th class="border p-2 font-semibold">Mié</th>
+              <th class="border p-2 font-semibold">Jue</th>
+              <th class="border p-2 font-semibold">Vie</th>
+              <th class="border p-2 font-semibold">Sáb</th>
+              <th class="border p-2 font-semibold">Dom</th>
+            </tr>
+          </thead>
+          <tbody id="schedule-table-body"></tbody>
+        </table>
       </div>
-    `;
+      <button onclick="submitPreferredSchedule()" 
+              class="w-full bg-orange-600 text-white p-3 rounded-lg font-semibold hover:bg-orange-700 transition duration-150 mt-4">
+        ✅ Enviar Solicitud de Nuevo Grupo
+      </button>
+    </div>
+  </div>
 
-    if (!API_KEY) {
-      out.innerHTML = baseInfo + "<p><i>(API key vacía)</i></p>";
-      loading.classList.add("hidden");
+  <!-- EL JAVASCRIPT VA AQUÍ (siguiente mensaje) -->
+
+  <script>
+const SHEET_ID = "2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e";
+const SHEET_GID = "2084392899";
+const POSSIBLE_GROUPS_SHEET_ID = "";
+const POSSIBLE_GROUPS_GID = "";
+const SALES_SCRIPT_URL = "";
+
+const DATA_SOURCES = {
+  csv: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${SHEET_GID}&single=true&output=csv`,
+  json: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`
+};
+
+const API_KEY = "";
+const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+
+let currentLang = "es";
+let LIVE_COURSE_DATA = [];
+let connectionStatus = { connected: false, method: null };
+let lastFetchTime = null;
+let isFetching = false;
+let allFilteredCourses = [];
+let selectedCourses = [];
+let preferredSchedule = [];
+
+function updateConnectionStatus(status) {
+  const statusEl = document.getElementById('connection-status');
+  statusEl.className = 'connection-status ' + status;
+  if (status === 'connected') statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Conectado';
+  else if (status === 'disconnected') statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Sin conexión';
+  else statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
+}
+
+function showSystemMessage(type, title, message) {
+  const container = document.getElementById('system-messages');
+  const msgId = 'msg-' + Date.now();
+  const html = `<div id="${msgId}" class="${type}-box"><div style="display: flex; justify-content: space-between; align-items: start;"><div><strong>${title}</strong><p class="text-sm mt-1">${message}</p></div><button onclick="document.getElementById('${msgId}').remove()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div></div>`;
+  container.innerHTML = html + container.innerHTML;
+  if (type === 'success') setTimeout(() => { const el = document.getElementById(msgId); if (el) el.remove(); }, 5000);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
+    if (values.length === headers.length) rows.push(values);
+  }
+  return { headers, rows };
+}
+
+function parseAgeRange(ageStr) {
+  const m = String(ageStr || "").match(/(\d+)\D+(\d+)/);
+  return m ? { min: parseInt(m[1],10), max: parseInt(m[2],10) } : { min: 7, max: 17 };
+}
+
+function inferInterest(courseTitle) {
+  const t = String(courseTitle || "").toLowerCase();
+  if (t.includes("roblox") || t.includes("minecraft") || t.includes("game")) return "games";
+  if (t.includes("design") || t.includes("figma") || t.includes("art")) return "design";
+  return "coding";
+}
+
+function extractCourseType(courseName, courseTitle) {
+  const title = String(courseTitle || courseName || "").toLowerCase();
+  if (title.includes("roblox")) return "Roblox";
+  if (title.includes("minecraft")) return "Minecraft";
+  if (title.includes("unity")) return "Unity";
+  if (title.includes("godot")) return "Godot";
+  if (title.includes("game")) return "Desarrollo de Videojuegos";
+  if (title.includes("figma")) return "Figma";
+  if (title.includes("photoshop")) return "Photoshop";
+  if (title.includes("illustrator")) return "Illustrator";
+  if (title.includes("canva")) return "Canva";
+  if (title.includes("blender")) return "Blender 3D";
+  if (title.includes("design")) return "Diseño Digital";
+  if (title.includes("python")) return "Python";
+  if (title.includes("javascript") || title.includes("js")) return "JavaScript";
+  if (title.includes("scratch")) return "Scratch";
+  if (title.includes("web")) return "Desarrollo Web";
+  if (title.includes("app")) return "Desarrollo de Apps";
+  if (title.includes("c++")) return "C++";
+  if (title.includes("java")) return "Java";
+  return courseTitle || null;
+}
+
+function parseISODateOnly(s) {
+  const m = String(s || "").match(/(\d{4}-\d{2}-\d{2})/);
+  if (!m) return null;
+  const d = new Date(m[1] + "T00:00:00");
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function mapRowsToCourses(headers, rows) {
+  const findCol = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+  const idx_group = findCol("group_title");
+  const idx_course = findCol("course_title");
+  const idx_age = findCol("age");
+  const idx_capacity = findCol("capacity");
+  const idx_enrolled = findCol("enrolled");
+  const idx_status = findCol("status");
+  const idx_teacher = findCol("teacher") >= 0 ? findCol("teacher") : findCol("tutor");
+  const idx_date = findCol("date");
+  const idx_time = findCol("time");
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const twoWeeksAgo = new Date(today);
+  twoWeeksAgo.setDate(today.getDate() - 14);
+
+  const courses = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const groupTitle = idx_group >= 0 ? (r[idx_group] || "") : "";
+    const name = groupTitle || (idx_course >= 0 ? r[idx_course] : "");
+    const topic = idx_course >= 0 ? r[idx_course] : name;
+    const capacity = idx_capacity >= 0 ? parseInt(r[idx_capacity] || "0") : 0;
+    const enrolled = idx_enrolled >= 0 ? parseInt(r[idx_enrolled] || "0") : 0;
+    const status = idx_status >= 0 ? r[idx_status] : "";
+    const teacher = idx_teacher >= 0 ? r[idx_teacher] : "Tutor N/A";
+    const dateStr = idx_date >= 0 ? r[idx_date] : "";
+    const timeStr = idx_time >= 0 ? r[idx_time] : "";
+
+    if (groupTitle.includes("WRONG") || !name || status.toLowerCase() === "closed") continue;
+    const startDate = parseISODateOnly(dateStr);
+    if (!startDate || startDate < twoWeeksAgo) continue;
+
+    const ageRange = parseAgeRange(idx_age >= 0 ? r[idx_age] : "");
+    courses.push({
+      id: `${i}_${name}_${dateStr}`,
+      name_es: name,
+      topic: topic || name,
+      courseTitle: topic,
+      min_age: ageRange.min,
+      max_age: ageRange.max,
+      interest: inferInterest(topic),
+      courseType: extractCourseType(name, topic),
+      enrolled: enrolled,
+      capacity: capacity,
+      isFull: capacity > 0 && enrolled >= capacity,
+      next_start: dateStr && timeStr ? `${dateStr} | ${timeStr}` : (dateStr || "N/A"),
+      teacher: teacher,
+      startDateObj: startDate
+    });
+  }
+  return courses;
+}
+
+async function fetchWithCSV() {
+  let url = DATA_SOURCES.csv + "&_=" + Date.now();
+  let resp;
+  try {
+    resp = await fetch(url, { mode: 'cors', cache: "no-store" });
+  } catch {
+    url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    resp = await fetch(url, { cache: "no-store" });
+  }
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const text = await resp.text();
+  const { headers, rows } = parseCSV(text);
+  return mapRowsToCourses(headers, rows);
+}
+
+async function fetchWithGViz() {
+  let url = DATA_SOURCES.json + "&_=" + Date.now();
+  let resp;
+  try {
+    resp = await fetch(url, { mode: 'cors', cache: "no-store" });
+  } catch {
+    url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    resp = await fetch(url, { cache: "no-store" });
+  }
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  let text = await resp.text();
+  text = text.replace(/^.*?google\.visualization\.Query\.setResponse\(/, '').replace(/\);?\s*$/, '');
+  const data = JSON.parse(text);
+  const headers = data.table.cols.map(col => col.label || col.id || "");
+  const rows = data.table.rows.map(row => row.c.map(cell => cell ? (cell.v || "") : ""));
+  return mapRowsToCourses(headers, rows);
+}
+
+function updateDataSourceInfo() {
+  const el = document.getElementById('data-source-info');
+  if (lastFetchTime) {
+    const diffSec = Math.floor((new Date() - lastFetchTime) / 1000);
+    const timeAgo = diffSec < 60 ? `${diffSec}s` : `${Math.floor(diffSec/60)}m`;
+    el.innerHTML = `Data source: <b>${connectionStatus.method}</b> | <span class="text-xs text-green-600">✓ ${timeAgo}</span>`;
+  }
+}
+
+async function fetchCourseData(forceRefresh = false) {
+  if (isFetching && !forceRefresh) return;
+  isFetching = true;
+  updateConnectionStatus('loading');
+  const methods = [{ name: 'CSV Export', fn: fetchWithCSV }, { name: 'GViz JSON', fn: fetchWithGViz }];
+  for (const method of methods) {
+    try {
+      LIVE_COURSE_DATA = await method.fn();
+      if (LIVE_COURSE_DATA.length === 0) throw new Error("No hay cursos");
+      connectionStatus = { connected: true, method: method.name };
+      lastFetchTime = new Date();
+      updateConnectionStatus('connected');
+      updateDataSourceInfo();
+      isFetching = false;
+      return;
+    } catch (err) {
+      console.warn(`✗ ${method.name}:`, err.message);
+    }
+  }
+  connectionStatus = { connected: false, method: null };
+  isFetching = false;
+  updateConnectionStatus('disconnected');
+  throw new Error("Error de conexión");
+}
+
+function getFillRatio(course) {
+  return course.capacity ? course.enrolled / course.capacity : 0;
+}
+
+function updateCourseTypeOptions() {
+  const interest = document.getElementById("student_interest").value;
+  const courseTypeSelect = document.getElementById("course_type");
+  if (!LIVE_COURSE_DATA.length) {
+    courseTypeSelect.innerHTML = '<option value="">-- Cargando... --</option>';
+    return;
+  }
+  const types = new Set();
+  LIVE_COURSE_DATA.forEach(c => {
+    if (c.interest === interest && c.courseType) types.add(c.courseType);
+  });
+  courseTypeSelect.innerHTML = '<option value="">-- Todos --</option>';
+  Array.from(types).sort().forEach(type => {
+    courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
+  });
+}
+
+async function diagnoseAndMatch() {
+  const resultsDiv = document.getElementById("course_recommendation");
+  resultsDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> Cargando...</span>';
+  try {
+    await fetchCourseData(true);
+  } catch {
+    resultsDiv.innerHTML = '<span class="text-red-600">Error de conexión</span>';
+    return;
+  }
+
+  const age = parseInt(document.getElementById("student_age").value, 10);
+  const interest = document.getElementById("student_interest").value;
+  const courseType = document.getElementById("course_type").value;
+  const groupType = document.getElementById("group_type").value;
+
+  if (isNaN(age) || age < 7 || age > 17) {
+    resultsDiv.innerHTML = '<span class="text-red-600">Edad inválida</span>';
+    return;
+  }
+
+  let filtered = LIVE_COURSE_DATA.filter(c => {
+    const basicMatch = age >= c.min_age && age <= c.max_age && c.interest === interest;
+    if (!basicMatch) return false;
+    if (courseType && c.courseType !== courseType) return false;
+    const isPremium = (c.name_es || "").toUpperCase().includes("PRM");
+    if (groupType === "premium" && !isPremium) return false;
+    if (groupType === "regular" && isPremium) return false;
+    return true;
+  });
+
+  filtered.sort((a, b) => getFillRatio(b) - getFillRatio(a));
+  allFilteredCourses = filtered;
+  selectedCourses = [];
+  const top3 = filtered.slice(0, 3);
+
+  if (!top3.length) {
+    resultsDiv.innerHTML = '<span class="text-red-600">No hay grupos disponibles</span>';
+    return;
+  }
+
+  let html = "";
+  top3.forEach((course, idx) => {
+    const remaining = course.capacity - course.enrolled;
+    const critical = remaining <= 2 && !course.isFull;
+    const isSelected = selectedCourses.some(c => c.id === course.id);
+    html += `<div class="course-option ${critical ? "critical" : ""} ${isSelected ? "selected" : ""}" id="course-card-${course.id}">
+      <div class="course-option-title">OPCIÓN ${idx + 1}: ${course.name_es}</div>
+      <div class="course-option-row">⏰ ${course.next_start}</div>
+      <div class="course-option-row ${critical ? "text-orange-600 font-semibold" : ""}">💻 ${course.enrolled}/${course.capacity} (${remaining} restantes)</div>
+      <div class="course-option-row">👨‍🏫 ${course.teacher}</div>
+      ${course.isFull ? '<div class="course-option-urgency" style="color:#f59e0b;">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN</div>' : ""}
+      ${critical ? '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA 🚨</div>' : ""}
+      <button onclick="toggleCourseSelection('${course.id}')" class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}" id="btn-select-${course.id}">${isSelected ? "✓ Seleccionado" : "Seleccionar"}</button>
+    </div>`;
+  });
+
+  resultsDiv.innerHTML = html;
+
+  if (allFilteredCourses.length > 3) {
+    resultsDiv.innerHTML += `<div class="mt-4 text-center"><button onclick="openCoursesModal()" class="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700">📋 Ver todos los ${allFilteredCourses.length} cursos</button></div>`;
+  }
+
+  updatePitchDropdown();
+  updateSaleSummary();
+}
+
+function toggleCourseSelection(courseId) {
+  const course = allFilteredCourses.find(c => c.id === courseId);
+  if (!course) return;
+  const isSelected = selectedCourses.some(c => c.id === courseId);
+  if (isSelected) {
+    selectedCourses = selectedCourses.filter(c => c.id !== courseId);
+  } else {
+    if (selectedCourses.length >= 2) {
+      alert("⚠️ Máximo 2 cursos");
       return;
     }
+    selectedCourses.push(course);
+  }
+  updateSelectionUI();
+  updatePitchDropdown();
+  updateSaleSummary();
+}
 
-    const systemPrompt = `Genera pitch de venta en español, 150 palabras máx.`;
-    const userQuery = `Pitch para: ${course.name_es}. Edad: ${document.getElementById("student_age").value}.`;
-
-    try {
-      const resp = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: userQuery }] }],
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-        }),
-      });
-      
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      
-      const data = await resp.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      
-      if (!text) throw new Error("Sin respuesta");
-
-      out.innerHTML = baseInfo + `<b>PITCH:</b><p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>")}</p>`;
-      
-    } catch (err) {
-      out.innerHTML = `<div class="mb-4 p-2 bg-red-100 rounded-lg"><b>⚠️ Error IA</b></div>` + baseInfo;
-    } finally {
-      loading.classList.add("hidden");
+function updateSelectionUI() {
+  allFilteredCourses.forEach(course => {
+    const btn = document.getElementById(`btn-select-${course.id}`);
+    const card = document.getElementById(`course-card-${course.id}`);
+    const isSelected = selectedCourses.some(c => c.id === course.id);
+    if (btn) {
+      btn.className = `btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}`;
+      btn.textContent = isSelected ? "✓ Seleccionado" : "Seleccionar";
+      if (selectedCourses.length >= 2 && !isSelected) btn.classList.add("disabled");
     }
+    if (card) {
+      isSelected ? card.classList.add("selected") : card.classList.remove("selected");
+    }
+  });
+  const countEl = document.getElementById("selected-count");
+  if (countEl) countEl.textContent = `${selectedCourses.length}/2 cursos`;
+}
+
+function updatePitchDropdown() {
+  const selectElement = document.getElementById("selected_course");
+  const submitBtn = document.getElementById("btn_submit_sale");
+  if (selectedCourses.length === 0) {
+    selectElement.innerHTML = '<option value="">-- Selecciona curso --</option>';
+    submitBtn.disabled = true;
+    return;
+  }
+  selectElement.innerHTML = '<option value="">-- Elige cuál pitch --</option>';
+  selectedCourses.forEach((course, idx) => {
+    const remaining = course.capacity - course.enrolled;
+    const urgencyTag = remaining <= 2 ? ` (CRÍTICO - ${remaining})` : "";
+    selectElement.innerHTML += `<option value="${course.id}">Curso ${idx + 1}: ${course.name_es}${urgencyTag}</option>`;
+  });
+  submitBtn.disabled = false;
+}
+
+function updateSaleSummary() {
+  const summaryContent = document.getElementById("summary-content");
+  const amoCrm = document.getElementById("amo_crm_link").value.trim();
+  const age = document.getElementById("student_age").value;
+  const interest = document.getElementById("student_interest").value;
+  const groupType = document.getElementById("group_type").value;
+  const isSen = document.getElementById("is_sen").checked;
+  
+  if (selectedCourses.length === 0) {
+    summaryContent.innerHTML = '<p class="text-gray-500">Completa diagnóstico</p>';
+    return;
+  }
+  
+  let html = '<div class="space-y-2">';
+  if (amoCrm) html += `<div><strong>amo CRM:</strong> ${amoCrm}</div>`;
+  html += `<div><strong>Edad:</strong> ${age}</div>`;
+  html += `<div><strong>Interés:</strong> ${interest}</div>`;
+  html += `<div><strong>Tipo:</strong> ${groupType}</div>`;
+  if (isSen) html += '<div><strong>SEN:</strong> ⭐ Sí</div>';
+  html += `<div><strong>Cursos:</strong> ${selectedCourses.length}</div>`;
+  selectedCourses.forEach(c => {
+    html += `<div class="text-sm pl-4">• ${c.name_es}</div>`;
+  });
+  html += '</div>';
+  summaryContent.innerHTML = html;
+}
+
+function openPreferredScheduleModal() {
+  const modal = document.getElementById("schedule-modal");
+  const overlay = document.getElementById("schedule-modal-overlay");
+  const tbody = document.getElementById("schedule-table-body");
+  const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  let html = "";
+  for (let hour = 6; hour <= 22; hour++) {
+    const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+    html += `<tr><td class="border p-2 font-medium">${timeStr}</td>`;
+    days.forEach(day => {
+      const checkId = `schedule-${day}-${hour}`;
+      html += `<td class="border p-2 text-center"><input type="checkbox" id="${checkId}" class="w-5 h-5 cursor-pointer schedule-checkbox" data-day="${day}" data-hour="${hour}"/></td>`;
+    });
+    html += "</tr>";
+  }
+  tbody.innerHTML = html;
+  modal.classList.add("active");
+  overlay.classList.add("active");
+}
+
+function closeScheduleModal() {
+  document.getElementById("schedule-modal").classList.remove("active");
+  document.getElementById("schedule-modal-overlay").classList.remove("active");
+}
+
+function submitPreferredSchedule() {
+  const checkboxes = document.querySelectorAll('.schedule-checkbox:checked');
+  if (checkboxes.length === 0) {
+    alert("⚠️ Selecciona al menos un horario");
+    return;
+  }
+  preferredSchedule = [];
+  checkboxes.forEach(cb => {
+    preferredSchedule.push({ day: cb.dataset.day, hour: parseInt(cb.dataset.hour) });
+  });
+  alert(`✅ ${checkboxes.length} horarios seleccionados`);
+  closeScheduleModal();
+  updateSaleSummary();
+}
+
+function openCoursesModal() {
+  const modal = document.getElementById("courses-modal");
+  const overlay = document.getElementById("modal-overlay");
+  const modalBody = document.getElementById("modal-courses-list");
+  let html = "";
+  allFilteredCourses.forEach((course, idx) => {
+    const remaining = course.capacity - course.enrolled;
+    const critical = remaining <= 2 && !course.isFull;
+    const isSelected = selectedCourses.some(c => c.id === course.id);
+    html += `<div class="course-option ${critical ? "critical" : ""} ${isSelected ? "selected" : ""}" id="course-card-${course.id}">
+      <div class="course-option-title">#${idx + 1}: ${course.name_es}</div>
+      <div class="course-option-row">⏰ ${course.next_start}</div>
+      <div class="course-option-row">💻 ${course.enrolled}/${course.capacity} (${remaining})</div>
+      <div class="course-option-row">👨‍🏫 ${course.teacher}</div>
+      ${course.isFull ? '<div class="course-option-urgency" style="color:#f59e0b;">⚠️ LLENO - REQUIERE AUTORIZACIÓN</div>' : ""}
+      ${critical ? '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA 🚨</div>' : ""}
+      <button onclick="toggleCourseSelection('${course.id}')" class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"} ${selectedCourses.length >= 2 && !isSelected ? "disabled" : ""}" id="btn-select-${course.id}">${isSelected ? "✓ Seleccionado" : "Seleccionar"}</button>
+    </div>`;
+  });
+  modalBody.innerHTML = html;
+  modal.classList.add("active");
+  overlay.classList.add("active");
+  updateSelectionUI();
+}
+
+function closeCoursesModal() {
+  document.getElementById("courses-modal").classList.remove("active");
+  document.getElementById("modal-overlay").classList.remove("active");
+}
+
+async function generatePitch() {
+  const selectedId = document.getElementById("selected_course").value;
+  const loading = document.getElementById("loading_indicator");
+  const out = document.getElementById("pitch_output");
+
+  if (!selectedId) {
+    out.innerHTML = "Selecciona un curso";
+    return;
   }
 
-  function setLanguage(lang) {
-    currentLang = lang;
+  const course = LIVE_COURSE_DATA.find(c => c.id === selectedId);
+  if (!course) return;
+
+  const remaining = course.capacity - course.enrolled;
+  loading.classList.remove("hidden");
+
+  const baseInfo = `<div class="mb-4 p-2 bg-blue-100 rounded-lg"><b>DETALLES:</b><div>📅 ${course.next_start}</div><div>🧑‍💻 ${remaining} cupos (de ${course.capacity})</div><div>👨‍🏫 ${course.teacher}</div></div>`;
+
+  if (!API_KEY) {
+    out.innerHTML = baseInfo + "<p><i>(API key vacía)</i></p>";
+    loading.classList.add("hidden");
+    return;
   }
 
-  window.onload = () => {
-    setLanguage("es");
-    document.getElementById("student_age").value = 10;
-    
-    fetchCourseData()
-      .then(() => { 
-        updateDataSourceInfo();
-        updateCourseTypeOptions(); // Inicializar opciones de tipo de curso
-      })
-      .catch(() => {});
+  const systemPrompt = `Genera pitch de venta en español, 150 palabras máx.`;
+  const userQuery = `Pitch para: ${course.name_es}. Edad: ${document.getElementById("student_age").value}.`;
 
-    setInterval(() => {
-      if (lastFetchTime) updateDataSourceInfo();
-    }, 30000);
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+      }),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!text) throw new Error("Sin respuesta");
+    out.innerHTML = baseInfo + `<b>PITCH:</b><p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>")}</p>`;
+  } catch (err) {
+    out.innerHTML = `<div class="mb-4 p-2 bg-red-100 rounded-lg"><b>⚠️ Error IA</b></div>` + baseInfo;
+  } finally {
+    loading.classList.add("hidden");
+  }
+}
+
+async function submitSale() {
+  if (selectedCourses.length === 0) {
+    alert("⚠️ Selecciona al menos un curso");
+    return;
+  }
+  if (!SALES_SCRIPT_URL) {
+    alert("⚠️ Sistema no conectado al Google Sheet.\n\nContacta al administrador.");
+    return;
+  }
+  const saleData = {
+    timestamp: new Date().toISOString(),
+    amo_crm_link: document.getElementById("amo_crm_link").value.trim(),
+    student_age: document.getElementById("student_age").value,
+    interest: document.getElementById("student_interest").value,
+    course_type: document.getElementById("course_type").value,
+    group_type: document.getElementById("group_type").value,
+    is_sen: document.getElementById("is_sen").checked,
+    selected_courses: selectedCourses.map(c => ({
+      id: c.id,
+      name: c.name_es,
+      schedule: c.next_start,
+      teacher: c.teacher,
+      enrolled: c.enrolled,
+      capacity: c.capacity
+    })),
+    preferred_schedule: preferredSchedule.length > 0 ? preferredSchedule : null
   };
+  try {
+    const response = await fetch(SALES_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(saleData)
+    });
+    const result = await response.json();
+    if (result.success) {
+      alert("✅ ¡Venta registrada!");
+      location.reload();
+    } else {
+      throw new Error(result.message || "Error");
+    }
+  } catch (error) {
+    alert("❌ Error al guardar: " + error.message);
+  }
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+}
+
+window.onload = () => {
+  setLanguage("es");
+  document.getElementById("student_age").value = 10;
+  fetchCourseData().then(() => updateDataSourceInfo()).catch(() => {});
+  setInterval(() => { if (lastFetchTime) updateDataSourceInfo(); }, 30000);
+};
 </script>
 </body>
 </html>
