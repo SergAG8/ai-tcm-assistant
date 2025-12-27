@@ -276,7 +276,7 @@
               <th class="border p-2 font-semibold">Jue</th>
               <th class="border p-2 font-semibold">Vie</th>
               <th class="border p-2 font-semibold">Sáb</th>
-              <th class="border p-2 font-semold">Dom</th>
+              <th class="border p-2 font-semibold">Dom</th>
             </tr>
           </thead>
           <tbody id="schedule-table-body"></tbody>
@@ -413,7 +413,6 @@ function mapRowsToCourses(headers, rows) {
     const dateStr = idx_date >= 0 ? r[idx_date] : "";
     const timeStr = idx_time >= 0 ? r[idx_time] : "";
 
-    // FILTRO CORREGIDO: NO excluir grupos llenos, solo verificar que no estén cerrados
     if (groupTitle.includes("WRONG") || !name || status.toLowerCase() === "closed") continue;
     
     const startDate = parseISODateOnly(dateStr);
@@ -507,32 +506,43 @@ async function fetchCourseData(forceRefresh = false) {
   throw new Error("Error de conexión");
 }
 
-// FUNCIÓN CORREGIDA: Calcula prioridad basada en urgencia y proximidad de inicio
+// FUNCIÓN CORREGIDA: Prioriza por CUPOS RESTANTES (menos cupos = mayor prioridad)
 function calculatePriority(course) {
   const remaining = course.capacity - course.enrolled;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const daysUntilStart = Math.floor((course.startDateObj - today) / (1000 * 60 * 60 * 24));
   
-  // Puntaje de urgencia por cupos (mayor puntaje = más urgente)
+  // Puntaje de urgencia por cupos RESTANTES (MENOS cupos = MÁS urgente)
   let urgencyScore = 0;
-  if (remaining <= 0) urgencyScore = 100; // Lleno pero mostrar igual
-  else if (remaining === 1) urgencyScore = 90;
-  else if (remaining === 2) urgencyScore = 80;
-  else if (remaining === 3) urgencyScore = 70;
-  else if (remaining <= 5) urgencyScore = 60;
-  else urgencyScore = Math.max(0, 50 - remaining * 2);
+  if (course.isFull) {
+    urgencyScore = 5; // Grupos llenos van al final
+  } else if (remaining === 1) {
+    urgencyScore = 1000; // MÁXIMA PRIORIDAD - falta 1 estudiante
+  } else if (remaining === 2) {
+    urgencyScore = 900;  // SEGUNDA PRIORIDAD - faltan 2 estudiantes
+  } else if (remaining === 3) {
+    urgencyScore = 800;  // TERCERA PRIORIDAD - faltan 3 estudiantes
+  } else if (remaining === 4) {
+    urgencyScore = 700;
+  } else if (remaining === 5) {
+    urgencyScore = 600;
+  } else if (remaining <= 10) {
+    urgencyScore = 500 - (remaining * 10);
+  } else {
+    urgencyScore = 300 - remaining;
+  }
   
-  // Puntaje de proximidad (mayor puntaje = más cercano)
+  // Puntaje de proximidad (como desempate)
   let proximityScore = 0;
-  if (daysUntilStart <= 0) proximityScore = 100;
-  else if (daysUntilStart <= 7) proximityScore = 90;
-  else if (daysUntilStart <= 14) proximityScore = 80;
-  else if (daysUntilStart <= 30) proximityScore = 70;
-  else proximityScore = Math.max(0, 60 - daysUntilStart);
+  if (daysUntilStart <= 0) proximityScore = 50;
+  else if (daysUntilStart <= 7) proximityScore = 40;
+  else if (daysUntilStart <= 14) proximityScore = 30;
+  else if (daysUntilStart <= 30) proximityScore = 20;
+  else proximityScore = Math.max(0, 10 - (daysUntilStart / 10));
   
-  // Prioridad total: 60% urgencia, 40% proximidad
-  return (urgencyScore * 0.6) + (proximityScore * 0.4);
+  // Prioridad total: 95% urgencia por cupos, 5% proximidad (solo como desempate)
+  return (urgencyScore * 0.95) + (proximityScore * 0.05);
 }
 
 function updateCourseTypeOptions() {
@@ -582,11 +592,12 @@ async function diagnoseAndMatch() {
     return true;
   });
 
-  // ORDENAMIENTO CORREGIDO: Por prioridad (urgencia + proximidad)
+  // Calcular prioridad y ordenar
   filtered.forEach(course => {
     course.priority = calculatePriority(course);
   });
   
+  // ORDENAR: Mayor prioridad primero (1 cupo > 2 cupos > 3 cupos, etc.)
   filtered.sort((a, b) => b.priority - a.priority);
   
   allFilteredCourses = filtered;
@@ -622,10 +633,12 @@ async function diagnoseAndMatch() {
       html += '<div class="course-option-urgency critical-text">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN</div>';
     } else if (remaining === 1) {
       html += '<div class="course-option-urgency critical-text">🚨 ¡ÚLTIMO CUPO DISPONIBLE! 🚨</div>';
-    } else if (critical) {
-      html += '<div class="course-option-urgency critical-text">🚨 MÁXIMA URGENCIA - Solo ' + remaining + ' cupos 🚨</div>';
+    } else if (remaining === 2) {
+      html += '<div class="course-option-urgency critical-text">🚨 URGENTE - 2 cupos 🚨</div>';
+    } else if (remaining === 3) {
+      html += '<div class="course-option-urgency warning-text">⚠️ Casi lleno - 3 cupos</div>';
     } else if (almostFull) {
-      html += '<div class="course-option-urgency warning-text">⚠️ Casi lleno - ' + remaining + ' cupos restantes</div>';
+      html += `<div class="course-option-urgency warning-text">⚠️ Casi lleno - ${remaining} cupos</div>`;
     }
     
     html += `<button onclick="toggleCourseSelection('${course.id}')" class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}" id="btn-select-${course.id}">${isSelected ? "✓ Seleccionado" : "Seleccionar"}</button>
@@ -691,7 +704,8 @@ function updatePitchDropdown() {
     const remaining = course.capacity - course.enrolled;
     let urgencyTag = "";
     if (remaining === 1) urgencyTag = " (¡ÚLTIMO CUPO!)";
-    else if (remaining <= 2) urgencyTag = ` (CRÍTICO - ${remaining} cupos)`;
+    else if (remaining === 2) urgencyTag = " (URGENTE - 2 cupos)";
+    else if (remaining === 3) urgencyTag = " (Casi lleno - 3 cupos)";
     else if (remaining <= 5) urgencyTag = ` (${remaining} cupos)`;
     
     selectElement.innerHTML += `<option value="${course.id}">Curso ${idx + 1}: ${course.name_es}${urgencyTag}</option>`;
@@ -795,8 +809,10 @@ function openCoursesModal() {
       html += '<div class="course-option-urgency critical-text">⚠️ LLENO - REQUIERE AUTORIZACIÓN</div>';
     } else if (remaining === 1) {
       html += '<div class="course-option-urgency critical-text">🚨 ¡ÚLTIMO CUPO! 🚨</div>';
-    } else if (critical) {
-      html += `<div class="course-option-urgency critical-text">🚨 URGENTE - ${remaining} cupos 🚨</div>`;
+    } else if (remaining === 2) {
+      html += '<div class="course-option-urgency critical-text">🚨 URGENTE - 2 cupos 🚨</div>';
+    } else if (remaining === 3) {
+      html += '<div class="course-option-urgency warning-text">⚠️ Casi lleno - 3 cupos</div>';
     } else if (almostFull) {
       html += `<div class="course-option-urgency warning-text">⚠️ Casi lleno - ${remaining} cupos</div>`;
     }
@@ -921,7 +937,6 @@ async function submitSale() {
 
 function setLanguage(lang) {
   currentLang = lang;
-  // Aquí puedes agregar lógica de traducción si es necesario
 }
 
 window.onload = () => {
