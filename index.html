@@ -850,7 +850,7 @@ async function generatePitch() {
   const baseInfo = `<div class="mb-4 p-2 bg-blue-100 rounded-lg"><b>📊 DETALLES DEL CURSO:</b><div class="mt-1">📅 Inicio: ${course.next_start}</div><div>🧑‍💻 Disponibilidad: ${remaining} cupos de ${course.capacity} totales</div><div>👨‍🏫 Instructor: ${course.teacher}</div>${course.isFull ? '<div class="text-orange-600 font-semibold">⚠️ Grupo lleno - requiere autorización</div>' : ''}</div>`;
 
   if (!API_KEY) {
-    out.innerHTML = baseInfo + "<p class='text-gray-600 mt-2'><i>⚠️ Configura tu API key de Gemini para generar pitches personalizados con IA</i></p>";
+    out.innerHTML = baseInfo + "<p class='text-gray-600 mt-2'><i>⚠️ Configura tu API key para generar pitches personalizados con IA</i></p>";
     loading.classList.add("hidden");
     return;
   }
@@ -953,4 +953,5 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
