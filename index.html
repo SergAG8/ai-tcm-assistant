@@ -203,9 +203,7 @@
           El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.
         </div>
 
-        <div id="loading_indicator" class="mt-4 hidden text-center text-blue-600 font-semibold">
-          Cargando análisis de IA y datos de disponibilidad...
-        </div>
+        
       </div>
 
       <!-- COLUMNA 2: ENVIAR VENTA -->
@@ -331,9 +329,314 @@ const DATA_SOURCES = {
   }
 };
 
-const API_KEY = "";
-const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+// ============================================
+// BASE DE DATOS DE CURSOS - INFORMACIÓN COMPLETA
+// ============================================
+const COURSE_GUIDELINES = {
+  "funtech": {
+    name: "FunTech Explorers",
+    age_range: { min: 5, max: 7 },
+    keywords: ["funtech", "explorers"],
+    interest_profile: "Descubrir el mundo digital, aprender a usar el computador",
+    min_requirements: "Ninguno (es para quienes no saben usar mouse/teclado)",
+    tech_requirements: "PC o Portátil (Windows/Mac), Zoom, Chrome",
+    tools: "Scratch Junior, Google Docs, Google Slides, Google Sheets, Brush Ninja, Gartic Phone",
+    soft_skills: "Lógica, trabajo en equipo, pensamiento creativo",
+    hard_skills: "Manejo de mouse y teclado, estructura de carpetas, algoritmos básicos, animación GIF, creación de presentaciones",
+    complementary_course: "La magia del código con Scratch (una vez cumplan 8 años o dominen lectoescritura)",
+    key_selling_points: [
+      "Curso perfecto para iniciar en el mundo digital",
+      "No requiere conocimientos previos",
+      "Aprenden jugando y creando",
+      "Base sólida para futuros cursos de programación"
+    ]
+  },
+  
+  "scratch": {
+    name: "La Magia del Código con Scratch",
+    age_range: { min: 8, max: 12 },
+    keywords: ["scratch", "magia", "código"],
+    interest_profile: "Crear historias interactivas, juegos y animaciones",
+    min_requirements: "Saber leer y escribir, manejo básico de PC",
+    tech_requirements: "PC o Portátil (Windows/Mac)",
+    tools: "Scratch (versión web/escritorio)",
+    soft_skills: "Storytelling (narración), resolución de problemas, pensamiento lógico",
+    hard_skills: "Coordenadas, variables, bucles, condicionales, depuración de errores (debugging), clones",
+    complementary_course: "Creatividad Digital 1 (para mejorar sus gráficos) o Roblox (para saltar al 3D)",
+    key_selling_points: [
+      "Estándar mundial para aprender programación",
+      "Desarrolla pensamiento lógico jugando",
+      "Crea sus propios juegos y animaciones",
+      "Preparación perfecta para lenguajes profesionales"
+    ]
+  },
+  
+  "roblox_8_9": {
+    name: "Roblox Game Developer",
+    age_range: { min: 8, max: 9 },
+    keywords: ["roblox"],
+    interest_profile: "Jugar videojuegos, crear sus propios mundos y reglas",
+    min_requirements: "Lectoescritura fluida (deben escribir código)",
+    tech_requirements: "8GB RAM (Mínimo), Tarjeta gráfica dedicada (o integrada reciente), Mouse con rueda",
+    tools: "Roblox Studio, Lenguaje LUA",
+    soft_skills: "Trabajo en equipo, monetización básica, paciencia (testing)",
+    hard_skills: "Modelado 3D básico (bloques), Scripting LUA (Variables, Bucles, Funciones), Edición de terreno, GUI (Interfaces)",
+    complementary_course: "Creatividad Digital (para diseñar texturas)",
+    key_selling_points: [
+      "Aprende a programar en LUA mientras crea juegos",
+      "Posibilidad de publicar juegos en la plataforma Roblox",
+      "Desarrollo 3D desde temprana edad",
+      "Puede monetizar sus creaciones en el futuro"
+    ]
+  },
+  
+  "roblox_10_12": {
+    name: "Roblox Game Developer (Avanzado)",
+    age_range: { min: 10, max: 12 },
+    keywords: ["roblox"],
+    interest_profile: "Videojuegos, mecánica de juegos avanzada, programación",
+    min_requirements: "Manejo fluido de teclado y mouse, lógica básica",
+    tech_requirements: "8GB RAM, Tarjeta gráfica dedicada, Mouse con rueda",
+    tools: "Roblox Studio, Lenguaje LUA",
+    soft_skills: "Diseño de juegos (Game Design), planificación de proyectos",
+    hard_skills: "Física de juegos, Animación de objetos, Scripting LUA avanzado (Condicionales complejos), Monetización (Game Passes), NPCs",
+    complementary_course: "Python New (para fortalecer la lógica de código escrito)",
+    key_selling_points: [
+      "Versión más avanzada y profunda de Roblox",
+      "Aprende mecánicas profesionales de Game Design",
+      "Programación LUA avanzada con física y animación",
+      "Preparación para desarrollo profesional de videojuegos"
+    ]
+  },
+  
+  "python_new": {
+    name: "Python New (Fundamentos)",
+    age_range: { min: 10, max: 17 },
+    keywords: ["python", "new", "fundamentos"],
+    interest_profile: "Lógica pura, 'hackers', crear software real, automatización",
+    min_requirements: "Pensamiento lógico avanzado, inglés básico (para comandos como print, while)",
+    tech_requirements: "PC/Mac, Teclado y Mouse",
+    tools: "Python, Librería PyGame Zero",
+    soft_skills: "Trabajo en equipo (desarrollo grupal), presentación de proyectos",
+    hard_skills: "Sintaxis de Python, Tipos de datos (listas, diccionarios), Ciclos (While/For), Lógica booleana, Desarrollo de juegos 2D",
+    complementary_course: "Diseño Web (para interfaz) o Unity (siguiente paso en juegos)",
+    key_selling_points: [
+      "Primer paso hacia programación profesional",
+      "Python es el lenguaje #1 en el mundo",
+      "Base para Inteligencia Artificial y Data Science",
+      "Crear software real desde el primer día"
+    ]
+  },
+  
+  "python_pro": {
+    name: "Python Pro",
+    age_range: { min: 13, max: 17 },
+    keywords: ["python", "pro", "avanzado"],
+    interest_profile: "Inteligencia Artificial, Bots, Back-end, Datos",
+    min_requirements: "Haber completado Python Básico o examen de validación",
+    tech_requirements: "PC/Mac",
+    tools: "Python, Discord.py, Git/GitHub, Flask (Web), Google Colab (IA)",
+    soft_skills: "Metodologías Ágiles (Scrum), Revisión de código (Code Review)",
+    hard_skills: "POO (Programación Orientada a Objetos), APIs, Desarrollo Web Backend, Machine Learning (IA), Síntesis de voz",
+    complementary_course: "Diseño Web (para conectar con Flask)",
+    key_selling_points: [
+      "Nivel profesional: IA, bots y desarrollo web",
+      "Aprende Machine Learning e Inteligencia Artificial",
+      "Crea aplicaciones web completas",
+      "Preparación para universidad o trabajo tech"
+    ]
+  },
+  
+  "creatividad_1": {
+    name: "Creatividad Digital Nivel 1",
+    age_range: { min: 8, max: 9 },
+    keywords: ["creatividad", "digital", "arte", "nivel 1"],
+    interest_profile: "Dibujar, pintar, crear caricaturas",
+    min_requirements: "Manejo básico de mouse",
+    tech_requirements: "PC/Mac (Uso intensivo de mouse para dibujar)",
+    tools: "Kleki (Dibujo), FlipAnim (Animación), 123Apps (Edición video)",
+    soft_skills: "Expresión emocional, creatividad visual",
+    hard_skills: "Pixel Art, uso de capas, animación cuadro por cuadro, Storyboarding, edición de video básica",
+    complementary_course: "Scratch (para dar vida interactiva a sus dibujos)",
+    key_selling_points: [
+      "Desarrolla expresión artística digital",
+      "Aprende técnicas profesionales de animación",
+      "Crea su propio contenido visual",
+      "Base para diseño gráfico profesional"
+    ]
+  },
+  
+  "creatividad_2": {
+    name: "Creatividad Digital Nivel 2",
+    age_range: { min: 10, max: 12 },
+    keywords: ["creatividad", "digital", "diseño", "nivel 2"],
+    interest_profile: "Diseño, logos, animación más compleja, 3D",
+    min_requirements: "Manejo de PC",
+    tech_requirements: "PC/Mac",
+    tools: "Canva, Krita, WickEditor, Spline (3D), Figma, WIX",
+    soft_skills: "Autopresentación, creación de portafolio",
+    hard_skills: "Diseño vectorial, Branding (Libro de marca), Ilustración digital, Modelado 3D básico, Creación de sitios web en WIX",
+    complementary_course: "Ilustración o FWD Pro (cuando cumpla la edad/equipo)",
+    key_selling_points: [
+      "Evolución hacia diseño gráfico profesional",
+      "Modelado 3D básico con Spline",
+      "Crea su portafolio digital",
+      "Aprende branding y diseño de marcas"
+    ]
+  },
+  
+  "ilustracion": {
+    name: "Ilustración (Artista CG)",
+    age_range: { min: 10, max: 12 },
+    keywords: ["ilustración", "ilustracion", "artista", "dibujo"],
+    interest_profile: "Dibujo profesional, cómics, arte conceptual",
+    min_requirements: "Gusto por el dibujo manual/digital",
+    tech_requirements: "PC/Mac. Idealmente Tableta Digitalizadora",
+    tools: "Software de arte digital, Herramientas de IA",
+    soft_skills: "Ética en el uso de IA, estilo propio",
+    hard_skills: "Teoría del color, luces y sombras, perspectiva, anatomía, Photobashing, diseño de personajes",
+    complementary_course: "Creatividad Digital 2",
+    key_selling_points: [
+      "Enfoque artístico profesional",
+      "Técnicas avanzadas de ilustración digital",
+      "Aprende a usar IA como herramienta artística",
+      "Desarrolla estilo propio y portafolio"
+    ]
+  },
+  
+  "diseno_grafico": {
+    name: "Diseño Gráfico",
+    age_range: { min: 13, max: 17 },
+    keywords: ["diseño", "gráfico", "grafico", "branding"],
+    interest_profile: "Branding, logos, publicidad, redes sociales",
+    min_requirements: "Autonomía digital, sentido estético",
+    tech_requirements: "PC/Mac",
+    tools: "Figma, Photopea, Behance",
+    soft_skills: "Orientación profesional, presentación personal",
+    hard_skills: "Vectores, tipografía, retículas modulares, retoque fotográfico, Mockups, diseño de Landing Pages (UI)",
+    complementary_course: "Diseño Web (es el complemento natural)",
+    key_selling_points: [
+      "Preparación para carrera en diseño",
+      "Aprende herramientas profesionales (Figma)",
+      "Crea branding completo para marcas",
+      "Portfolio profesional en Behance"
+    ]
+  },
+  
+  "diseno_web": {
+    name: "Diseño Web (WEB)",
+    age_range: { min: 13, max: 17 },
+    keywords: ["web", "html", "css", "frontend"],
+    interest_profile: "Crear páginas web, código + diseño",
+    min_requirements: "Escribir en inglés básico (keywords), no usar tablet",
+    tech_requirements: "PC/Portátil, Chrome. No Tablets/Chromebooks",
+    tools: "Visual Studio Code, HTML5, CSS3, Figma, Bootstrap",
+    soft_skills: "Análisis de usuario (UX), presentación de proyectos",
+    hard_skills: "Maquetación HTML/CSS, Flexbox/Grid, Diseño Responsivo, JavaScript básico (interactividad), SEO básico",
+    complementary_course: "Diseño Gráfico (para mejorar la UI) o Python Pro (para el backend)",
+    key_selling_points: [
+      "Crea sitios web profesionales desde cero",
+      "Habilidad más demandada en el mercado laboral",
+      "Aprende HTML, CSS y JavaScript",
+      "Base para desarrollo Full Stack"
+    ]
+  },
+  
+  "fwd_pro": {
+    name: "Fantastic World Design Pro (FWD Pro)",
+    age_range: { min: 13, max: 17 },
+    keywords: ["fwd", "blender", "3d", "modelado", "fantastic", "world"],
+    interest_profile: "3D, arquitectura, animación realista",
+    min_requirements: "Paciencia, pensamiento espacial",
+    tech_requirements: "8GB - 32GB RAM, CPU 64-bit. No Chromebooks",
+    tools: "Blender, Photopea, Tilda (Web)",
+    soft_skills: "Planificación de proyectos complejos",
+    hard_skills: "Modelado 3D (Low/High poly), Texturizado UV, Simulaciones físicas (fuego, fluidos), Renderizado, Diseño arquitectónico",
+    complementary_course: "Unity (para importar los modelos 3D a un juego)",
+    key_selling_points: [
+      "Blender: herramienta usada en Hollywood",
+      "Modelado 3D profesional y arquitectura",
+      "Simulaciones físicas avanzadas",
+      "Preparación para industria de VFX y videojuegos"
+    ]
+  },
+  
+  "unity": {
+    name: "Unity (Juegos Unity 3D)",
+    age_range: { min: 13, max: 17 },
+    keywords: ["unity", "c#", "game"],
+    interest_profile: "Crear videojuegos profesionales, programación C#",
+    min_requirements: "Experiencia previa en programación, Usuario confiado de PC",
+    tech_requirements: "PC Potente (i3/i5, GPU dedicada recomendada). No Chromebooks",
+    tools: "Unity Editor, Visual Studio (C#), Photon (Multiplayer), GitHub",
+    soft_skills: "Gestión de versiones, equilibrio de juego",
+    hard_skills: "Programación C# (Clases, Herencia, POO), Física 2D/3D, Inteligencia Artificial (IA) básica, Redes (Multiplayer), Animación",
+    complementary_course: "FWD Pro (para crear los assets 3D)",
+    key_selling_points: [
+      "Motor usado en juegos AAA profesionales",
+      "Aprende C#: lenguaje de alta demanda",
+      "Crea juegos multiplayer",
+      "Preparación para industria de videojuegos"
+    ]
+  },
+  
+  "minecraft_1": {
+    name: "Minecraft Education (Nivel 1)",
+    age_range: { min: 8, max: 9 },
+    keywords: ["minecraft", "nivel 1", "education"],
+    interest_profile: "Construir, jugar Minecraft, automatizar tareas, crear juegos simples",
+    min_requirements: "Habilidad básica de PC (ratón/teclado). No requiere experiencia previa en programación",
+    tech_requirements: "PC/Mac o Chrome OS, 8GB RAM, Procesador i3 o superior",
+    tools: "Minecraft Education Edition, MakeCode (bloques)",
+    soft_skills: "Trabajo en equipo, planificación de proyectos, resolución creativa de problemas, presentación de proyectos",
+    hard_skills: "Algoritmos, bucles, coordenadas, lógica condicional (if/else), automatización con Agente, Redstone",
+    complementary_course: "Roblox (8-9) (para saltar a otro motor 3D) o Minecraft Nivel 2 (para avanzar a código escrito)",
+    key_selling_points: [
+      "Aprende programación dentro de su juego favorito",
+      "No requiere experiencia previa",
+      "Automatización con bloques visuales",
+      "Base perfecta para Python después"
+    ]
+  },
+  
+  "minecraft_2": {
+    name: "Minecraft Education Nivel 2 (Python)",
+    age_range: { min: 10, max: 11 },
+    keywords: ["minecraft", "python", "nivel 2"],
+    interest_profile: "Programar 'de verdad', controlar el juego con código, Inteligencia Artificial (IA)",
+    min_requirements: "Lectura fluida (código en inglés básico), lógica básica",
+    tech_requirements: "PC/Mac o Chrome OS, Hardware específico (Intel i3/AMD A8 o superior)",
+    tools: "Minecraft Education Edition, Lenguaje Python",
+    soft_skills: "Ética de la IA, presentación de proyectos, pensamiento sistemático",
+    hard_skills: "Sintaxis Python, Bucles anidados, Variables, Funciones parametrizadas, Listas, Coordenadas 3D (x, y, z), Uso de IA para código",
+    complementary_course: "Python New (para salir del entorno de juego) o Roblox (10-12)",
+    key_selling_points: [
+      "Evolución a programación profesional con Python",
+      "Controla Minecraft con código real",
+      "Introducción a IA dentro del juego",
+      "Transición perfecta hacia Python profesional"
+    ]
+  },
+  
+  "drawing": {
+    name: "Drawing (Dibujo en papel)",
+    age_range: { min: 8, max: 9 },
+    keywords: ["drawing", "dibujo", "papel"],
+    interest_profile: "Dibujar en papel, cómics, anime, realismo, pintura",
+    min_requirements: "Paciencia, motricidad fina, gusto por dibujar a mano",
+    tech_requirements: "PC/Mac/Tablet (para ver la clase por Zoom). Materiales Físicos: Papel A4, Lápiz HB, Borrador, Regla, Colores/Marcadores, Pinturas a base de agua",
+    tools: "Papel y materiales tradicionales",
+    soft_skills: "Confianza en sí mismo, concentración, estabilidad emocional, superación del miedo al error",
+    hard_skills: "Proporción, perspectiva, teoría del color, sombreado, estilos (anime, cubismo, impresionismo), bocetado rápido",
+    complementary_course: "Creatividad Digital 1 (para digitalizar su arte) o Ilustración (futuro paso)",
+    key_selling_points: [
+      "Fundamentos artísticos tradicionales",
+      "No requiere tableta digital costosa",
+      "Desarrolla concentración y confianza",
+      "Base perfecta para ilustración digital después"
+    ]
+  }
+};
 
 // ============================================
 // VARIABLES GLOBALES
@@ -1221,65 +1524,129 @@ function submitPreferredSchedule() {
   closeScheduleModal();
 }
 
+// ============================================
+// FUNCIÓN DE MATCHING INTELIGENTE
+// ============================================
+function findCourseGuideline(courseName, studentAge) {
+  const searchTerm = courseName.toLowerCase();
+  
+  for (const [key, course] of Object.entries(COURSE_GUIDELINES)) {
+    const matchesKeyword = course.keywords.some(kw => searchTerm.includes(kw));
+    const matchesAge = studentAge >= course.age_range.min && studentAge <= course.age_range.max;
+    
+    if (matchesKeyword && matchesAge) {
+      return course;
+    }
+  }
+  
+  for (const [key, course] of Object.entries(COURSE_GUIDELINES)) {
+    const matchesKeyword = course.keywords.some(kw => searchTerm.includes(kw));
+    if (matchesKeyword) {
+      return course;
+    }
+  }
+  
+  return null;
+}
+
+    // ============================================
+// FUNCIÓN PARA GENERAR PITCH 
+// ============================================
 async function generatePitch() {
   const selectedId = document.getElementById("selected_course").value;
-  const loading = document.getElementById("loading_indicator");
   const out = document.getElementById("pitch_output");
 
   if (!selectedId) {
-    out.innerHTML = '<span class="text-gray-600">⚠️ Selecciona un curso de la lista para generar el pitch</span>';
+    out.innerHTML = '<span class="text-gray-600">⚠️ Selecciona un curso de la lista</span>';
     return;
   }
 
   const course = [...LIVE_COURSE_DATA, ...LIVE_POSSIBLE_GROUPS].find(c => c.id === selectedId);
   if (!course) return;
 
+  const studentAge = parseInt(document.getElementById("student_age").value);
   const remaining = course.capacity - course.enrolled;
   const typeLabel = course.type === 'possible' ? '🌟 GRUPO POSIBLE (creado por demanda)' : '✅ GRUPO ACTIVO';
-  loading.classList.remove("hidden");
-
-  const baseInfo = `<div class="mb-4 p-2 bg-blue-100 rounded-lg"><b>📊 DETALLES DEL CURSO:</b><div class="mt-1"><span class="font-semibold">${typeLabel}</span></div><div class="mt-1">📅 Inicio: ${course.next_start}</div><div>🧑‍💻 Disponibilidad: ${remaining} cupos de ${course.capacity} totales</div><div>👨‍🏫 Instructor: ${course.teacher}</div>${course.isFull ? '<div class="text-orange-600 font-semibold">⚠️ Grupo lleno - requiere autorización</div>' : ''}</div>`;
-
-  if (!API_KEY) {
-    out.innerHTML = baseInfo + "<p class='text-gray-600 mt-2'><i>⚠️ Configura tu API key para generar pitches personalizados con IA</i></p>";
-    loading.classList.add("hidden");
+  
+  const guideline = findCourseGuideline(course.name_es, studentAge);
+  
+  if (!guideline) {
+    out.innerHTML = `
+      <div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+        <div class="font-bold text-lg mb-2">📊 ${course.name_es}</div>
+        <div class="text-sm mb-1"><b>${typeLabel}</b></div>
+        <div class="text-sm mb-1">📅 <b>Inicio:</b> ${course.next_start}</div>
+        <div class="text-sm mb-1">💻 <b>Disponibilidad:</b> ${remaining} de ${course.capacity} cupos</div>
+        <div class="text-sm mb-1">👨‍🏫 <b>Instructor:</b> ${course.teacher}</div>
+        ${course.isFull ? '<div class="text-orange-600 font-semibold mt-2">⚠️ Grupo lleno</div>' : ''}
+      </div>
+      <div class="p-3 bg-yellow-50 rounded">
+        <p class="text-sm">ℹ️ Información no disponible para este curso</p>
+      </div>
+    `;
     return;
   }
 
-  const age = document.getElementById("student_age").value;
-  const interest = document.getElementById("student_interest").value;
-  
-  const systemPrompt = `Eres un experto en ventas educativas. Genera un pitch de venta convincente en español, máximo 150 palabras, enfocado en los beneficios del curso para el estudiante y los padres. Incluye urgencia si hay pocos cupos. ${course.type === 'possible' ? 'Este es un grupo POSIBLE creado por demanda, enfatiza la oportunidad de formar parte de un grupo nuevo.' : 'Este es un grupo ACTIVO confirmado.'}`;
-  
-  const userQuery = `Curso: ${course.name_es}
-Tipo: ${course.type === 'possible' ? 'Grupo Posible (por demanda)' : 'Grupo Activo'}
-Edad estudiante: ${age} años
-Interés: ${interest}
-Cupos disponibles: ${remaining} de ${course.capacity}
-Horario: ${course.next_start}
-Profesor: ${course.teacher}
+  let pitchHTML = `
+    <div class="space-y-4">
+      <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg">
+        <h3 class="text-xl font-bold mb-1">🎯 ${guideline.name}</h3>
+        <p class="text-sm opacity-90">${typeLabel} | Edad: ${guideline.age_range.min}-${guideline.age_range.max} años</p>
+      </div>
 
-Genera un pitch persuasivo que destaque los beneficios y cree urgencia apropiada.`;
+      <div class="p-3 ${remaining <= 3 ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'} border-l-4 rounded">
+        <div class="font-semibold text-lg mb-1">📅 Información del Grupo</div>
+        <div class="text-sm space-y-1">
+          <div>🕐 <b>Horario:</b> ${course.next_start}</div>
+          <div>💺 <b>Cupos:</b> ${remaining} de ${course.capacity} disponibles ${remaining <= 3 ? '⚠️ ¡CASI LLENO!' : ''}</div>
+          <div>👨‍🏫 <b>Instructor:</b> ${course.teacher}</div>
+        </div>
+      </div>
 
-  try {
-    const resp = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: userQuery }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-      }),
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    if (!text) throw new Error("Sin respuesta de la IA");
-    out.innerHTML = baseInfo + `<div class="mt-3"><b>🎤 PITCH GENERADO:</b><p style="margin-top:10px;line-height:1.6;">${text.replace(/\n/g, "<br>")}</p></div>`;
-  } catch (err) {
-    out.innerHTML = `<div class="mb-4 p-2 bg-red-100 rounded-lg"><b>⚠️ Error al generar pitch con IA</b><p class="text-sm mt-1">${err.message}</p></div>` + baseInfo;
-  } finally {
-    loading.classList.add("hidden");
-  }
+      <div class="p-3 bg-purple-50 border-l-4 border-purple-400 rounded">
+        <div class="font-semibold mb-2">👤 Perfil Ideal del Estudiante</div>
+        <p class="text-sm">${guideline.interest_profile}</p>
+      </div>
+
+      <div class="p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+        <div class="font-semibold mb-2">🎓 Lo que Aprenderá</div>
+        <div class="text-sm space-y-2">
+          <div><b>🛠️ Herramientas:</b> ${guideline.tools}</div>
+          <div><b>💪 Habilidades Técnicas:</b> ${guideline.hard_skills}</div>
+          <div><b>🧠 Habilidades Blandas:</b> ${guideline.soft_skills}</div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-orange-50 border-l-4 border-orange-400 rounded">
+        <div class="font-semibold mb-2">⚙️ Requisitos Importantes</div>
+        <div class="text-sm space-y-1">
+          <div><b>📚 Académicos:</b> ${guideline.min_requirements}</div>
+          <div><b>💻 Técnicos:</b> ${guideline.tech_requirements}</div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-green-50 border-l-4 border-green-500 rounded">
+        <div class="font-semibold mb-2">✨ ¿Por qué este curso es perfecto?</div>
+        <ul class="text-sm space-y-1 list-disc list-inside">
+          ${guideline.key_selling_points.map(point => `<li>${point}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="p-3 bg-indigo-50 border-l-4 border-indigo-400 rounded">
+        <div class="font-semibold mb-1">🚀 Siguiente Paso en su Aprendizaje</div>
+        <p class="text-sm">${guideline.complementary_course}</p>
+      </div>
+
+      ${remaining <= 5 ? `
+      <div class="p-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg text-center">
+        <div class="text-lg font-bold mb-1">⚠️ ¡ATENCIÓN!</div>
+        <p class="text-sm">Solo quedan <b>${remaining} cupos</b>. ${remaining <= 2 ? '¡Asegura el lugar AHORA!' : 'Reserva antes de que se llene.'}</p>
+      </div>
+      ` : ''}
+    </div>
+  `;
+
+  out.innerHTML = pitchHTML;
 }
 
 async function submitSale() {
@@ -1347,4 +1714,5 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
