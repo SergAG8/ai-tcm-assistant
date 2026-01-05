@@ -427,21 +427,31 @@ function parseISODateOnly(s) {
 }
 
 function parseTimeToMinutes(timeStr) {
-  // Parsea formato "HH:MM" a minutos desde medianoche
+  // Parsea formato "HH:MM" o "H:MM" a minutos desde medianoche
   const match = String(timeStr || "").match(/(\d{1,2}):(\d{2})/);
   if (!match) return null;
   return parseInt(match[1]) * 60 + parseInt(match[2]);
 }
 
+// MEJORADO: Parsing de días con soporte inglés y español
 function parseDayAbbreviation(dayStr) {
   const dayMap = {
-    'mon': 'lunes', 'monday': 'lunes', 'lun': 'lunes',
-    'tue': 'martes', 'tuesday': 'martes', 'mar': 'martes',
-    'wed': 'miércoles', 'wednesday': 'miércoles', 'mié': 'miércoles', 'mie': 'miércoles',
-    'thu': 'jueves', 'thursday': 'jueves', 'jue': 'jueves',
-    'fri': 'viernes', 'friday': 'viernes', 'vie': 'viernes',
-    'sat': 'sábado', 'saturday': 'sábado', 'sáb': 'sábado', 'sab': 'sábado',
-    'sun': 'domingo', 'sunday': 'domingo', 'dom': 'domingo'
+    // Inglés
+    'mon': 'lunes', 'monday': 'lunes',
+    'tue': 'martes', 'tuesday': 'martes',  
+    'wed': 'miércoles', 'wednesday': 'miércoles',
+    'thu': 'jueves', 'thursday': 'jueves',
+    'fri': 'viernes', 'friday': 'viernes',
+    'sat': 'sábado', 'saturday': 'sábado',
+    'sun': 'domingo', 'sunday': 'domingo',
+    // Español
+    'lun': 'lunes', 'lunes': 'lunes',
+    'mar': 'martes', 'martes': 'martes',
+    'mié': 'miércoles', 'mie': 'miércoles', 'miércoles': 'miércoles', 'miercoles': 'miércoles',
+    'jue': 'jueves', 'jueves': 'jueves',
+    'vie': 'viernes', 'viernes': 'viernes',
+    'sáb': 'sábado', 'sab': 'sábado', 'sábado': 'sábado', 'sabado': 'sábado',
+    'dom': 'domingo', 'domingo': 'domingo'
   };
   const normalized = String(dayStr || "").toLowerCase().trim();
   return dayMap[normalized] || normalized;
@@ -480,19 +490,20 @@ function mapRowsToCourses(headers, rows) {
     const dateStr = idx_date >= 0 ? r[idx_date] : "";
     const timeStr = idx_time >= 0 ? r[idx_time] : "";
 
+    // NUEVO: Filtrar grupos con "Error" en el nombre
+    if (groupTitle.toLowerCase().includes("error") || name.toLowerCase().includes("error")) continue;
+    
     if (groupTitle.includes("WRONG") || !name || status.toLowerCase() === "closed") continue;
     
-    // NUEVO: Filtrar grupos sobrevendidos (enrolled > capacity)
+    // Filtrar grupos sobrevendidos (enrolled > capacity)
     if (capacity > 0 && enrolled > capacity) continue;
     
     const startDate = parseISODateOnly(dateStr);
-    // NUEVO: Para grupos al 100%, solo mostrar si iniciaron hace máximo 2 semanas
+    // Para grupos al 100%, solo mostrar si iniciaron hace máximo 2 semanas
     if (startDate) {
       if (capacity > 0 && enrolled === capacity) {
-        // Grupo lleno al 100%
-        if (startDate < twoWeeksAgo) continue; // No mostrar si inició hace más de 2 semanas
+        if (startDate < twoWeeksAgo) continue;
       } else {
-        // Grupos no llenos: solo mostrar si no han iniciado o iniciaron hace máximo 2 semanas
         if (startDate < twoWeeksAgo) continue;
       }
     }
@@ -526,25 +537,27 @@ function mapRowsToCourses(headers, rows) {
 // ============================================
 function mapRowsToPossibleGroups(headers, rows) {
   // Columnas esperadas:
-  // A: Course, B: Format, C: Day, D: Hora, E: Students, G: Age Range
-  const findCol = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+  // A: Course (idx 0), B: Format (idx 1), C: Day (idx 2), D: Hora (idx 3), E: Students (idx 4), G: Age Range (idx 6)
   
-  const idx_course = 0; // Columna A
-  const idx_format = 1; // Columna B
-  const idx_day = 2; // Columna C
-  const idx_hora = 3; // Columna D
-  const idx_students = 4; // Columna E
-  const idx_age = 6; // Columna G
-
   const groups = [];
+  
+  console.log("=== DEBUGGING POSSIBLE GROUPS ===");
+  console.log("Headers:", headers);
+  console.log("Total rows:", rows.length);
+  
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
-    const courseName = r[idx_course] || "";
-    const format = (r[idx_format] || "").toLowerCase();
-    const day = parseDayAbbreviation(r[idx_day] || "");
-    const hora = r[idx_hora] || "";
-    const students = parseInt(r[idx_students] || "0");
-    const ageRange = parseAgeRange(r[idx_age] || "");
+    
+    // Manejo flexible de columnas (por índice y por nombre)
+    const courseName = r[0] || "";
+    const format = (r[1] || "").toLowerCase();
+    const dayRaw = r[2] || "";
+    const hora = r[3] || "";
+    const students = parseInt(r[4] || "0");
+    const ageRangeStr = r[6] || "";
+    
+    const day = parseDayAbbreviation(dayRaw);
+    const ageRange = parseAgeRange(ageRangeStr);
 
     if (!courseName) continue;
 
@@ -552,16 +565,17 @@ function mapRowsToPossibleGroups(headers, rows) {
     const isPremium = format.includes("prm") || format.includes("premium");
     const capacity = isPremium ? 4 : 14;
 
-    // NUEVO: No mostrar grupos sobrevendidos
+    // No mostrar grupos sobrevendidos
     if (students > capacity) continue;
 
-    groups.push({
+    const group = {
       id: `possible_${i}_${courseName}_${day}_${hora}`,
       name_es: courseName,
       topic: courseName,
       courseTitle: courseName,
       format: isPremium ? "premium" : "regular",
       day: day,
+      dayRaw: dayRaw,
       hora: hora,
       timeMinutes: parseTimeToMinutes(hora),
       enrolled: students,
@@ -574,8 +588,29 @@ function mapRowsToPossibleGroups(headers, rows) {
       next_start: `${day} | ${hora}`,
       teacher: "Por asignar",
       type: 'possible'
-    });
+    };
+    
+    // Debug log para el grupo de Roblox viernes 13:00
+    if (courseName.toLowerCase().includes("roblox") && (dayRaw.toLowerCase().includes("fri") || day.includes("viernes"))) {
+      console.log("🔍 Found Roblox Friday group:", {
+        courseName,
+        dayRaw,
+        dayParsed: day,
+        hora,
+        timeMinutes: group.timeMinutes,
+        students,
+        format,
+        isPremium,
+        capacity
+      });
+    }
+    
+    groups.push(group);
   }
+  
+  console.log("Total possible groups parsed:", groups.length);
+  console.log("=== END DEBUGGING ===");
+  
   return groups;
 }
 
@@ -708,7 +743,7 @@ function calculatePriority(course) {
   return (urgencyScore * 0.95) + (proximityScore * 0.05);
 }
 
-// NUEVO: Calcular match score para horarios
+// MEJORADO: Calcular match score para horarios
 function calculateScheduleMatchScore(course) {
   if (preferredSchedule.length === 0) return 0;
   
@@ -723,29 +758,42 @@ function calculateScheduleMatchScore(course) {
     'thu': 'jueves', 'fri': 'viernes', 'sat': 'sábado', 'sun': 'domingo'
   };
   
+  console.log(`Checking schedule match for: ${course.name_es} | Day: ${courseDay} | Time: ${courseTime}min (${course.hora || course.timeStr})`);
+  
   for (const pref of preferredSchedule) {
-    const prefTime = pref.hour * 60;
+    const prefTime = pref.hour * 60; // Convertir hora a minutos
     const prefDay = dayMap[pref.day];
     const timeDiff = Math.abs(courseTime - prefTime);
     
-    // Prioridad 1: Mismo día + misma hora (exacto o muy cercano)
+    console.log(`  Comparing with pref: ${prefDay} ${pref.hour}:00 (${prefTime}min) | TimeDiff: ${timeDiff}min`);
+    
+    // Prioridad 1: Mismo día + misma hora (exacto o muy cercano ±30min)
     if (courseDay === prefDay && timeDiff <= 30) {
-      bestScore = Math.max(bestScore, 1000 - timeDiff);
+      const score = 1000 - timeDiff;
+      console.log(`    ✅ P1 Match! Score: ${score}`);
+      bestScore = Math.max(bestScore, score);
     }
     // Prioridad 2: Misma hora (±30min) + día diferente
     else if (timeDiff <= 30) {
-      bestScore = Math.max(bestScore, 800 - timeDiff);
+      const score = 800 - timeDiff;
+      console.log(`    ✅ P2 Match! Score: ${score}`);
+      bestScore = Math.max(bestScore, score);
     }
     // Prioridad 3: Mismo día + hora cercana (±2 horas = 120 min)
     else if (courseDay === prefDay && timeDiff <= 120) {
-      bestScore = Math.max(bestScore, 600 - timeDiff);
+      const score = 600 - timeDiff;
+      console.log(`    ✅ P3 Match! Score: ${score}`);
+      bestScore = Math.max(bestScore, score);
     }
     // Prioridad 4: Día diferente + hora cercana (±2 horas)
     else if (timeDiff <= 120) {
-      bestScore = Math.max(bestScore, 400 - timeDiff);
+      const score = 400 - timeDiff;
+      console.log(`    ✅ P4 Match! Score: ${score}`);
+      bestScore = Math.max(bestScore, score);
     }
   }
   
+  console.log(`  Final best score: ${bestScore}`);
   return bestScore;
 }
 
@@ -798,6 +846,13 @@ async function diagnoseAndMatch() {
     return;
   }
 
+  console.log("=== FILTERING CRITERIA ===");
+  console.log("Age:", age);
+  console.log("Interest:", interest);
+  console.log("Course Type:", courseType || "All");
+  console.log("Group Type:", groupType);
+  console.log("Preferred Schedule:", preferredSchedule);
+
   // Filtrar grupos activos
   let filteredActive = LIVE_COURSE_DATA.filter(c => {
     const basicMatch = age >= c.min_age && age <= c.max_age && c.interest === interest;
@@ -809,6 +864,8 @@ async function diagnoseAndMatch() {
     return true;
   });
 
+  console.log("Active groups after basic filter:", filteredActive.length);
+
   // Filtrar grupos posibles
   let filteredPossible = LIVE_POSSIBLE_GROUPS.filter(c => {
     const basicMatch = age >= c.min_age && age <= c.max_age && c.interest === interest;
@@ -816,6 +873,14 @@ async function diagnoseAndMatch() {
     if (courseType && c.courseType !== courseType) return false;
     if (groupType !== c.format) return false;
     return true;
+  });
+
+  console.log("Possible groups after basic filter:", filteredPossible.length);
+  
+  // Debug: Mostrar grupos posibles filtrados
+  console.log("=== POSSIBLE GROUPS DETAILS ===");
+  filteredPossible.forEach(g => {
+    console.log(`- ${g.name_es} | ${g.day} ${g.hora} | Students: ${g.enrolled}/${g.capacity}`);
   });
 
   // Calcular scores
@@ -1257,4 +1322,5 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
