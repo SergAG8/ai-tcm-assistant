@@ -125,7 +125,6 @@
           <option value="premium">Premium (PRM)</option>
         </select>
 
-        <!-- NUEVO: Selector de Horario Preferido -->
         <button id="btn_select_schedule" onclick="openPreferredScheduleModal()" class="schedule-btn">
           🕐 Seleccionar Horario Preferido
         </button>
@@ -370,17 +369,45 @@ function showSystemMessage(type, title, message) {
 }
 
 // ============================================
-// FUNCIONES DE PARSING
+// FUNCIONES DE PARSING MEJORADAS
 // ============================================
-function parseCSV(text) {
+
+// NUEVO: Parser CSV robusto que maneja comillas y comas dentro de celdas
+function parseCSVRobust(text) {
   const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
   const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
-    if (values.length === headers.length) rows.push(values);
+  
+  for (let line of lines) {
+    const row = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+      
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        row.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    row.push(current.trim());
+    rows.push(row);
   }
-  return { headers, rows };
+  
+  const headers = rows[0].map(h => h.replace(/['"]/g, ''));
+  const dataRows = rows.slice(1);
+  
+  return { headers, rows: dataRows };
 }
 
 function parseAgeRange(ageStr) {
@@ -395,11 +422,9 @@ function inferInterest(courseTitle) {
   return "coding";
 }
 
-// MEJORADO: Extraer tipo de curso más genérico
 function extractCourseType(courseName, courseTitle) {
   const title = String(courseTitle || courseName || "").toLowerCase();
   
-  // Para Roblox, devolver solo "Roblox" (sin LVL2, LVL1, etc.)
   if (title.includes("roblox")) return "Roblox";
   if (title.includes("minecraft")) return "Minecraft";
   if (title.includes("unity")) return "Unity";
@@ -526,34 +551,52 @@ function mapRowsToCourses(headers, rows) {
 }
 
 // ============================================
-// MAPEO DE DATOS: GRUPOS POSIBLES
+// MAPEO DE DATOS: GRUPOS POSIBLES - MEJORADO
 // ============================================
 function mapRowsToPossibleGroups(headers, rows) {
   const groups = [];
   
-  console.log("=== PARSING POSSIBLE GROUPS ===");
+  console.log("=== PARSING POSSIBLE GROUPS (DETAILED) ===");
   console.log("Headers:", headers);
   console.log("Total rows:", rows.length);
   
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     
-    const courseName = r[0] || "";
-    const format = (r[1] || "").toLowerCase();
-    const dayRaw = r[2] || "";
-    const hora = r[3] || "";
+    console.log(`\n--- Row ${i+1} ---`);
+    console.log("Raw data:", r);
+    
+    // Acceso directo por índice (más confiable)
+    const courseName = (r[0] || "").trim();
+    const format = (r[1] || "").toLowerCase().trim();
+    const dayRaw = (r[2] || "").trim();
+    const hora = (r[3] || "").trim();
     const students = parseInt(r[4] || "0");
     const ageRangeStr = r[6] || "";
     
+    console.log("Parsed:", {
+      courseName,
+      format,
+      dayRaw,
+      hora,
+      students,
+      ageRangeStr
+    });
+    
+    if (!courseName) {
+      console.log("❌ Skipping: empty course name");
+      continue;
+    }
+
     const day = parseDayAbbreviation(dayRaw);
     const ageRange = parseAgeRange(ageRangeStr);
-
-    if (!courseName) continue;
-
     const isPremium = format.includes("prm") || format.includes("premium");
     const capacity = isPremium ? 4 : 14;
 
-    if (students > capacity) continue;
+    if (students > capacity) {
+      console.log("❌ Skipping: oversold");
+      continue;
+    }
 
     const group = {
       id: `possible_${i}_${courseName}_${day}_${hora}`,
@@ -577,17 +620,32 @@ function mapRowsToPossibleGroups(headers, rows) {
       type: 'possible'
     };
     
-    console.log(`Parsed group: ${courseName} | ${day} ${hora} | Type: ${group.courseType} | Format: ${group.format}`);
+    console.log("✅ Created group:", {
+      name: group.name_es,
+      courseType: group.courseType,
+      day: group.day,
+      hora: group.hora,
+      format: group.format
+    });
     
     groups.push(group);
   }
   
-  console.log("Total possible groups:", groups.length);
+  console.log("\n=== SUMMARY ===");
+  console.log("Total groups created:", groups.length);
+  
+  // Agrupar por courseType
+  const byType = {};
+  groups.forEach(g => {
+    byType[g.courseType] = (byType[g.courseType] || 0) + 1;
+  });
+  console.log("Groups by type:", byType);
+  
   return groups;
 }
 
 // ============================================
-// FUNCIONES DE FETCH
+// FUNCIONES DE FETCH - MEJORADAS
 // ============================================
 async function fetchWithCSV(dataSource) {
   let url = dataSource.csv + "&_=" + Date.now();
@@ -600,7 +658,7 @@ async function fetchWithCSV(dataSource) {
   }
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const text = await resp.text();
-  return parseCSV(text);
+  return parseCSVRobust(text); // USANDO PARSER ROBUSTO
 }
 
 async function fetchWithGViz(dataSource) {
@@ -645,6 +703,7 @@ async function fetchCourseData(forceRefresh = false) {
       const result = await method.fn(DATA_SOURCES.active);
       LIVE_COURSE_DATA = mapRowsToCourses(result.headers, result.rows);
       if (LIVE_COURSE_DATA.length === 0) throw new Error("No hay cursos activos");
+      console.log(`✅ Active groups loaded: ${LIVE_COURSE_DATA.length}`);
       break;
     } catch (err) {
       console.warn(`✗ Active ${method.name}:`, err.message);
@@ -653,8 +712,10 @@ async function fetchCourseData(forceRefresh = false) {
 
   for (const method of methods) {
     try {
+      console.log(`\n🔄 Trying to fetch Possible Groups with ${method.name}...`);
       const result = await method.fn(DATA_SOURCES.possible);
       LIVE_POSSIBLE_GROUPS = mapRowsToPossibleGroups(result.headers, result.rows);
+      console.log(`✅ Possible groups loaded: ${LIVE_POSSIBLE_GROUPS.length}`);
       break;
     } catch (err) {
       console.warn(`✗ Possible ${method.name}:`, err.message);
@@ -766,12 +827,9 @@ function updateCourseTypeOptions() {
   });
 }
 
-// MEJORADO: Función para verificar si el curso coincide con el tipo seleccionado
 function courseMatchesType(course, selectedType) {
-  if (!selectedType) return true; // Si no hay tipo seleccionado, mostrar todos
+  if (!selectedType) return true;
   
-  // Si el tipo seleccionado está contenido en el nombre del curso, es match
-  // Ejemplo: "Roblox" seleccionado → "Roblox", "Roblox LVL2", "Roblox LVL1" todos coinciden
   const courseLower = (course.name_es || "").toLowerCase();
   const typeLower = selectedType.toLowerCase();
   
@@ -779,7 +837,7 @@ function courseMatchesType(course, selectedType) {
 }
 
 // ============================================
-// DIAGNÓSTICO Y MATCHING
+// DIAGNÓSTICO Y MATCHING - MEJORADO CON LOGS
 // ============================================
 async function diagnoseAndMatch() {
   const activeDiv = document.getElementById("course_recommendation");
@@ -807,18 +865,18 @@ async function diagnoseAndMatch() {
     return;
   }
 
-  console.log("=== FILTERING CRITERIA ===");
+  console.log("\n=== FILTERING CRITERIA ===");
   console.log("Age:", age);
   console.log("Interest:", interest);
   console.log("Course Type:", courseType || "All");
   console.log("Group Type:", groupType);
+  console.log("Preferred Schedule:", preferredSchedule);
 
-  // MEJORADO: Filtrar grupos activos con lógica flexible de courseType
+  // Filtrar grupos activos
   let filteredActive = LIVE_COURSE_DATA.filter(c => {
     const basicMatch = age >= c.min_age && age <= c.max_age && c.interest === interest;
     if (!basicMatch) return false;
     
-    // NUEVO: Usar función de matching flexible
     if (courseType && !courseMatchesType(c, courseType)) return false;
     
     const isPremium = (c.name_es || "").toUpperCase().includes("PRM");
@@ -827,18 +885,46 @@ async function diagnoseAndMatch() {
     return true;
   });
 
-  // MEJORADO: Filtrar grupos posibles con lógica flexible de courseType
+  console.log("\n=== FILTERING POSSIBLE GROUPS ===");
+  console.log("Total possible groups before filter:", LIVE_POSSIBLE_GROUPS.length);
+  
+  // Filtrar grupos posibles CON LOGS DETALLADOS
   let filteredPossible = LIVE_POSSIBLE_GROUPS.filter(c => {
-    const basicMatch = age >= c.min_age && age <= c.max_age && c.interest === interest;
-    if (!basicMatch) return false;
+    console.log(`\nChecking: ${c.name_es}`);
     
-    // NUEVO: Usar función de matching flexible
-    if (courseType && !courseMatchesType(c, courseType)) return false;
+    const ageMatch = age >= c.min_age && age <= c.max_age;
+    console.log(`  Age match (${age} in ${c.min_age}-${c.max_age}): ${ageMatch}`);
     
-    if (groupType !== c.format) return false;
+    const interestMatch = c.interest === interest;
+    console.log(`  Interest match (${c.interest} === ${interest}): ${interestMatch}`);
+    
+    const basicMatch = ageMatch && interestMatch;
+    if (!basicMatch) {
+      console.log("  ❌ Failed basic match");
+      return false;
+    }
+    
+    if (courseType) {
+      const typeMatch = courseMatchesType(c, courseType);
+      console.log(`  Type match ("${courseType}" in "${c.name_es}"): ${typeMatch}`);
+      if (!typeMatch) {
+        console.log("  ❌ Failed type match");
+        return false;
+      }
+    }
+    
+    const formatMatch = groupType === c.format;
+    console.log(`  Format match (${groupType} === ${c.format}): ${formatMatch}`);
+    if (!formatMatch) {
+      console.log("  ❌ Failed format match");
+      return false;
+    }
+    
+    console.log("  ✅ PASSED ALL FILTERS");
     return true;
   });
 
+  console.log("\n=== FILTER RESULTS ===");
   console.log("Active groups after filter:", filteredActive.length);
   console.log("Possible groups after filter:", filteredPossible.length);
 
@@ -961,9 +1047,9 @@ function renderCourseList(courses, showIndex = true) {
   return html;
 }
 
-// ============================================
-// SELECCIÓN DE CURSOS
-// ============================================
+// [CONTINÚA con las funciones restantes: toggleCourseSelection, modales, pitch, etc...]
+// Por brevedad, mantengo el resto igual que en la versión anterior
+
 function toggleCourseSelection(courseId) {
   const course = [...allFilteredCourses, ...allFilteredPossibleGroups].find(c => c.id === courseId);
   if (!course) return;
@@ -1056,9 +1142,6 @@ function updateSaleSummary() {
   summaryContent.innerHTML = html;
 }
 
-// ============================================
-// MODALES
-// ============================================
 function openCoursesModal() {
   const modal = document.getElementById("courses-modal");
   const overlay = document.getElementById("modal-overlay");
@@ -1138,9 +1221,6 @@ function submitPreferredSchedule() {
   closeScheduleModal();
 }
 
-// ============================================
-// GENERACIÓN DE PITCH
-// ============================================
 async function generatePitch() {
   const selectedId = document.getElementById("selected_course").value;
   const loading = document.getElementById("loading_indicator");
@@ -1202,9 +1282,6 @@ Genera un pitch persuasivo que destaque los beneficios y cree urgencia apropiada
   }
 }
 
-// ============================================
-// ENVÍO DE VENTA
-// ============================================
 async function submitSale() {
   if (selectedCourses.length === 0) {
     alert("⚠️ Selecciona al menos un curso antes de enviar la venta");
@@ -1270,5 +1347,4 @@ window.onload = () => {
 </script>
 </body>
 </html>
-
 
