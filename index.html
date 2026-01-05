@@ -316,7 +316,6 @@
 const SHEET_ID = "2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e";
 const SHEET_GID = "2084392899";
 
-// NUEVO: Configuración para Possible Groups
 const POSSIBLE_GROUPS_SHEET_ID = "2PACX-1vRfJ1Dc2mTlooFRM6Jc0r-zKyrjmbWFGCOaT3UeiOc0vyihrxBL8UaN3n8Z0QxxJDfSEwzQYn1-YmIM";
 const POSSIBLE_GROUPS_GID = "1601359885";
 
@@ -396,8 +395,11 @@ function inferInterest(courseTitle) {
   return "coding";
 }
 
+// MEJORADO: Extraer tipo de curso más genérico
 function extractCourseType(courseName, courseTitle) {
   const title = String(courseTitle || courseName || "").toLowerCase();
+  
+  // Para Roblox, devolver solo "Roblox" (sin LVL2, LVL1, etc.)
   if (title.includes("roblox")) return "Roblox";
   if (title.includes("minecraft")) return "Minecraft";
   if (title.includes("unity")) return "Unity";
@@ -427,16 +429,13 @@ function parseISODateOnly(s) {
 }
 
 function parseTimeToMinutes(timeStr) {
-  // Parsea formato "HH:MM" o "H:MM" a minutos desde medianoche
   const match = String(timeStr || "").match(/(\d{1,2}):(\d{2})/);
   if (!match) return null;
   return parseInt(match[1]) * 60 + parseInt(match[2]);
 }
 
-// MEJORADO: Parsing de días con soporte inglés y español
 function parseDayAbbreviation(dayStr) {
   const dayMap = {
-    // Inglés
     'mon': 'lunes', 'monday': 'lunes',
     'tue': 'martes', 'tuesday': 'martes',  
     'wed': 'miércoles', 'wednesday': 'miércoles',
@@ -444,7 +443,6 @@ function parseDayAbbreviation(dayStr) {
     'fri': 'viernes', 'friday': 'viernes',
     'sat': 'sábado', 'saturday': 'sábado',
     'sun': 'domingo', 'sunday': 'domingo',
-    // Español
     'lun': 'lunes', 'lunes': 'lunes',
     'mar': 'martes', 'martes': 'martes',
     'mié': 'miércoles', 'mie': 'miércoles', 'miércoles': 'miércoles', 'miercoles': 'miércoles',
@@ -490,16 +488,11 @@ function mapRowsToCourses(headers, rows) {
     const dateStr = idx_date >= 0 ? r[idx_date] : "";
     const timeStr = idx_time >= 0 ? r[idx_time] : "";
 
-    // NUEVO: Filtrar grupos con "Error" en el nombre
     if (groupTitle.toLowerCase().includes("error") || name.toLowerCase().includes("error")) continue;
-    
     if (groupTitle.includes("WRONG") || !name || status.toLowerCase() === "closed") continue;
-    
-    // Filtrar grupos sobrevendidos (enrolled > capacity)
     if (capacity > 0 && enrolled > capacity) continue;
     
     const startDate = parseISODateOnly(dateStr);
-    // Para grupos al 100%, solo mostrar si iniciaron hace máximo 2 semanas
     if (startDate) {
       if (capacity > 0 && enrolled === capacity) {
         if (startDate < twoWeeksAgo) continue;
@@ -536,19 +529,15 @@ function mapRowsToCourses(headers, rows) {
 // MAPEO DE DATOS: GRUPOS POSIBLES
 // ============================================
 function mapRowsToPossibleGroups(headers, rows) {
-  // Columnas esperadas:
-  // A: Course (idx 0), B: Format (idx 1), C: Day (idx 2), D: Hora (idx 3), E: Students (idx 4), G: Age Range (idx 6)
-  
   const groups = [];
   
-  console.log("=== DEBUGGING POSSIBLE GROUPS ===");
+  console.log("=== PARSING POSSIBLE GROUPS ===");
   console.log("Headers:", headers);
   console.log("Total rows:", rows.length);
   
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     
-    // Manejo flexible de columnas (por índice y por nombre)
     const courseName = r[0] || "";
     const format = (r[1] || "").toLowerCase();
     const dayRaw = r[2] || "";
@@ -561,11 +550,9 @@ function mapRowsToPossibleGroups(headers, rows) {
 
     if (!courseName) continue;
 
-    // Determinar capacidad según formato
     const isPremium = format.includes("prm") || format.includes("premium");
     const capacity = isPremium ? 4 : 14;
 
-    // No mostrar grupos sobrevendidos
     if (students > capacity) continue;
 
     const group = {
@@ -590,27 +577,12 @@ function mapRowsToPossibleGroups(headers, rows) {
       type: 'possible'
     };
     
-    // Debug log para el grupo de Roblox viernes 13:00
-    if (courseName.toLowerCase().includes("roblox") && (dayRaw.toLowerCase().includes("fri") || day.includes("viernes"))) {
-      console.log("🔍 Found Roblox Friday group:", {
-        courseName,
-        dayRaw,
-        dayParsed: day,
-        hora,
-        timeMinutes: group.timeMinutes,
-        students,
-        format,
-        isPremium,
-        capacity
-      });
-    }
+    console.log(`Parsed group: ${courseName} | ${day} ${hora} | Type: ${group.courseType} | Format: ${group.format}`);
     
     groups.push(group);
   }
   
-  console.log("Total possible groups parsed:", groups.length);
-  console.log("=== END DEBUGGING ===");
-  
+  console.log("Total possible groups:", groups.length);
   return groups;
 }
 
@@ -668,7 +640,6 @@ async function fetchCourseData(forceRefresh = false) {
     { name: 'GViz JSON', fn: fetchWithGViz }
   ];
 
-  // Fetch Active Groups
   for (const method of methods) {
     try {
       const result = await method.fn(DATA_SOURCES.active);
@@ -680,7 +651,6 @@ async function fetchCourseData(forceRefresh = false) {
     }
   }
 
-  // Fetch Possible Groups
   for (const method of methods) {
     try {
       const result = await method.fn(DATA_SOURCES.possible);
@@ -743,7 +713,6 @@ function calculatePriority(course) {
   return (urgencyScore * 0.95) + (proximityScore * 0.05);
 }
 
-// MEJORADO: Calcular match score para horarios
 function calculateScheduleMatchScore(course) {
   if (preferredSchedule.length === 0) return 0;
   
@@ -758,42 +727,22 @@ function calculateScheduleMatchScore(course) {
     'thu': 'jueves', 'fri': 'viernes', 'sat': 'sábado', 'sun': 'domingo'
   };
   
-  console.log(`Checking schedule match for: ${course.name_es} | Day: ${courseDay} | Time: ${courseTime}min (${course.hora || course.timeStr})`);
-  
   for (const pref of preferredSchedule) {
-    const prefTime = pref.hour * 60; // Convertir hora a minutos
+    const prefTime = pref.hour * 60;
     const prefDay = dayMap[pref.day];
     const timeDiff = Math.abs(courseTime - prefTime);
     
-    console.log(`  Comparing with pref: ${prefDay} ${pref.hour}:00 (${prefTime}min) | TimeDiff: ${timeDiff}min`);
-    
-    // Prioridad 1: Mismo día + misma hora (exacto o muy cercano ±30min)
     if (courseDay === prefDay && timeDiff <= 30) {
-      const score = 1000 - timeDiff;
-      console.log(`    ✅ P1 Match! Score: ${score}`);
-      bestScore = Math.max(bestScore, score);
-    }
-    // Prioridad 2: Misma hora (±30min) + día diferente
-    else if (timeDiff <= 30) {
-      const score = 800 - timeDiff;
-      console.log(`    ✅ P2 Match! Score: ${score}`);
-      bestScore = Math.max(bestScore, score);
-    }
-    // Prioridad 3: Mismo día + hora cercana (±2 horas = 120 min)
-    else if (courseDay === prefDay && timeDiff <= 120) {
-      const score = 600 - timeDiff;
-      console.log(`    ✅ P3 Match! Score: ${score}`);
-      bestScore = Math.max(bestScore, score);
-    }
-    // Prioridad 4: Día diferente + hora cercana (±2 horas)
-    else if (timeDiff <= 120) {
-      const score = 400 - timeDiff;
-      console.log(`    ✅ P4 Match! Score: ${score}`);
-      bestScore = Math.max(bestScore, score);
+      bestScore = Math.max(bestScore, 1000 - timeDiff);
+    } else if (timeDiff <= 30) {
+      bestScore = Math.max(bestScore, 800 - timeDiff);
+    } else if (courseDay === prefDay && timeDiff <= 120) {
+      bestScore = Math.max(bestScore, 600 - timeDiff);
+    } else if (timeDiff <= 120) {
+      bestScore = Math.max(bestScore, 400 - timeDiff);
     }
   }
   
-  console.log(`  Final best score: ${bestScore}`);
   return bestScore;
 }
 
@@ -815,6 +764,18 @@ function updateCourseTypeOptions() {
   Array.from(types).sort().forEach(type => {
     courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
   });
+}
+
+// MEJORADO: Función para verificar si el curso coincide con el tipo seleccionado
+function courseMatchesType(course, selectedType) {
+  if (!selectedType) return true; // Si no hay tipo seleccionado, mostrar todos
+  
+  // Si el tipo seleccionado está contenido en el nombre del curso, es match
+  // Ejemplo: "Roblox" seleccionado → "Roblox", "Roblox LVL2", "Roblox LVL1" todos coinciden
+  const courseLower = (course.name_es || "").toLowerCase();
+  const typeLower = selectedType.toLowerCase();
+  
+  return courseLower.includes(typeLower) || course.courseType === selectedType;
 }
 
 // ============================================
@@ -851,37 +812,35 @@ async function diagnoseAndMatch() {
   console.log("Interest:", interest);
   console.log("Course Type:", courseType || "All");
   console.log("Group Type:", groupType);
-  console.log("Preferred Schedule:", preferredSchedule);
 
-  // Filtrar grupos activos
+  // MEJORADO: Filtrar grupos activos con lógica flexible de courseType
   let filteredActive = LIVE_COURSE_DATA.filter(c => {
     const basicMatch = age >= c.min_age && age <= c.max_age && c.interest === interest;
     if (!basicMatch) return false;
-    if (courseType && c.courseType !== courseType) return false;
+    
+    // NUEVO: Usar función de matching flexible
+    if (courseType && !courseMatchesType(c, courseType)) return false;
+    
     const isPremium = (c.name_es || "").toUpperCase().includes("PRM");
     if (groupType === "premium" && !isPremium) return false;
     if (groupType === "regular" && isPremium) return false;
     return true;
   });
 
-  console.log("Active groups after basic filter:", filteredActive.length);
-
-  // Filtrar grupos posibles
+  // MEJORADO: Filtrar grupos posibles con lógica flexible de courseType
   let filteredPossible = LIVE_POSSIBLE_GROUPS.filter(c => {
     const basicMatch = age >= c.min_age && age <= c.max_age && c.interest === interest;
     if (!basicMatch) return false;
-    if (courseType && c.courseType !== courseType) return false;
+    
+    // NUEVO: Usar función de matching flexible
+    if (courseType && !courseMatchesType(c, courseType)) return false;
+    
     if (groupType !== c.format) return false;
     return true;
   });
 
-  console.log("Possible groups after basic filter:", filteredPossible.length);
-  
-  // Debug: Mostrar grupos posibles filtrados
-  console.log("=== POSSIBLE GROUPS DETAILS ===");
-  filteredPossible.forEach(g => {
-    console.log(`- ${g.name_es} | ${g.day} ${g.hora} | Students: ${g.enrolled}/${g.capacity}`);
-  });
+  console.log("Active groups after filter:", filteredActive.length);
+  console.log("Possible groups after filter:", filteredPossible.length);
 
   // Calcular scores
   filteredActive.forEach(course => {
@@ -894,7 +853,6 @@ async function diagnoseAndMatch() {
     course.scheduleScore = calculateScheduleMatchScore(course);
   });
 
-  // Si hay horarios preferidos, priorizar por schedule match
   if (preferredSchedule.length > 0) {
     filteredActive.sort((a, b) => {
       if (b.scheduleScore !== a.scheduleScore) return b.scheduleScore - a.scheduleScore;
@@ -937,7 +895,6 @@ async function diagnoseAndMatch() {
     possibleDiv.innerHTML = html;
   }
 
-  // Mensaje de coincidencia de horario
   if (preferredSchedule.length > 0) {
     const hasMatches = filteredActive.some(c => c.scheduleScore > 0) || filteredPossible.some(c => c.scheduleScore > 0);
     if (hasMatches) {
@@ -978,7 +935,6 @@ function renderCourseList(courses, showIndex = true) {
       <div class="course-option-row ${critical || course.isFull ? "text-orange-600 font-semibold" : ""}">💻 ${course.enrolled}/${course.capacity} (${remaining} restantes)</div>
       <div class="course-option-row">👨‍🏫 ${course.teacher}</div>`;
     
-    // Mostrar score de coincidencia de horario si existe
     if (preferredSchedule.length > 0 && course.scheduleScore > 0) {
       let matchText = "✨ Coincidencia de horario";
       if (course.scheduleScore >= 900) matchText = "🎯 Coincidencia EXACTA";
@@ -1170,12 +1126,10 @@ function submitPreferredSchedule() {
     preferredSchedule.push({ day: cb.dataset.day, hour: parseInt(cb.dataset.hour) });
   });
   
-  // Actualizar UI del botón
   const btn = document.getElementById("btn_select_schedule");
   btn.classList.add("selected");
   btn.innerHTML = `✅ ${checkboxes.length} horarios seleccionados`;
   
-  // Mostrar resumen
   const summary = document.getElementById("schedule-summary");
   summary.classList.remove("hidden");
   summary.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${checkboxes.length} horarios guardados - Se buscarán coincidencias`;
@@ -1298,16 +1252,10 @@ async function submitSale() {
   }
 }
 
-// ============================================
-// CONFIGURACIÓN DE IDIOMA
-// ============================================
 function setLanguage(lang) {
   currentLang = lang;
 }
 
-// ============================================
-// INICIALIZACIÓN
-// ============================================
 window.onload = () => {
   setLanguage("es");
   document.getElementById("student_age").value = 10;
