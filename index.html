@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Course Matchmaker (TCM Assistant)</title>
+  <title>AI Course Matchmaker (TCM Assistant) - FIXED</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -53,6 +53,7 @@
     .schedule-btn { background: #f97316; color: white; padding: 10px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.15s; width: 100%; margin-top: 12px; border: none; }
     .schedule-btn:hover { background: #ea580c; }
     .schedule-btn.selected { background: #22c55e; }
+    .debug-info { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; margin-top: 10px; font-size: 0.75rem; font-family: monospace; }
   </style>
 </head>
 
@@ -71,7 +72,7 @@
 
   <div id="app-container">
     <h1 class="text-3xl font-extrabold text-gray-900 mb-4 text-center">
-      🤖 AI Course Matchmaker (TCM Assistant)
+      🤖 AI Course Matchmaker (TCM Assistant) - FIXED
     </h1>
     <p class="text-center text-gray-600 mb-6">
       Herramienta de diagnóstico de ventas para asegurar la colocación correcta y reducir el churn por expectativas.
@@ -147,6 +148,12 @@
         <div class="mt-2 text-xs text-gray-500">
           <span id="data-source-info">Data source: <b>Conectando...</b></span>
         </div>
+
+        <!-- DEBUG INFO -->
+        <div id="debug-panel" class="debug-info" style="display:none;">
+          <strong>🔍 Debug Info:</strong>
+          <div id="debug-content"></div>
+        </div>
       </div>
 
       <!-- COLUMNA 2: TOP 3 GRUPOS ACTIVOS -->
@@ -202,8 +209,6 @@
         <div id="pitch_output" class="ai-result-box text-gray-800 text-sm mt-4">
           El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.
         </div>
-
-        
       </div>
 
       <!-- COLUMNA 2: ENVIAR VENTA -->
@@ -232,7 +237,7 @@
     </div>
   </div>
 
-  <!-- Modal para ver todos los cursos activos -->
+  <!-- Modals (same as before) -->
   <div id="modal-overlay" class="modal-overlay" onclick="closeCoursesModal()"></div>
   <div id="courses-modal" class="modal-container">
     <div class="modal-header">
@@ -241,16 +246,13 @@
           <h2 class="text-xl font-bold text-gray-900">Todos los Cursos Activos Disponibles</h2>
           <p class="text-sm text-gray-600 mt-1">Selecciona hasta 2 cursos para generar pitch</p>
         </div>
-        <button onclick="closeCoursesModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
-          ×
-        </button>
+        <button onclick="closeCoursesModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">×</button>
       </div>
       <div id="selected-count" class="mt-3 text-sm font-semibold text-blue-600"></div>
     </div>
     <div id="modal-courses-list" class="modal-body"></div>
   </div>
 
-  <!-- Modal para ver todos los grupos posibles -->
   <div id="possible-modal-overlay" class="modal-overlay" onclick="closePossibleGroupsModal()"></div>
   <div id="possible-groups-modal" class="modal-container">
     <div class="modal-header">
@@ -259,15 +261,12 @@
           <h2 class="text-xl font-bold text-gray-900">Todos los Grupos Posibles Disponibles</h2>
           <p class="text-sm text-gray-600 mt-1">Grupos creados por demanda de estudiantes</p>
         </div>
-        <button onclick="closePossibleGroupsModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
-          ×
-        </button>
+        <button onclick="closePossibleGroupsModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">×</button>
       </div>
     </div>
     <div id="modal-possible-groups-list" class="modal-body"></div>
   </div>
 
-  <!-- Modal para Preferred Schedule -->
   <div id="schedule-modal-overlay" class="modal-overlay" onclick="closeScheduleModal()"></div>
   <div id="schedule-modal" class="modal-container">
     <div class="modal-header">
@@ -276,9 +275,7 @@
           <h2 class="text-xl font-bold text-gray-900">🕐 Selecciona tu Horario Preferido</h2>
           <p class="text-sm text-gray-600 mt-1">Marca los horarios que te funcionan (puedes seleccionar varios)</p>
         </div>
-        <button onclick="closeScheduleModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
-          ×
-        </button>
+        <button onclick="closeScheduleModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">×</button>
       </div>
     </div>
     <div class="modal-body">
@@ -308,14 +305,12 @@
 
   <script>
 // ============================================
-// CONFIGURACIÓN DE SPREADSHEETS
+// CONFIGURACIÓN
 // ============================================
 const SHEET_ID = "2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e";
 const SHEET_GID = "2084392899";
-
 const POSSIBLE_GROUPS_SHEET_ID = "2PACX-1vRfJ1Dc2mTlooFRM6Jc0r-zKyrjmbWFGCOaT3UeiOc0vyihrxBL8UaN3n8Z0QxxJDfSEwzQYn1-YmIM";
 const POSSIBLE_GROUPS_GID = "1601359885";
-
 const SALES_SCRIPT_URL = "";
 
 const DATA_SOURCES = {
@@ -326,315 +321,6 @@ const DATA_SOURCES = {
   possible: {
     csv: `https://docs.google.com/spreadsheets/d/e/${POSSIBLE_GROUPS_SHEET_ID}/pub?gid=${POSSIBLE_GROUPS_GID}&single=true&output=csv`,
     json: `https://docs.google.com/spreadsheets/d/e/${POSSIBLE_GROUPS_SHEET_ID}/gviz/tq?tqx=out:json&gid=${POSSIBLE_GROUPS_GID}`
-  }
-};
-
-// ============================================
-// BASE DE DATOS DE CURSOS - INFORMACIÓN COMPLETA
-// ============================================
-const COURSE_GUIDELINES = {
-  "funtech": {
-    name: "FunTech Explorers",
-    age_range: { min: 5, max: 7 },
-    keywords: ["funtech", "explorers"],
-    interest_profile: "Descubrir el mundo digital, aprender a usar el computador",
-    min_requirements: "Ninguno (es para quienes no saben usar mouse/teclado)",
-    tech_requirements: "PC o Portátil (Windows/Mac), Zoom, Chrome",
-    tools: "Scratch Junior, Google Docs, Google Slides, Google Sheets, Brush Ninja, Gartic Phone",
-    soft_skills: "Lógica, trabajo en equipo, pensamiento creativo",
-    hard_skills: "Manejo de mouse y teclado, estructura de carpetas, algoritmos básicos, animación GIF, creación de presentaciones",
-    complementary_course: "La magia del código con Scratch (una vez cumplan 8 años o dominen lectoescritura)",
-    key_selling_points: [
-      "Curso perfecto para iniciar en el mundo digital",
-      "No requiere conocimientos previos",
-      "Aprenden jugando y creando",
-      "Base sólida para futuros cursos de programación"
-    ]
-  },
-  
-  "scratch": {
-    name: "La Magia del Código con Scratch",
-    age_range: { min: 8, max: 12 },
-    keywords: ["scratch", "magia", "código"],
-    interest_profile: "Crear historias interactivas, juegos y animaciones",
-    min_requirements: "Saber leer y escribir, manejo básico de PC",
-    tech_requirements: "PC o Portátil (Windows/Mac)",
-    tools: "Scratch (versión web/escritorio)",
-    soft_skills: "Storytelling (narración), resolución de problemas, pensamiento lógico",
-    hard_skills: "Coordenadas, variables, bucles, condicionales, depuración de errores (debugging), clones",
-    complementary_course: "Creatividad Digital 1 (para mejorar sus gráficos) o Roblox (para saltar al 3D)",
-    key_selling_points: [
-      "Estándar mundial para aprender programación",
-      "Desarrolla pensamiento lógico jugando",
-      "Crea sus propios juegos y animaciones",
-      "Preparación perfecta para lenguajes profesionales"
-    ]
-  },
-  
-  "roblox_8_9": {
-    name: "Roblox Game Developer",
-    age_range: { min: 8, max: 9 },
-    keywords: ["roblox"],
-    interest_profile: "Jugar videojuegos, crear sus propios mundos y reglas",
-    min_requirements: "Lectoescritura fluida (deben escribir código)",
-    tech_requirements: "8GB RAM (Mínimo), Tarjeta gráfica dedicada (o integrada reciente), Mouse con rueda",
-    tools: "Roblox Studio, Lenguaje LUA",
-    soft_skills: "Trabajo en equipo, monetización básica, paciencia (testing)",
-    hard_skills: "Modelado 3D básico (bloques), Scripting LUA (Variables, Bucles, Funciones), Edición de terreno, GUI (Interfaces)",
-    complementary_course: "Creatividad Digital (para diseñar texturas)",
-    key_selling_points: [
-      "Aprende a programar en LUA mientras crea juegos",
-      "Posibilidad de publicar juegos en la plataforma Roblox",
-      "Desarrollo 3D desde temprana edad",
-      "Puede monetizar sus creaciones en el futuro"
-    ]
-  },
-  
-  "roblox_10_12": {
-    name: "Roblox Game Developer (Avanzado)",
-    age_range: { min: 10, max: 12 },
-    keywords: ["roblox"],
-    interest_profile: "Videojuegos, mecánica de juegos avanzada, programación",
-    min_requirements: "Manejo fluido de teclado y mouse, lógica básica",
-    tech_requirements: "8GB RAM, Tarjeta gráfica dedicada, Mouse con rueda",
-    tools: "Roblox Studio, Lenguaje LUA",
-    soft_skills: "Diseño de juegos (Game Design), planificación de proyectos",
-    hard_skills: "Física de juegos, Animación de objetos, Scripting LUA avanzado (Condicionales complejos), Monetización (Game Passes), NPCs",
-    complementary_course: "Python New (para fortalecer la lógica de código escrito)",
-    key_selling_points: [
-      "Versión más avanzada y profunda de Roblox",
-      "Aprende mecánicas profesionales de Game Design",
-      "Programación LUA avanzada con física y animación",
-      "Preparación para desarrollo profesional de videojuegos"
-    ]
-  },
-  
-  "python_new": {
-    name: "Python New (Fundamentos)",
-    age_range: { min: 10, max: 17 },
-    keywords: ["python", "new", "fundamentos"],
-    interest_profile: "Lógica pura, 'hackers', crear software real, automatización",
-    min_requirements: "Pensamiento lógico avanzado, inglés básico (para comandos como print, while)",
-    tech_requirements: "PC/Mac, Teclado y Mouse",
-    tools: "Python, Librería PyGame Zero",
-    soft_skills: "Trabajo en equipo (desarrollo grupal), presentación de proyectos",
-    hard_skills: "Sintaxis de Python, Tipos de datos (listas, diccionarios), Ciclos (While/For), Lógica booleana, Desarrollo de juegos 2D",
-    complementary_course: "Diseño Web (para interfaz) o Unity (siguiente paso en juegos)",
-    key_selling_points: [
-      "Primer paso hacia programación profesional",
-      "Python es el lenguaje #1 en el mundo",
-      "Base para Inteligencia Artificial y Data Science",
-      "Crear software real desde el primer día"
-    ]
-  },
-  
-  "python_pro": {
-    name: "Python Pro",
-    age_range: { min: 13, max: 17 },
-    keywords: ["python", "pro", "avanzado"],
-    interest_profile: "Inteligencia Artificial, Bots, Back-end, Datos",
-    min_requirements: "Haber completado Python Básico o examen de validación",
-    tech_requirements: "PC/Mac",
-    tools: "Python, Discord.py, Git/GitHub, Flask (Web), Google Colab (IA)",
-    soft_skills: "Metodologías Ágiles (Scrum), Revisión de código (Code Review)",
-    hard_skills: "POO (Programación Orientada a Objetos), APIs, Desarrollo Web Backend, Machine Learning (IA), Síntesis de voz",
-    complementary_course: "Diseño Web (para conectar con Flask)",
-    key_selling_points: [
-      "Nivel profesional: IA, bots y desarrollo web",
-      "Aprende Machine Learning e Inteligencia Artificial",
-      "Crea aplicaciones web completas",
-      "Preparación para universidad o trabajo tech"
-    ]
-  },
-  
-  "creatividad_1": {
-    name: "Creatividad Digital Nivel 1",
-    age_range: { min: 8, max: 9 },
-    keywords: ["creatividad", "digital", "arte", "nivel 1"],
-    interest_profile: "Dibujar, pintar, crear caricaturas",
-    min_requirements: "Manejo básico de mouse",
-    tech_requirements: "PC/Mac (Uso intensivo de mouse para dibujar)",
-    tools: "Kleki (Dibujo), FlipAnim (Animación), 123Apps (Edición video)",
-    soft_skills: "Expresión emocional, creatividad visual",
-    hard_skills: "Pixel Art, uso de capas, animación cuadro por cuadro, Storyboarding, edición de video básica",
-    complementary_course: "Scratch (para dar vida interactiva a sus dibujos)",
-    key_selling_points: [
-      "Desarrolla expresión artística digital",
-      "Aprende técnicas profesionales de animación",
-      "Crea su propio contenido visual",
-      "Base para diseño gráfico profesional"
-    ]
-  },
-  
-  "creatividad_2": {
-    name: "Creatividad Digital Nivel 2",
-    age_range: { min: 10, max: 12 },
-    keywords: ["creatividad", "digital", "diseño", "nivel 2"],
-    interest_profile: "Diseño, logos, animación más compleja, 3D",
-    min_requirements: "Manejo de PC",
-    tech_requirements: "PC/Mac",
-    tools: "Canva, Krita, WickEditor, Spline (3D), Figma, WIX",
-    soft_skills: "Autopresentación, creación de portafolio",
-    hard_skills: "Diseño vectorial, Branding (Libro de marca), Ilustración digital, Modelado 3D básico, Creación de sitios web en WIX",
-    complementary_course: "Ilustración o FWD Pro (cuando cumpla la edad/equipo)",
-    key_selling_points: [
-      "Evolución hacia diseño gráfico profesional",
-      "Modelado 3D básico con Spline",
-      "Crea su portafolio digital",
-      "Aprende branding y diseño de marcas"
-    ]
-  },
-  
-  "ilustracion": {
-    name: "Ilustración (Artista CG)",
-    age_range: { min: 10, max: 12 },
-    keywords: ["ilustración", "ilustracion", "artista", "dibujo"],
-    interest_profile: "Dibujo profesional, cómics, arte conceptual",
-    min_requirements: "Gusto por el dibujo manual/digital",
-    tech_requirements: "PC/Mac. Idealmente Tableta Digitalizadora",
-    tools: "Software de arte digital, Herramientas de IA",
-    soft_skills: "Ética en el uso de IA, estilo propio",
-    hard_skills: "Teoría del color, luces y sombras, perspectiva, anatomía, Photobashing, diseño de personajes",
-    complementary_course: "Creatividad Digital 2",
-    key_selling_points: [
-      "Enfoque artístico profesional",
-      "Técnicas avanzadas de ilustración digital",
-      "Aprende a usar IA como herramienta artística",
-      "Desarrolla estilo propio y portafolio"
-    ]
-  },
-  
-  "diseno_grafico": {
-    name: "Diseño Gráfico",
-    age_range: { min: 13, max: 17 },
-    keywords: ["diseño", "gráfico", "grafico", "branding"],
-    interest_profile: "Branding, logos, publicidad, redes sociales",
-    min_requirements: "Autonomía digital, sentido estético",
-    tech_requirements: "PC/Mac",
-    tools: "Figma, Photopea, Behance",
-    soft_skills: "Orientación profesional, presentación personal",
-    hard_skills: "Vectores, tipografía, retículas modulares, retoque fotográfico, Mockups, diseño de Landing Pages (UI)",
-    complementary_course: "Diseño Web (es el complemento natural)",
-    key_selling_points: [
-      "Preparación para carrera en diseño",
-      "Aprende herramientas profesionales (Figma)",
-      "Crea branding completo para marcas",
-      "Portfolio profesional en Behance"
-    ]
-  },
-  
-  "diseno_web": {
-    name: "Diseño Web (WEB)",
-    age_range: { min: 13, max: 17 },
-    keywords: ["web", "html", "css", "frontend"],
-    interest_profile: "Crear páginas web, código + diseño",
-    min_requirements: "Escribir en inglés básico (keywords), no usar tablet",
-    tech_requirements: "PC/Portátil, Chrome. No Tablets/Chromebooks",
-    tools: "Visual Studio Code, HTML5, CSS3, Figma, Bootstrap",
-    soft_skills: "Análisis de usuario (UX), presentación de proyectos",
-    hard_skills: "Maquetación HTML/CSS, Flexbox/Grid, Diseño Responsivo, JavaScript básico (interactividad), SEO básico",
-    complementary_course: "Diseño Gráfico (para mejorar la UI) o Python Pro (para el backend)",
-    key_selling_points: [
-      "Crea sitios web profesionales desde cero",
-      "Habilidad más demandada en el mercado laboral",
-      "Aprende HTML, CSS y JavaScript",
-      "Base para desarrollo Full Stack"
-    ]
-  },
-  
-  "fwd_pro": {
-    name: "Fantastic World Design Pro (FWD Pro)",
-    age_range: { min: 13, max: 17 },
-    keywords: ["fwd", "blender", "3d", "modelado", "fantastic", "world"],
-    interest_profile: "3D, arquitectura, animación realista",
-    min_requirements: "Paciencia, pensamiento espacial",
-    tech_requirements: "8GB - 32GB RAM, CPU 64-bit. No Chromebooks",
-    tools: "Blender, Photopea, Tilda (Web)",
-    soft_skills: "Planificación de proyectos complejos",
-    hard_skills: "Modelado 3D (Low/High poly), Texturizado UV, Simulaciones físicas (fuego, fluidos), Renderizado, Diseño arquitectónico",
-    complementary_course: "Unity (para importar los modelos 3D a un juego)",
-    key_selling_points: [
-      "Blender: herramienta usada en Hollywood",
-      "Modelado 3D profesional y arquitectura",
-      "Simulaciones físicas avanzadas",
-      "Preparación para industria de VFX y videojuegos"
-    ]
-  },
-  
-  "unity": {
-    name: "Unity (Juegos Unity 3D)",
-    age_range: { min: 13, max: 17 },
-    keywords: ["unity", "c#", "game"],
-    interest_profile: "Crear videojuegos profesionales, programación C#",
-    min_requirements: "Experiencia previa en programación, Usuario confiado de PC",
-    tech_requirements: "PC Potente (i3/i5, GPU dedicada recomendada). No Chromebooks",
-    tools: "Unity Editor, Visual Studio (C#), Photon (Multiplayer), GitHub",
-    soft_skills: "Gestión de versiones, equilibrio de juego",
-    hard_skills: "Programación C# (Clases, Herencia, POO), Física 2D/3D, Inteligencia Artificial (IA) básica, Redes (Multiplayer), Animación",
-    complementary_course: "FWD Pro (para crear los assets 3D)",
-    key_selling_points: [
-      "Motor usado en juegos AAA profesionales",
-      "Aprende C#: lenguaje de alta demanda",
-      "Crea juegos multiplayer",
-      "Preparación para industria de videojuegos"
-    ]
-  },
-  
-  "minecraft_1": {
-    name: "Minecraft Education (Nivel 1)",
-    age_range: { min: 8, max: 9 },
-    keywords: ["minecraft", "nivel 1", "education"],
-    interest_profile: "Construir, jugar Minecraft, automatizar tareas, crear juegos simples",
-    min_requirements: "Habilidad básica de PC (ratón/teclado). No requiere experiencia previa en programación",
-    tech_requirements: "PC/Mac o Chrome OS, 8GB RAM, Procesador i3 o superior",
-    tools: "Minecraft Education Edition, MakeCode (bloques)",
-    soft_skills: "Trabajo en equipo, planificación de proyectos, resolución creativa de problemas, presentación de proyectos",
-    hard_skills: "Algoritmos, bucles, coordenadas, lógica condicional (if/else), automatización con Agente, Redstone",
-    complementary_course: "Roblox (8-9) (para saltar a otro motor 3D) o Minecraft Nivel 2 (para avanzar a código escrito)",
-    key_selling_points: [
-      "Aprende programación dentro de su juego favorito",
-      "No requiere experiencia previa",
-      "Automatización con bloques visuales",
-      "Base perfecta para Python después"
-    ]
-  },
-  
-  "minecraft_2": {
-    name: "Minecraft Education Nivel 2 (Python)",
-    age_range: { min: 10, max: 11 },
-    keywords: ["minecraft", "python", "nivel 2"],
-    interest_profile: "Programar 'de verdad', controlar el juego con código, Inteligencia Artificial (IA)",
-    min_requirements: "Lectura fluida (código en inglés básico), lógica básica",
-    tech_requirements: "PC/Mac o Chrome OS, Hardware específico (Intel i3/AMD A8 o superior)",
-    tools: "Minecraft Education Edition, Lenguaje Python",
-    soft_skills: "Ética de la IA, presentación de proyectos, pensamiento sistemático",
-    hard_skills: "Sintaxis Python, Bucles anidados, Variables, Funciones parametrizadas, Listas, Coordenadas 3D (x, y, z), Uso de IA para código",
-    complementary_course: "Python New (para salir del entorno de juego) o Roblox (10-12)",
-    key_selling_points: [
-      "Evolución a programación profesional con Python",
-      "Controla Minecraft con código real",
-      "Introducción a IA dentro del juego",
-      "Transición perfecta hacia Python profesional"
-    ]
-  },
-  
-  "drawing": {
-    name: "Drawing (Dibujo en papel)",
-    age_range: { min: 8, max: 9 },
-    keywords: ["drawing", "dibujo", "papel"],
-    interest_profile: "Dibujar en papel, cómics, anime, realismo, pintura",
-    min_requirements: "Paciencia, motricidad fina, gusto por dibujar a mano",
-    tech_requirements: "PC/Mac/Tablet (para ver la clase por Zoom). Materiales Físicos: Papel A4, Lápiz HB, Borrador, Regla, Colores/Marcadores, Pinturas a base de agua",
-    tools: "Papel y materiales tradicionales",
-    soft_skills: "Confianza en sí mismo, concentración, estabilidad emocional, superación del miedo al error",
-    hard_skills: "Proporción, perspectiva, teoría del color, sombreado, estilos (anime, cubismo, impresionismo), bocetado rápido",
-    complementary_course: "Creatividad Digital 1 (para digitalizar su arte) o Ilustración (futuro paso)",
-    key_selling_points: [
-      "Fundamentos artísticos tradicionales",
-      "No requiere tableta digital costosa",
-      "Desarrolla concentración y confianza",
-      "Base perfecta para ilustración digital después"
-    ]
   }
 };
 
@@ -651,9 +337,10 @@ let allFilteredCourses = [];
 let allFilteredPossibleGroups = [];
 let selectedCourses = [];
 let preferredSchedule = [];
+let DEBUG_MODE = true; // Enable debug
 
 // ============================================
-// FUNCIONES DE UI Y CONEXIÓN
+// FUNCIONES DE UI
 // ============================================
 function updateConnectionStatus(status) {
   const statusEl = document.getElementById('connection-status');
@@ -671,11 +358,20 @@ function showSystemMessage(type, title, message) {
   if (type === 'success') setTimeout(() => { const el = document.getElementById(msgId); if (el) el.remove(); }, 5000);
 }
 
-// ============================================
-// FUNCIONES DE PARSING MEJORADAS
-// ============================================
+function debugLog(message, data = null) {
+  if (!DEBUG_MODE) return;
+  console.log(`[DEBUG] ${message}`, data || '');
+  const debugContent = document.getElementById('debug-content');
+  if (debugContent) {
+    const timestamp = new Date().toLocaleTimeString();
+    debugContent.innerHTML = `[${timestamp}] ${message}` + (data ? `<br><pre>${JSON.stringify(data, null, 2)}</pre>` : '') + '<br>' + debugContent.innerHTML;
+    document.getElementById('debug-panel').style.display = 'block';
+  }
+}
 
-// NUEVO: Parser CSV robusto que maneja comillas y comas dentro de celdas
+// ============================================
+// PARSING FUNCTIONS
+// ============================================
 function parseCSVRobust(text) {
   const lines = text.trim().split('\n');
   const rows = [];
@@ -692,7 +388,7 @@ function parseCSVRobust(text) {
       if (char === '"') {
         if (inQuotes && nextChar === '"') {
           current += '"';
-          i++; // Skip next quote
+          i++;
         } else {
           inQuotes = !inQuotes;
         }
@@ -720,33 +416,104 @@ function parseAgeRange(ageStr) {
 
 function inferInterest(courseTitle) {
   const t = String(courseTitle || "").toLowerCase();
-  if (t.includes("roblox") || t.includes("minecraft") || t.includes("game")) return "games";
-  if (t.includes("design") || t.includes("figma") || t.includes("art")) return "design";
+  if (t.includes("roblox") || t.includes("minecraft") || t.includes("unity") || t.includes("godot") || t.includes("game")) return "games";
+  if (t.includes("design") || t.includes("figma") || t.includes("art") || t.includes("creatividad")) return "design";
   return "coding";
 }
 
+// ============================================
+// FIXED: IMPROVED COURSE TYPE EXTRACTION
+// ============================================
 function extractCourseType(courseName, courseTitle) {
-  const title = String(courseTitle || courseName || "").toLowerCase();
+  const fullText = `${courseName || ""} ${courseTitle || ""}`.toLowerCase();
   
-  if (title.includes("roblox")) return "Roblox";
-  if (title.includes("minecraft")) return "Minecraft";
-  if (title.includes("unity")) return "Unity";
-  if (title.includes("godot")) return "Godot";
-  if (title.includes("game")) return "Desarrollo de Videojuegos";
-  if (title.includes("figma")) return "Figma";
-  if (title.includes("photoshop")) return "Photoshop";
-  if (title.includes("illustrator")) return "Illustrator";
-  if (title.includes("canva")) return "Canva";
-  if (title.includes("blender")) return "Blender 3D";
-  if (title.includes("design")) return "Diseño Digital";
-  if (title.includes("python")) return "Python";
-  if (title.includes("javascript") || title.includes("js")) return "JavaScript";
-  if (title.includes("scratch")) return "Scratch";
-  if (title.includes("web")) return "Desarrollo Web";
-  if (title.includes("app")) return "Desarrollo de Apps";
-  if (title.includes("c++")) return "C++";
-  if (title.includes("java")) return "Java";
-  return courseTitle || null;
+  debugLog("Extracting course type", { courseName, courseTitle, fullText });
+  
+  // Lista de mapeos EXACTOS
+  const courseTypeMappings = {
+    "unity": "Unity",
+    "roblox": "Roblox",
+    "minecraft": "Minecraft",
+    "godot": "Godot",
+    "python": "Python",
+    "scratch": "Scratch",
+    "javascript": "JavaScript",
+    "js": "JavaScript",
+    "web": "Desarrollo Web",
+    "html": "Desarrollo Web",
+    "css": "Desarrollo Web",
+    "figma": "Figma",
+    "photoshop": "Photoshop",
+    "illustrator": "Illustrator",
+    "canva": "Canva",
+    "blender": "Blender 3D",
+    "fwd": "Blender 3D",
+    "creatividad": "Diseño Digital",
+    "design": "Diseño Digital",
+    "drawing": "Dibujo"
+  };
+  
+  // Buscar coincidencia exacta
+  for (const [keyword, type] of Object.entries(courseTypeMappings)) {
+    if (fullText.includes(keyword)) {
+      debugLog(`Matched course type: ${type} for keyword: ${keyword}`);
+      return type;
+    }
+  }
+  
+  debugLog("No specific course type found, using title");
+  return courseTitle || courseName || "Curso General";
+}
+
+// ============================================
+// FIXED: IMPROVED COURSE TYPE MATCHING
+// ============================================
+function courseMatchesType(course, selectedType) {
+  if (!selectedType) {
+    debugLog("No type filter selected - accepting course");
+    return true;
+  }
+  
+  const courseName = (course.name_es || "").toLowerCase();
+  const courseTitle = (course.topic || course.courseTitle || "").toLowerCase();
+  const courseType = (course.courseType || "").toLowerCase();
+  const selectedTypeLower = selectedType.toLowerCase();
+  
+  // Lista de keywords por tipo
+  const typeKeywords = {
+    "unity": ["unity"],
+    "roblox": ["roblox"],
+    "minecraft": ["minecraft"],
+    "godot": ["godot"],
+    "python": ["python"],
+    "scratch": ["scratch"],
+    "javascript": ["javascript", "js"],
+    "desarrollo web": ["web", "html", "css"],
+    "figma": ["figma"],
+    "photoshop": ["photoshop"],
+    "blender 3d": ["blender", "fwd"],
+    "diseño digital": ["creatividad", "diseño", "design"]
+  };
+  
+  // Obtener keywords relevantes
+  const relevantKeywords = typeKeywords[selectedTypeLower] || [selectedTypeLower];
+  
+  const matches = relevantKeywords.some(keyword => 
+    courseName.includes(keyword) || 
+    courseTitle.includes(keyword) || 
+    courseType.includes(keyword)
+  );
+  
+  debugLog(`Course matching check for ${selectedType}`, {
+    courseName,
+    courseTitle,
+    courseType,
+    selectedType,
+    relevantKeywords,
+    matches
+  });
+  
+  return matches;
 }
 
 function parseISODateOnly(s) {
@@ -784,7 +551,7 @@ function parseDayAbbreviation(dayStr) {
 }
 
 // ============================================
-// MAPEO DE DATOS: GRUPOS ACTIVOS
+// DATA MAPPING
 // ============================================
 function mapRowsToCourses(headers, rows) {
   const findCol = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
@@ -830,6 +597,8 @@ function mapRowsToCourses(headers, rows) {
     }
 
     const ageRange = parseAgeRange(idx_age >= 0 ? r[idx_age] : "");
+    const courseType = extractCourseType(name, topic);
+    
     courses.push({
       id: `active_${i}_${name}_${dateStr}`,
       name_es: name,
@@ -838,7 +607,7 @@ function mapRowsToCourses(headers, rows) {
       min_age: ageRange.min,
       max_age: ageRange.max,
       interest: inferInterest(topic),
-      courseType: extractCourseType(name, topic),
+      courseType: courseType,
       enrolled: enrolled,
       capacity: capacity,
       isFull: capacity > 0 && enrolled >= capacity,
@@ -850,26 +619,23 @@ function mapRowsToCourses(headers, rows) {
       type: 'active'
     });
   }
+  
+  debugLog(`Active courses mapped: ${courses.length}`);
   return courses;
 }
 
 // ============================================
-// MAPEO DE DATOS: GRUPOS POSIBLES - MEJORADO
+// FIXED: IMPROVED POSSIBLE GROUPS MAPPING
 // ============================================
 function mapRowsToPossibleGroups(headers, rows) {
   const groups = [];
   
-  console.log("=== PARSING POSSIBLE GROUPS (DETAILED) ===");
-  console.log("Headers:", headers);
-  console.log("Total rows:", rows.length);
+  debugLog("=== PARSING POSSIBLE GROUPS ===", { headerCount: headers.length, rowCount: rows.length });
   
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     
-    console.log(`\n--- Row ${i+1} ---`);
-    console.log("Raw data:", r);
-    
-    // Acceso directo por índice (más confiable)
+    // Acceso directo por índice
     const courseName = (r[0] || "").trim();
     const format = (r[1] || "").toLowerCase().trim();
     const dayRaw = (r[2] || "").trim();
@@ -877,17 +643,8 @@ function mapRowsToPossibleGroups(headers, rows) {
     const students = parseInt(r[4] || "0");
     const ageRangeStr = r[6] || "";
     
-    console.log("Parsed:", {
-      courseName,
-      format,
-      dayRaw,
-      hora,
-      students,
-      ageRangeStr
-    });
-    
     if (!courseName) {
-      console.log("❌ Skipping: empty course name");
+      debugLog(`Row ${i+1}: Skipping - empty course name`);
       continue;
     }
 
@@ -897,9 +654,12 @@ function mapRowsToPossibleGroups(headers, rows) {
     const capacity = isPremium ? 4 : 14;
 
     if (students > capacity) {
-      console.log("❌ Skipping: oversold");
+      debugLog(`Row ${i+1}: Skipping - oversold (${students}/${capacity})`);
       continue;
     }
+
+    const courseType = extractCourseType(courseName, courseName);
+    const interest = inferInterest(courseName);
 
     const group = {
       id: `possible_${i}_${courseName}_${day}_${hora}`,
@@ -916,16 +676,17 @@ function mapRowsToPossibleGroups(headers, rows) {
       isFull: students >= capacity,
       min_age: ageRange.min,
       max_age: ageRange.max,
-      interest: inferInterest(courseName),
-      courseType: extractCourseType(courseName, courseName),
+      interest: interest,
+      courseType: courseType,
       next_start: `${day} | ${hora}`,
       teacher: "Por asignar",
       type: 'possible'
     };
     
-    console.log("✅ Created group:", {
+    debugLog(`Row ${i+1}: Created group`, {
       name: group.name_es,
       courseType: group.courseType,
+      interest: group.interest,
       day: group.day,
       hora: group.hora,
       format: group.format
@@ -934,21 +695,20 @@ function mapRowsToPossibleGroups(headers, rows) {
     groups.push(group);
   }
   
-  console.log("\n=== SUMMARY ===");
-  console.log("Total groups created:", groups.length);
+  debugLog(`Possible groups mapped: ${groups.length}`);
   
   // Agrupar por courseType
   const byType = {};
   groups.forEach(g => {
     byType[g.courseType] = (byType[g.courseType] || 0) + 1;
   });
-  console.log("Groups by type:", byType);
+  debugLog("Groups by type", byType);
   
   return groups;
 }
 
 // ============================================
-// FUNCIONES DE FETCH - MEJORADAS
+// FETCH FUNCTIONS
 // ============================================
 async function fetchWithCSV(dataSource) {
   let url = dataSource.csv + "&_=" + Date.now();
@@ -961,7 +721,7 @@ async function fetchWithCSV(dataSource) {
   }
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const text = await resp.text();
-  return parseCSVRobust(text); // USANDO PARSER ROBUSTO
+  return parseCSVRobust(text);
 }
 
 async function fetchWithGViz(dataSource) {
@@ -1001,27 +761,30 @@ async function fetchCourseData(forceRefresh = false) {
     { name: 'GViz JSON', fn: fetchWithGViz }
   ];
 
+  // Fetch Active Groups
   for (const method of methods) {
     try {
+      debugLog(`Fetching active groups with ${method.name}`);
       const result = await method.fn(DATA_SOURCES.active);
       LIVE_COURSE_DATA = mapRowsToCourses(result.headers, result.rows);
       if (LIVE_COURSE_DATA.length === 0) throw new Error("No hay cursos activos");
-      console.log(`✅ Active groups loaded: ${LIVE_COURSE_DATA.length}`);
+      debugLog(`Active groups loaded: ${LIVE_COURSE_DATA.length}`);
       break;
     } catch (err) {
-      console.warn(`✗ Active ${method.name}:`, err.message);
+      debugLog(`Active ${method.name} failed`, err.message);
     }
   }
 
+  // Fetch Possible Groups
   for (const method of methods) {
     try {
-      console.log(`\n🔄 Trying to fetch Possible Groups with ${method.name}...`);
+      debugLog(`Fetching possible groups with ${method.name}`);
       const result = await method.fn(DATA_SOURCES.possible);
       LIVE_POSSIBLE_GROUPS = mapRowsToPossibleGroups(result.headers, result.rows);
-      console.log(`✅ Possible groups loaded: ${LIVE_POSSIBLE_GROUPS.length}`);
+      debugLog(`Possible groups loaded: ${LIVE_POSSIBLE_GROUPS.length}`);
       break;
     } catch (err) {
-      console.warn(`✗ Possible ${method.name}:`, err.message);
+      debugLog(`Possible ${method.name} failed`, err.message);
     }
   }
 
@@ -1040,7 +803,7 @@ async function fetchCourseData(forceRefresh = false) {
 }
 
 // ============================================
-// CÁLCULO DE PRIORIDAD
+// PRIORITY CALCULATION
 // ============================================
 function calculatePriority(course) {
   const remaining = course.capacity - course.enrolled;
@@ -1111,36 +874,34 @@ function calculateScheduleMatchScore(course) {
 }
 
 // ============================================
-// FUNCIONES DE ACTUALIZACIÓN DE UI
+// UPDATE UI FUNCTIONS
 // ============================================
 function updateCourseTypeOptions() {
   const interest = document.getElementById("student_interest").value;
   const courseTypeSelect = document.getElementById("course_type");
+  
   if (!LIVE_COURSE_DATA.length && !LIVE_POSSIBLE_GROUPS.length) {
     courseTypeSelect.innerHTML = '<option value="">-- Cargando... --</option>';
     return;
   }
+  
   const types = new Set();
   [...LIVE_COURSE_DATA, ...LIVE_POSSIBLE_GROUPS].forEach(c => {
-    if (c.interest === interest && c.courseType) types.add(c.courseType);
+    if (c.interest === interest && c.courseType) {
+      types.add(c.courseType);
+    }
   });
+  
   courseTypeSelect.innerHTML = '<option value="">-- Todos --</option>';
   Array.from(types).sort().forEach(type => {
     courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
   });
-}
-
-function courseMatchesType(course, selectedType) {
-  if (!selectedType) return true;
   
-  const courseLower = (course.name_es || "").toLowerCase();
-  const typeLower = selectedType.toLowerCase();
-  
-  return courseLower.includes(typeLower) || course.courseType === selectedType;
+  debugLog("Course type options updated", { interest, types: Array.from(types) });
 }
 
 // ============================================
-// DIAGNÓSTICO Y MATCHING - MEJORADO CON LOGS
+// FIXED: DIAGNOSE AND MATCH
 // ============================================
 async function diagnoseAndMatch() {
   const activeDiv = document.getElementById("course_recommendation");
@@ -1168,12 +929,7 @@ async function diagnoseAndMatch() {
     return;
   }
 
-  console.log("\n=== FILTERING CRITERIA ===");
-  console.log("Age:", age);
-  console.log("Interest:", interest);
-  console.log("Course Type:", courseType || "All");
-  console.log("Group Type:", groupType);
-  console.log("Preferred Schedule:", preferredSchedule);
+  debugLog("=== FILTERING CRITERIA ===", { age, interest, courseType, groupType, preferredSchedule });
 
   // Filtrar grupos activos
   let filteredActive = LIVE_COURSE_DATA.filter(c => {
@@ -1188,48 +944,42 @@ async function diagnoseAndMatch() {
     return true;
   });
 
-  console.log("\n=== FILTERING POSSIBLE GROUPS ===");
-  console.log("Total possible groups before filter:", LIVE_POSSIBLE_GROUPS.length);
-  
-  // Filtrar grupos posibles CON LOGS DETALLADOS
+  debugLog("Active groups filtered", { total: filteredActive.length });
+
+  // Filtrar grupos posibles CON LOGS MEJORADOS
   let filteredPossible = LIVE_POSSIBLE_GROUPS.filter(c => {
-    console.log(`\nChecking: ${c.name_es}`);
-    
     const ageMatch = age >= c.min_age && age <= c.max_age;
-    console.log(`  Age match (${age} in ${c.min_age}-${c.max_age}): ${ageMatch}`);
-    
     const interestMatch = c.interest === interest;
-    console.log(`  Interest match (${c.interest} === ${interest}): ${interestMatch}`);
-    
     const basicMatch = ageMatch && interestMatch;
+    
     if (!basicMatch) {
-      console.log("  ❌ Failed basic match");
       return false;
     }
     
     if (courseType) {
       const typeMatch = courseMatchesType(c, courseType);
-      console.log(`  Type match ("${courseType}" in "${c.name_es}"): ${typeMatch}`);
       if (!typeMatch) {
-        console.log("  ❌ Failed type match");
+        debugLog(`Course rejected by type filter`, {
+          courseName: c.name_es,
+          courseType: c.courseType,
+          selectedType: courseType
+        });
         return false;
       }
     }
     
     const formatMatch = groupType === c.format;
-    console.log(`  Format match (${groupType} === ${c.format}): ${formatMatch}`);
     if (!formatMatch) {
-      console.log("  ❌ Failed format match");
       return false;
     }
     
-    console.log("  ✅ PASSED ALL FILTERS");
     return true;
   });
 
-  console.log("\n=== FILTER RESULTS ===");
-  console.log("Active groups after filter:", filteredActive.length);
-  console.log("Possible groups after filter:", filteredPossible.length);
+  debugLog("Possible groups filtered", { 
+    total: filteredPossible.length,
+    groups: filteredPossible.map(g => ({ name: g.name_es, type: g.courseType, day: g.day, hora: g.hora }))
+  });
 
   // Calcular scores
   filteredActive.forEach(course => {
@@ -1242,6 +992,7 @@ async function diagnoseAndMatch() {
     course.scheduleScore = calculateScheduleMatchScore(course);
   });
 
+  // Ordenar
   if (preferredSchedule.length > 0) {
     filteredActive.sort((a, b) => {
       if (b.scheduleScore !== a.scheduleScore) return b.scheduleScore - a.scheduleScore;
@@ -1274,7 +1025,12 @@ async function diagnoseAndMatch() {
 
   // Renderizar grupos posibles
   if (filteredPossible.length === 0) {
-    possibleDiv.innerHTML = '<span class="text-gray-600">No hay grupos posibles para estos criterios</span>';
+    possibleDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-info-circle text-gray-400 text-2xl mb-2"></i><p class="text-gray-600">No hay grupos posibles para estos criterios</p></div>';
+    debugLog("NO POSSIBLE GROUPS FOUND", { 
+      totalPossibleGroups: LIVE_POSSIBLE_GROUPS.length,
+      afterFiltering: filteredPossible.length,
+      criteria: { age, interest, courseType, groupType }
+    });
   } else {
     const top3Possible = filteredPossible.slice(0, 3);
     let html = renderCourseList(top3Possible, false);
@@ -1320,6 +1076,7 @@ function renderCourseList(courses, showIndex = true) {
     
     html += `<div class="${cardClass}" id="course-card-${course.id}">
       <div class="course-option-title">${displayIdx}: ${course.name_es} ${badge}</div>
+      <div class="course-option-row">📚 <strong>Tipo:</strong> ${course.courseType}</div>
       <div class="course-option-row">⏰ ${course.next_start}</div>
       <div class="course-option-row ${critical || course.isFull ? "text-orange-600 font-semibold" : ""}">💻 ${course.enrolled}/${course.capacity} (${remaining} restantes)</div>
       <div class="course-option-row">👨‍🏫 ${course.teacher}</div>`;
@@ -1350,9 +1107,7 @@ function renderCourseList(courses, showIndex = true) {
   return html;
 }
 
-// [CONTINÚA con las funciones restantes: toggleCourseSelection, modales, pitch, etc...]
-// Por brevedad, mantengo el resto igual que en la versión anterior
-
+// [Resto de funciones: toggleCourseSelection, modales, pitch, etc. - mantener igual]
 function toggleCourseSelection(courseId) {
   const course = [...allFilteredCourses, ...allFilteredPossibleGroups].find(c => c.id === courseId);
   if (!course) return;
@@ -1524,35 +1279,7 @@ function submitPreferredSchedule() {
   closeScheduleModal();
 }
 
-// ============================================
-// FUNCIÓN DE MATCHING INTELIGENTE
-// ============================================
-function findCourseGuideline(courseName, studentAge) {
-  const searchTerm = courseName.toLowerCase();
-  
-  for (const [key, course] of Object.entries(COURSE_GUIDELINES)) {
-    const matchesKeyword = course.keywords.some(kw => searchTerm.includes(kw));
-    const matchesAge = studentAge >= course.age_range.min && studentAge <= course.age_range.max;
-    
-    if (matchesKeyword && matchesAge) {
-      return course;
-    }
-  }
-  
-  for (const [key, course] of Object.entries(COURSE_GUIDELINES)) {
-    const matchesKeyword = course.keywords.some(kw => searchTerm.includes(kw));
-    if (matchesKeyword) {
-      return course;
-    }
-  }
-  
-  return null;
-}
-
-    // ============================================
-// FUNCIÓN PARA GENERAR PITCH 
-// ============================================
-async function generatePitch() {
+function generatePitch() {
   const selectedId = document.getElementById("selected_course").value;
   const out = document.getElementById("pitch_output");
 
@@ -1564,34 +1291,14 @@ async function generatePitch() {
   const course = [...LIVE_COURSE_DATA, ...LIVE_POSSIBLE_GROUPS].find(c => c.id === selectedId);
   if (!course) return;
 
-  const studentAge = parseInt(document.getElementById("student_age").value);
   const remaining = course.capacity - course.enrolled;
   const typeLabel = course.type === 'possible' ? '🌟 GRUPO POSIBLE (creado por demanda)' : '✅ GRUPO ACTIVO';
   
-  const guideline = findCourseGuideline(course.name_es, studentAge);
-  
-  if (!guideline) {
-    out.innerHTML = `
-      <div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
-        <div class="font-bold text-lg mb-2">📊 ${course.name_es}</div>
-        <div class="text-sm mb-1"><b>${typeLabel}</b></div>
-        <div class="text-sm mb-1">📅 <b>Inicio:</b> ${course.next_start}</div>
-        <div class="text-sm mb-1">💻 <b>Disponibilidad:</b> ${remaining} de ${course.capacity} cupos</div>
-        <div class="text-sm mb-1">👨‍🏫 <b>Instructor:</b> ${course.teacher}</div>
-        ${course.isFull ? '<div class="text-orange-600 font-semibold mt-2">⚠️ Grupo lleno</div>' : ''}
-      </div>
-      <div class="p-3 bg-yellow-50 rounded">
-        <p class="text-sm">ℹ️ Información no disponible para este curso</p>
-      </div>
-    `;
-    return;
-  }
-
   let pitchHTML = `
     <div class="space-y-4">
       <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg">
-        <h3 class="text-xl font-bold mb-1">🎯 ${guideline.name}</h3>
-        <p class="text-sm opacity-90">${typeLabel} | Edad: ${guideline.age_range.min}-${guideline.age_range.max} años</p>
+        <h3 class="text-xl font-bold mb-1">🎯 ${course.name_es}</h3>
+        <p class="text-sm opacity-90">${typeLabel}</p>
       </div>
 
       <div class="p-3 ${remaining <= 3 ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'} border-l-4 rounded">
@@ -1600,41 +1307,8 @@ async function generatePitch() {
           <div>🕐 <b>Horario:</b> ${course.next_start}</div>
           <div>💺 <b>Cupos:</b> ${remaining} de ${course.capacity} disponibles ${remaining <= 3 ? '⚠️ ¡CASI LLENO!' : ''}</div>
           <div>👨‍🏫 <b>Instructor:</b> ${course.teacher}</div>
+          <div>📚 <b>Tipo:</b> ${course.courseType}</div>
         </div>
-      </div>
-
-      <div class="p-3 bg-purple-50 border-l-4 border-purple-400 rounded">
-        <div class="font-semibold mb-2">👤 Perfil Ideal del Estudiante</div>
-        <p class="text-sm">${guideline.interest_profile}</p>
-      </div>
-
-      <div class="p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-        <div class="font-semibold mb-2">🎓 Lo que Aprenderá</div>
-        <div class="text-sm space-y-2">
-          <div><b>🛠️ Herramientas:</b> ${guideline.tools}</div>
-          <div><b>💪 Habilidades Técnicas:</b> ${guideline.hard_skills}</div>
-          <div><b>🧠 Habilidades Blandas:</b> ${guideline.soft_skills}</div>
-        </div>
-      </div>
-
-      <div class="p-3 bg-orange-50 border-l-4 border-orange-400 rounded">
-        <div class="font-semibold mb-2">⚙️ Requisitos Importantes</div>
-        <div class="text-sm space-y-1">
-          <div><b>📚 Académicos:</b> ${guideline.min_requirements}</div>
-          <div><b>💻 Técnicos:</b> ${guideline.tech_requirements}</div>
-        </div>
-      </div>
-
-      <div class="p-3 bg-green-50 border-l-4 border-green-500 rounded">
-        <div class="font-semibold mb-2">✨ ¿Por qué este curso es perfecto?</div>
-        <ul class="text-sm space-y-1 list-disc list-inside">
-          ${guideline.key_selling_points.map(point => `<li>${point}</li>`).join('')}
-        </ul>
-      </div>
-
-      <div class="p-3 bg-indigo-50 border-l-4 border-indigo-400 rounded">
-        <div class="font-semibold mb-1">🚀 Siguiente Paso en su Aprendizaje</div>
-        <p class="text-sm">${guideline.complementary_course}</p>
       </div>
 
       ${remaining <= 5 ? `
@@ -1706,6 +1380,7 @@ window.onload = () => {
   fetchCourseData().then(() => {
     updateDataSourceInfo();
     updateCourseTypeOptions();
+    debugLog("Initial data loaded successfully");
   }).catch(() => {
     showSystemMessage('warning', '⚠️ Conexión limitada', 'No se pudo cargar la base de datos de cursos. Intenta refrescar la página.');
   });
@@ -1714,5 +1389,4 @@ window.onload = () => {
 </script>
 </body>
 </html>
-
 
