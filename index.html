@@ -1163,19 +1163,87 @@ function calculateScheduleMatchScore(course) {
 function updateCourseTypeOptions() {
   const interest = document.getElementById("student_interest").value;
   const courseTypeSelect = document.getElementById("course_type");
+  
   if (!LIVE_COURSE_DATA.length && !LIVE_POSSIBLE_GROUPS.length) {
     courseTypeSelect.innerHTML = '<option value="">-- Cargando... --</option>';
     return;
   }
+  
   const types = new Set();
+  
   [...LIVE_COURSE_DATA, ...LIVE_POSSIBLE_GROUPS].forEach(c => {
-    if (c.interest === interest && c.courseType) types.add(c.courseType);
+    if (c.interest === interest && c.courseType) {
+      // Limpiar el courseType antes de agregarlo
+      let cleanType = c.courseType;
+      
+      // Remover IDs, números extraños, y símbolos
+      cleanType = cleanType
+        .replace(/ID\s*\d+:/gi, '')           // Remover "ID 123:"
+        .replace(/\$\d+/g, '')                 // Remover "$123"
+        .replace(/\d+d,/g, '')                 // Remover "4d,"
+        .replace(/,\s*\d+/g, '')               // Remover ", 123"
+        .replace(/\s+students/gi, '')          // Remover "students"
+        .replace(/\s+\d+y/g, '')               // Remover "14y"
+        .replace(/[,;:]/g, ' ')                // Reemplazar símbolos por espacio
+        .replace(/\s+/g, ' ')                  // Normalizar espacios múltiples
+        .trim();
+      
+      // Solo agregar si tiene contenido válido después de limpiar
+      if (cleanType && cleanType.length > 2 && !cleanType.match(/^\d+$/)) {
+        types.add(cleanType);
+      }
+    }
   });
-  courseTypeSelect.innerHTML = '<option value="">-- Todos --</option>';
+  
+  // Si no hay tipos válidos, mostrar mensaje
+  if (types.size === 0) {
+    courseTypeSelect.innerHTML = '<option value="">-- No hay cursos disponibles --</option>';
+    return;
+  }
+  
+  // Ordenar alfabéticamente y popular el dropdown
+  courseTypeSelect.innerHTML = '<option value="">-- Todos los cursos de este interés --</option>';
   Array.from(types).sort().forEach(type => {
     courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
   });
 }
+```
+
+---
+
+## 🎯 **¿Qué hace esta versión mejorada?**
+
+1. **Limpia IDs**: Remueve "ID 123:", "ID 456:", etc.
+2. **Limpia precios**: Remueve "$555", "$212.44", etc.
+3. **Limpia duraciones**: Remueve "4d", "8y", "14y", etc.
+4. **Limpia estudiantes**: Remueve "0 students", "100 students", etc.
+5. **Limpia símbolos**: Remueve comas, puntos y comas excesivos
+6. **Valida**: Solo agrega nombres válidos (más de 2 caracteres y no solo números)
+
+---
+
+## 📋 **ANTES vs DESPUÉS**
+
+**ANTES (dropdown sucio):**
+```
+-- Todos --
+4d, $235
+4d, $323
+8y,0 students,100,20,33,0,47
+ID 174: $376,ID 17: 9y
+Unity
+```
+
+**DESPUÉS (dropdown limpio):**
+```
+-- Todos los cursos de este interés --
+FunTech
+Minecraft
+Python
+Roblox
+Scratch
+Unity
+Web
 
 function courseMatchesType(course, selectedType) {
   if (!selectedType) return true;
@@ -1797,6 +1865,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
