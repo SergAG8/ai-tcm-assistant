@@ -103,9 +103,8 @@
         </label>
         <select id="student_interest" onchange="updateCourseTypeOptions()"
                 class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
-          <option value="coding">Programación (Lógica)</option>
-          <option value="design">Diseño / Arte Digital</option>
-          <option value="games">Creación de Videojuegos</option>
+<option value="coding">Coding y Videojuegos</option>
+<option value="design">Media y Diseño</option>
         </select>
 
         <label for="course_type" class="block text-sm font-medium text-gray-700 mb-1">
@@ -720,33 +719,81 @@ function parseAgeRange(ageStr) {
 
 function inferInterest(courseTitle) {
   const t = String(courseTitle || "").toLowerCase();
-  if (t.includes("roblox") || t.includes("minecraft") || t.includes("game")) return "games";
-  if (t.includes("design") || t.includes("figma") || t.includes("art")) return "design";
+  
+  // Coding y Videojuegos
+  if (
+    t.includes("funtech") ||
+    t.includes("scratch") ||
+    t.includes("minecraft") ||
+    t.includes("roblox") ||
+    t.includes("python") ||
+    t.includes("unity") ||
+    t.includes("web") ||
+    t.includes("godot") ||
+    t.includes("game")
+  ) {
+    return "coding";
+  }
+  
+  // Media y Diseño
+  if (
+    t.includes("drawing") ||
+    t.includes("ilustra") ||
+    t.includes("creatividad") ||
+    t.includes("creativity") ||
+    t.includes("fwd") ||
+    t.includes("blender") ||
+    t.includes("graphic") ||
+    t.includes("design") ||
+    t.includes("diseño") ||
+    t.includes("figma") ||
+    t.includes("art")
+  ) {
+    return "design";
+  }
+  
+  // Default (debería raramente llegar aquí)
   return "coding";
 }
 
 function extractCourseType(courseName, courseTitle) {
-  const title = String(courseTitle || courseName || "").toLowerCase();
+  const fullText = `${courseName || ""} ${courseTitle || ""}`.toLowerCase().trim();
   
-  if (title.includes("roblox")) return "Roblox";
-  if (title.includes("minecraft")) return "Minecraft";
-  if (title.includes("unity")) return "Unity";
-  if (title.includes("godot")) return "Godot";
-  if (title.includes("game")) return "Desarrollo de Videojuegos";
-  if (title.includes("figma")) return "Figma";
-  if (title.includes("photoshop")) return "Photoshop";
-  if (title.includes("illustrator")) return "Illustrator";
-  if (title.includes("canva")) return "Canva";
-  if (title.includes("blender")) return "Blender 3D";
-  if (title.includes("design")) return "Diseño Digital";
-  if (title.includes("python")) return "Python";
-  if (title.includes("javascript") || title.includes("js")) return "JavaScript";
-  if (title.includes("scratch")) return "Scratch";
-  if (title.includes("web")) return "Desarrollo Web";
-  if (title.includes("app")) return "Desarrollo de Apps";
-  if (title.includes("c++")) return "C++";
-  if (title.includes("java")) return "Java";
-  return courseTitle || null;
+  // Lista de detección prioritaria (orden importa)
+  const courseMap = {
+    // Coding y Videojuegos
+    "funtech": "FunTech",
+    "scratch": "Scratch",
+    "minecraft": "Minecraft",
+    "roblox": "Roblox",
+    "python": "Python",
+    "unity": "Unity",
+    "web": "Web",
+    "godot": "Godot",
+    
+    // Media y Diseño
+    "drawing": "Drawing",
+    "ilustra": "Ilustración",
+    "ilustracion": "Ilustración",
+    "creatividad": "Digital Creativity",
+    "creativity": "Digital Creativity",
+    "fwd": "FWD Pro",
+    "blender": "FWD Pro",
+    "graphic": "Graphic Design",
+    "diseño gráfico": "Graphic Design",
+    "grafico": "Graphic Design"
+  };
+  
+  // Buscar coincidencia
+  for (const [keyword, cleanName] of Object.entries(courseMap)) {
+    if (fullText.includes(keyword)) {
+      return cleanName;
+    }
+  }
+  
+  // Fallback: retornar el título original limpio (sin IDs)
+  const cleaned = (courseTitle || courseName || "Curso").replace(/ID\s*\d+:/gi, "").trim();
+  return cleaned;
 }
 
 function parseISODateOnly(s) {
@@ -1133,17 +1180,46 @@ function updateCourseTypeOptions() {
 function courseMatchesType(course, selectedType) {
   if (!selectedType) return true;
   
-  // Normalizar todo a minúsculas para comparación
-  const courseLower = (course.name_es || "").toLowerCase();
-  const courseTypeLower = (course.courseType || "").toLowerCase();
-  const topicLower = (course.topic || "").toLowerCase();
-  const typeLower = selectedType.toLowerCase();
+  // Normalizar
+  const courseName = (course.name_es || "").toLowerCase();
+  const courseType = (course.courseType || "").toLowerCase();
+  const topic = (course.topic || course.courseTitle || "").toLowerCase();
+  const selected = selectedType.toLowerCase();
   
-  // Buscar coincidencia en cualquiera de los campos
-  return courseLower.includes(typeLower) || 
-         courseTypeLower.includes(typeLower) || 
-         topicLower.includes(typeLower) ||
-         courseTypeLower === typeLower;
+  // Mapa de sinónimos para matching flexible
+  const synonymMap = {
+    "funtech": ["funtech", "fun tech"],
+    "scratch": ["scratch"],
+    "minecraft": ["minecraft", "mine craft"],
+    "roblox": ["roblox"],
+    "python": ["python", "py"],
+    "unity": ["unity"],
+    "web": ["web", "html", "css", "javascript"],
+    "godot": ["godot"],
+    "drawing": ["drawing", "dibujo"],
+    "ilustración": ["ilustra", "ilustracion", "illustration"],
+    "digital creativity": ["creatividad", "creativity", "digital"],
+    "fwd pro": ["fwd", "blender", "fantastic world"],
+    "graphic design": ["graphic", "grafico", "diseño gráfico", "design"]
+  };
+  
+  // Buscar coincidencia directa
+  if (courseName.includes(selected) || courseType.includes(selected) || topic.includes(selected)) {
+    return true;
+  }
+  
+  // Buscar en sinónimos
+  for (const [key, synonyms] of Object.entries(synonymMap)) {
+    if (key.includes(selected) || synonyms.some(s => selected.includes(s))) {
+      return synonyms.some(s => 
+        courseName.includes(s) || 
+        courseType.includes(s) || 
+        topic.includes(s)
+      );
+    }
+  }
+  
+  return false;
 }
 
 // ============================================
@@ -1721,6 +1797,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
