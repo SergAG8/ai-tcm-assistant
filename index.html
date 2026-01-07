@@ -1133,10 +1133,39 @@ function updateCourseTypeOptions() {
 function courseMatchesType(course, selectedType) {
   if (!selectedType) return true;
   
-  const courseLower = (course.name_es || "").toLowerCase();
-  const typeLower = selectedType.toLowerCase();
+  // Normalizar todo a minúsculas
+  const courseName = (course.name_es || "").toLowerCase();
+  const courseType = (course.courseType || "").toLowerCase();
+  const topic = (course.topic || course.courseTitle || "").toLowerCase();
+  const selected = selectedType.toLowerCase();
   
-  return courseLower.includes(typeLower) || course.courseType === selectedType;
+  // Lista de sinónimos para cada curso
+  const synonyms = {
+    'unity': ['unity', 'c#', 'game'],
+    'roblox': ['roblox', 'lua'],
+    'python': ['python', 'py'],
+    'minecraft': ['minecraft', 'mine'],
+    'scratch': ['scratch'],
+    'web': ['web', 'html', 'css'],
+    'blender': ['blender', 'fwd', '3d'],
+    'figma': ['figma', 'diseño'],
+  };
+  
+  // Buscar coincidencia directa
+  const directMatch = courseName.includes(selected) || 
+                      courseType.includes(selected) || 
+                      topic.includes(selected);
+  
+  if (directMatch) return true;
+  
+  // Buscar en sinónimos
+  for (const [key, values] of Object.entries(synonyms)) {
+    if (values.some(v => selected.includes(v))) {
+      return values.some(v => courseName.includes(v) || courseType.includes(v) || topic.includes(v));
+    }
+  }
+  
+  return false;
 }
 
 // ============================================
@@ -1714,4 +1743,5 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
