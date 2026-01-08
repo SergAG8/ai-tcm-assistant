@@ -853,6 +853,21 @@ function parseDayAbbreviation(dayStr) {
   const normalized = String(dayStr || "").toLowerCase().trim();
   return dayMap[normalized] || normalized;
 }
+    function getDayOfWeekFromDate(dateObj) {
+  if (!dateObj) return null;
+  
+  const dayMap = {
+    0: 'domingo',
+    1: 'lunes',
+    2: 'martes',
+    3: 'miércoles',
+    4: 'jueves',
+    5: 'viernes',
+    6: 'sábado'
+  };
+  
+  return dayMap[dateObj.getDay()];
+}
 
 // ============================================
 // MAPEO DE DATOS: GRUPOS ACTIVOS
@@ -900,26 +915,29 @@ function mapRowsToCourses(headers, rows) {
       }
     }
 
-    const ageRange = parseAgeRange(idx_age >= 0 ? r[idx_age] : "");
-    courses.push({
-      id: `active_${i}_${name}_${dateStr}`,
-      name_es: name,
-      topic: topic || name,
-      courseTitle: topic,
-      min_age: ageRange.min,
-      max_age: ageRange.max,
-      interest: inferInterest(topic),
-      courseType: extractCourseType(name, topic),
-      enrolled: enrolled,
-      capacity: capacity,
-      isFull: capacity > 0 && enrolled >= capacity,
-      next_start: dateStr && timeStr ? `${dateStr} | ${timeStr}` : (dateStr || "N/A"),
-      teacher: teacher,
-      startDateObj: startDate,
-      timeStr: timeStr,
-      timeMinutes: parseTimeToMinutes(timeStr),
-      type: 'active'
-    });
+const ageRange = parseAgeRange(idx_age >= 0 ? r[idx_age] : "");
+const dayOfWeek = startDate ? getDayOfWeekFromDate(startDate) : null; // ← NUEVA LÍNEA
+
+courses.push({
+  id: `active_${i}_${name}_${dateStr}`,
+  name_es: name,
+  topic: topic || name,
+  courseTitle: topic,
+  min_age: ageRange.min,
+  max_age: ageRange.max,
+  interest: inferInterest(topic),
+  courseType: extractCourseType(name, topic),
+  enrolled: enrolled,
+  capacity: capacity,
+  isFull: capacity > 0 && enrolled >= capacity,
+  next_start: dateStr && timeStr ? `${dateStr} | ${timeStr}` : (dateStr || "N/A"),
+  teacher: teacher,
+  startDateObj: startDate,
+  timeStr: timeStr,
+  timeMinutes: parseTimeToMinutes(timeStr),
+  day: dayOfWeek, // ← NUEVA LÍNEA
+  type: 'active'
+});
   }
   return courses;
 }
@@ -1937,6 +1955,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
