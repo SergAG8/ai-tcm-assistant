@@ -740,7 +740,8 @@ function inferInterest(courseTitle) {
     t.includes("unity") ||
     t.includes("web") ||
     t.includes("godot") ||
-    t.includes("game")
+    t.includes("game") ||
+    t.includes("c#")
   ) {
     return "coding";
   }
@@ -748,6 +749,7 @@ function inferInterest(courseTitle) {
   // Media y Diseño
   if (
     t.includes("drawing") ||
+    t.includes("dibujo") ||
     t.includes("ilustra") ||
     t.includes("creatividad") ||
     t.includes("creativity") ||
@@ -757,52 +759,64 @@ function inferInterest(courseTitle) {
     t.includes("design") ||
     t.includes("diseño") ||
     t.includes("figma") ||
-    t.includes("art")
+    t.includes("art") ||
+    t.includes("3d")
   ) {
     return "design";
   }
   
-  // Default (debería raramente llegar aquí)
+  // Default
   return "coding";
 }
 
 function extractCourseType(courseName, courseTitle) {
   const fullText = `${courseName || ""} ${courseTitle || ""}`.toLowerCase().trim();
   
-  // Lista de detección prioritaria (orden importa)
+  // Lista de detección con niveles (orden importa - específicos primero)
   const courseMap = {
-    // Coding y Videojuegos
-    "funtech": "FunTech",
-    "scratch": "Scratch",
-    "minecraft": "Minecraft",
-    "roblox": "Roblox",
-    "python": "Python",
-    "unity": "Unity",
-    "web": "Web",
-    "godot": "Godot",
+    // Coding y Videojuegos (específicos primero)
+    "minecraft lvl 2": ["minecraft lvl 2", "minecraft level 2", "minecraft nivel 2", "minecraft 2"],
+    "minecraft": ["minecraft"],
     
-    // Media y Diseño
-    "drawing": "Drawing",
-    "ilustra": "Ilustración",
-    "ilustracion": "Ilustración",
-    "creatividad": "Digital Creativity",
-    "creativity": "Digital Creativity",
-    "fwd": "FWD Pro",
-    "blender": "FWD Pro",
-    "graphic": "Graphic Design",
-    "diseño gráfico": "Graphic Design",
-    "grafico": "Graphic Design"
+    "roblox lvl 2": ["roblox lvl 2", "roblox level 2", "roblox nivel 2", "roblox 2", "roblox game developer lvl 2"],
+    "roblox": ["roblox"],
+    
+    "python pro": ["python pro", "python avanzado", "python advanced"],
+    "python": ["python"],
+    
+    "funtech": ["funtech", "fun tech", "explorers"],
+    "scratch": ["scratch", "magia", "código"],
+    "unity": ["unity", "c#"],
+    "web": ["web", "html", "css", "diseño web"],
+    "godot": ["godot"],
+    
+    // Media y Diseño (específicos primero)
+    "digital creativity 2": ["creatividad digital nivel 2", "digital creativity 2", "creatividad 2", "creativity 2"],
+    "digital creativity 1": ["creatividad digital nivel 1", "digital creativity 1", "creatividad 1", "creativity 1"],
+    "drawing": ["drawing", "dibujo"],
+    "ilustración": ["ilustra", "ilustracion", "illustration"],
+    "fwd pro": ["fwd", "blender", "fantastic world"],
+    "graphic design": ["graphic", "grafico", "diseño gráfico"]
   };
   
-  // Buscar coincidencia
-  for (const [keyword, cleanName] of Object.entries(courseMap)) {
-    if (fullText.includes(keyword)) {
-      return cleanName;
+  // Buscar coincidencia (los específicos se comprueban primero)
+  for (const [cleanName, keywords] of Object.entries(courseMap)) {
+    for (const keyword of keywords) {
+      if (fullText.includes(keyword)) {
+        // Formatear el nombre con capitalización correcta
+        return cleanName
+          .split(' ')
+          .map(word => word === 'lvl' ? 'lvl' : word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
     }
   }
   
   // Fallback: retornar el título original limpio (sin IDs)
-  const cleaned = (courseTitle || courseName || "Curso").replace(/ID\s*\d+:/gi, "").trim();
+  const cleaned = (courseTitle || courseName || "Curso")
+    .replace(/ID\s*\d+:/gi, "")
+    .replace(/\$\d+/g, "")
+    .trim();
   return cleaned;
 }
 
@@ -1181,10 +1195,28 @@ function updateCourseTypeOptions() {
   
   const types = new Set();
   
-  // Lista blanca de cursos válidos
+// Lista blanca de cursos válidos (con niveles específicos)
   const validCourses = {
-    "coding": ["FunTech", "Scratch", "Minecraft", "Roblox", "Python", "Unity", "Web", "Godot"],
-    "design": ["Drawing", "Ilustración", "Digital Creativity", "FWD Pro", "Graphic Design"]
+    "coding": [
+      "FunTech",
+      "Scratch", 
+      "Minecraft", 
+      "Minecraft lvl 2",
+      "Roblox", 
+      "Roblox lvl 2",
+      "Python", 
+      "Python Pro",
+      "Web", 
+      "Unity"
+    ],
+    "design": [
+      "Drawing",
+      "Ilustración",
+      "Digital Creativity 1",
+      "Digital Creativity 2",
+      "FWD Pro",
+      "Graphic Design"
+    ]
   };
   
   const allowedForThisInterest = validCourses[interest] || [];
@@ -1226,39 +1258,70 @@ function courseMatchesType(course, selectedType) {
   const topic = (course.topic || course.courseTitle || "").toLowerCase();
   const selected = selectedType.toLowerCase();
   
-  // Mapa de sinónimos para matching flexible
+  console.log(`Checking match: "${selected}" against "${courseName}"`);
+  
+  // Mapa de sinónimos expandido con niveles
   const synonymMap = {
-    "funtech": ["funtech", "fun tech"],
-    "scratch": ["scratch"],
-    "minecraft": ["minecraft", "mine craft"],
-    "roblox": ["roblox"],
-    "python": ["python", "py"],
-    "unity": ["unity"],
-    "web": ["web", "html", "css", "javascript"],
+    "funtech": ["funtech", "fun tech", "explorers"],
+    "scratch": ["scratch", "magia del código"],
+    
+    "minecraft lvl 2": ["minecraft lvl 2", "minecraft level 2", "minecraft nivel 2", "minecraft 2", "mc lvl 2"],
+    "minecraft": ["minecraft", "mc"], // Solo sin nivel
+    
+    "roblox lvl 2": ["roblox lvl 2", "roblox level 2", "roblox nivel 2", "roblox 2", "roblox game developer lvl 2"],
+    "roblox": ["roblox"], // Solo sin nivel (no incluye lvl 2)
+    
+    "python pro": ["python pro", "python avanzado", "python advanced"],
+    "python": ["python new", "python fundamentos", "python básico"], // Solo básico (no incluye pro)
+    
+    "unity": ["unity", "c#", "juegos unity"],
+    "web": ["web", "html", "css", "javascript", "diseño web"],
     "godot": ["godot"],
-    "drawing": ["drawing", "dibujo"],
-    "ilustración": ["ilustra", "ilustracion", "illustration"],
-    "digital creativity": ["creatividad", "creativity", "digital"],
-    "fwd pro": ["fwd", "blender", "fantastic world"],
-    "graphic design": ["graphic", "grafico", "diseño gráfico", "design"]
+    
+    "drawing": ["drawing", "dibujo", "papel"],
+    "ilustración": ["ilustra", "ilustracion", "illustration", "artista cg"],
+    
+    "digital creativity 2": ["creatividad digital nivel 2", "digital creativity 2", "creatividad 2", "creativity 2"],
+    "digital creativity 1": ["creatividad digital nivel 1", "digital creativity 1", "creatividad 1", "creativity 1"],
+    
+    "fwd pro": ["fwd", "blender", "fantastic world", "3d"],
+    "graphic design": ["graphic", "grafico", "diseño gráfico", "branding"]
   };
+  
+  // Casos especiales para evitar falsos positivos
+  const exclusions = {
+    "minecraft": ["lvl 2", "level 2", "nivel 2"], // Minecraft básico NO debe coincidir con lvl 2
+    "roblox": ["lvl 2", "level 2", "nivel 2"], // Roblox básico NO debe coincidir con lvl 2
+    "python": ["pro", "avanzado", "advanced"], // Python básico NO debe coincidir con pro
+    "digital creativity 1": ["nivel 2", "level 2", "lvl 2"] // Creatividad 1 NO debe coincidir con 2
+  };
+  
+  // Verificar exclusiones primero
+  if (exclusions[selected]) {
+    for (const exclusion of exclusions[selected]) {
+      if (courseName.includes(exclusion) || courseType.includes(exclusion) || topic.includes(exclusion)) {
+        console.log(`  ❌ Excluded by: "${exclusion}"`);
+        return false;
+      }
+    }
+  }
   
   // Buscar coincidencia directa
   if (courseName.includes(selected) || courseType.includes(selected) || topic.includes(selected)) {
+    console.log(`  ✅ Direct match`);
     return true;
   }
   
   // Buscar en sinónimos
-  for (const [key, synonyms] of Object.entries(synonymMap)) {
-    if (key.includes(selected) || synonyms.some(s => selected.includes(s))) {
-      return synonyms.some(s => 
-        courseName.includes(s) || 
-        courseType.includes(s) || 
-        topic.includes(s)
-      );
+  const synonyms = synonymMap[selected] || [];
+  for (const synonym of synonyms) {
+    if (courseName.includes(synonym) || courseType.includes(synonym) || topic.includes(synonym)) {
+      console.log(`  ✅ Synonym match: "${synonym}"`);
+      return true;
     }
   }
   
+  console.log(`  ❌ No match`);
   return false;
 }
 
@@ -1867,6 +1930,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
