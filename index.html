@@ -781,8 +781,8 @@ function extractCourseType(courseName, courseTitle) {
     "roblox lvl 2": ["roblox lvl 2", "roblox level 2", "roblox nivel 2", "roblox 2", "roblox game developer lvl 2"],
     "roblox": ["roblox"],
     
-    "python pro": ["python pro", "python avanzado", "python advanced"],
-    "python": ["python"],
+    "python pro": ["python pro", "python avanzado", "python advanced", "python lvl 2", "python level 2", "python nivel 2"],
+    "python": ["python new", "python fundamentos", "python básico"], // Solo básico
     
     "funtech": ["funtech", "fun tech", "explorers"],
     "scratch": ["scratch", "magia", "código"],
@@ -1278,8 +1278,8 @@ function courseMatchesType(course, selectedType) {
     "roblox lvl 2": ["roblox lvl 2", "roblox level 2", "roblox nivel 2", "roblox 2", "roblox game developer lvl 2"],
     "roblox": ["roblox"], // Solo sin nivel (no incluye lvl 2)
     
-    "python pro": ["python pro", "python avanzado", "python advanced"],
-    "python": ["python new", "python fundamentos", "python básico"], // Solo básico (no incluye pro)
+    "python pro": ["python pro", "python avanzado", "python advanced", "python lvl 2", "python level 2", "python nivel 2", "python 2"],
+    "python": ["python new", "python fundamentos", "python básico"], // Solo básico (no incluye pro ni lvl 2)
     
     "unity": ["unity", "c#", "juegos unity"],
     "web": ["web", "html", "css", "javascript", "diseño web"],
@@ -1296,12 +1296,12 @@ function courseMatchesType(course, selectedType) {
   };
   
   // Casos especiales para evitar falsos positivos
-  const exclusions = {
-    "minecraft": ["lvl 2", "level 2", "nivel 2"], // Minecraft básico NO debe coincidir con lvl 2
-    "roblox": ["lvl 2", "level 2", "nivel 2"], // Roblox básico NO debe coincidir con lvl 2
-    "python": ["pro", "avanzado", "advanced"], // Python básico NO debe coincidir con pro
-    "digital creativity 1": ["nivel 2", "level 2", "lvl 2"] // Creatividad 1 NO debe coincidir con 2
-  };
+const exclusions = {
+  "minecraft": ["lvl 2", "level 2", "nivel 2"],
+  "roblox": ["lvl 2", "level 2", "nivel 2"],
+  "python": ["pro", "avanzado", "advanced", "lvl 2", "level 2", "nivel 2"], // Python básico NO debe coincidir con pro ni lvl 2
+  "digital creativity 1": ["nivel 2", "level 2", "lvl 2"]
+};
   
   // Verificar exclusiones primero
   if (exclusions[selected]) {
@@ -1937,6 +1937,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
