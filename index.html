@@ -92,6 +92,13 @@
         <input type="url" id="amo_crm_link" placeholder="https://kodland.amocrm.com/leads/detail/..."
                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500" />
 
+        <label for="tcm_name" class="block text-sm font-medium text-gray-700 mb-1">
+          👤 Nombre del TCM:
+        </label>
+        <input type="text" id="tcm_name" placeholder="Ej: María García"
+               class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500" 
+               required />
+        
         <label for="student_age" class="block text-sm font-medium text-gray-700 mb-1">
           Edad del Estudiante (7-17 años):
         </label>
@@ -1780,6 +1787,12 @@ async function submitSale() {
     alert("⚠️ Sistema de guardado no conectado.\n\nContacta al administrador para configurar la integración con Google Sheets.");
     return;
   }
+    // Validar que el nombre del TCM esté completo
+  const tcmName = document.getElementById("tcm_name").value.trim();
+  if (!tcmName) {
+    alert("⚠️ Por favor ingresa el nombre del TCM antes de enviar la venta");
+    return;
+  }
   const saleData = {
     timestamp: new Date().toISOString(),
     amo_crm_link: document.getElementById("amo_crm_link").value.trim(),
@@ -1788,6 +1801,7 @@ async function submitSale() {
     course_type: document.getElementById("course_type").value,
     group_type: document.getElementById("group_type").value,
     is_sen: document.getElementById("is_sen").checked,
+    tcm_name: tcmName,
     selected_courses: selectedCourses.map(c => ({
       id: c.id,
       name: c.name_es,
@@ -1836,6 +1850,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
