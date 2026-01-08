@@ -1195,15 +1195,15 @@ function updateCourseTypeOptions() {
   
   const types = new Set();
   
-// Lista blanca de cursos válidos (con niveles específicos)
+  // Lista blanca de cursos válidos (con niveles específicos)
   const validCourses = {
     "coding": [
       "FunTech",
       "Scratch", 
       "Minecraft", 
-      "Minecraft lvl 2",
+      "Minecraft Lvl 2",
       "Roblox", 
-      "Roblox lvl 2",
+      "Roblox Lvl 2",
       "Python", 
       "Python Pro",
       "Web", 
@@ -1221,15 +1221,20 @@ function updateCourseTypeOptions() {
   
   const allowedForThisInterest = validCourses[interest] || [];
   
+  // Procesar cursos
   [...LIVE_COURSE_DATA, ...LIVE_POSSIBLE_GROUPS].forEach(c => {
     if (c.interest === interest && c.courseType) {
-      // Buscar si el courseType contiene alguno de los nombres válidos
-      const normalizedType = c.courseType;
+      const normalizedCourseType = c.courseType.toLowerCase().trim();
       
+      // Buscar coincidencia EXACTA (no includes)
       for (const validCourse of allowedForThisInterest) {
-        if (normalizedType.toLowerCase().includes(validCourse.toLowerCase())) {
-          types.add(validCourse);
-          break; // Ya encontramos uno válido, no seguir buscando
+        const normalizedValid = validCourse.toLowerCase().trim();
+        
+        // Comparación exacta o muy cercana
+        if (normalizedCourseType === normalizedValid || 
+            normalizedCourseType.replace(/\s+/g, '') === normalizedValid.replace(/\s+/g, '')) {
+          types.add(validCourse); // Agregar el nombre formateado correctamente
+          break;
         }
       }
     }
@@ -1239,7 +1244,7 @@ function updateCourseTypeOptions() {
   courseTypeSelect.innerHTML = '<option value="">-- Todos los cursos de este interés --</option>';
   
   if (types.size === 0) {
-    courseTypeSelect.innerHTML += '<option value="" disabled>No hay cursos disponibles</option>';
+    courseTypeSelect.innerHTML += '<option value="" disabled>No hay cursos disponibles para este interés</option>';
     return;
   }
   
@@ -1247,6 +1252,8 @@ function updateCourseTypeOptions() {
   Array.from(types).sort().forEach(type => {
     courseTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
   });
+  
+  console.log(`✅ Populated dropdown with ${types.size} course types for ${interest}`);
 }
 
 function courseMatchesType(course, selectedType) {
@@ -1930,6 +1937,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
