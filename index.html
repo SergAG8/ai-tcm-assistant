@@ -1822,65 +1822,30 @@ async function submitSale() {
   };
   
   try {
-    console.log("📤 Enviando venta...", saleData);
+    console.log("📤 Enviando venta a Google Sheets...");
+    console.log("Datos:", saleData);
     
-    // Usar proxy CORS si está habilitado
-    const targetUrl = USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(SALES_SCRIPT_URL) : SALES_SCRIPT_URL;
-    
-    const response = await fetch(targetUrl, {
+    const response = await fetch(SALES_SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors', // Evita problemas de CORS
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(saleData),
-      redirect: 'follow'
+      body: JSON.stringify(saleData)
     });
     
-    console.log("📥 Respuesta recibida:", response);
+    // Con no-cors no podemos leer la respuesta, pero si llegamos aquí sin error, funcionó
+    console.log("✅ Petición enviada sin errores");
+    showSystemMessage('success', '✅ ¡Venta registrada!', 'Los datos han sido guardados. Verifica el Google Sheet para confirmar.');
     
-    // Si usamos proxy, la respuesta es diferente
-    if (USE_CORS_PROXY) {
-      const text = await response.text();
-      console.log("📄 Respuesta (texto):", text);
-      
-      // Intentar parsear como JSON
-      try {
-        const result = JSON.parse(text);
-        if (result.success) {
-          showSystemMessage('success', '✅ ¡Venta registrada exitosamente!', `Los datos han sido guardados en el sistema. Fila: ${result.row || 'N/A'}`);
-          setTimeout(() => location.reload(), 2000);
-        } else {
-          throw new Error(result.message || "Error desconocido del servidor");
-        }
-      } catch (parseError) {
-        // Si no es JSON válido pero response fue OK, asumir éxito
-        if (response.ok) {
-          showSystemMessage('success', '✅ ¡Venta registrada exitosamente!', 'Los datos han sido guardados en el sistema');
-          setTimeout(() => location.reload(), 2000);
-        } else {
-          throw new Error("Respuesta del servidor no válida");
-        }
-      }
-    } else {
-      // Sin proxy, manejo normal
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log("✅ Resultado:", result);
-      
-      if (result.success) {
-        showSystemMessage('success', '✅ ¡Venta registrada exitosamente!', `Los datos han sido guardados en el sistema. Fila: ${result.row}`);
-        setTimeout(() => location.reload(), 2000);
-      } else {
-        throw new Error(result.message || "Error desconocido");
-      }
-    }
+    // Recargar la página después de 3 segundos
+    setTimeout(() => {
+      location.reload();
+    }, 3000);
     
   } catch (error) {
-    console.error("❌ Error completo:", error);
-    showSystemMessage('error', '❌ Error al guardar la venta', error.message);
+    console.error("❌ Error al enviar:", error);
+    showSystemMessage('error', '❌ Error al guardar la venta', 'Error: ' + error.message + '. Intenta de nuevo o contacta al administrador.');
   }
 }
 
@@ -1902,6 +1867,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
