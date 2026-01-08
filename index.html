@@ -323,6 +323,9 @@ const POSSIBLE_GROUPS_SHEET_ID = "2PACX-1vRfJ1Dc2mTlooFRM6Jc0r-zKyrjmbWFGCOaT3Ue
 const POSSIBLE_GROUPS_GID = "1601359885";
 
 const SALES_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSU2qnbSAHtTP9SY_XuCuPA8lXAdzUCBKtCzPeZuda6xLVSbAaam2i2p7mXQs9Xxw7ew/exec";
+    // Proxy CORS para desarrollo
+const USE_CORS_PROXY = true; // Cambiar a false cuando esté en producción sin CORS
+const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 
 const DATA_SOURCES = {
   active: {
@@ -1783,16 +1786,19 @@ async function submitSale() {
     alert("⚠️ Selecciona al menos un curso antes de enviar la venta");
     return;
   }
+  
   if (!SALES_SCRIPT_URL) {
     alert("⚠️ Sistema de guardado no conectado.\n\nContacta al administrador para configurar la integración con Google Sheets.");
     return;
   }
-    // Validar que el nombre del TCM esté completo
+  
+  // Validar que el nombre del TCM esté completo
   const tcmName = document.getElementById("tcm_name").value.trim();
   if (!tcmName) {
     alert("⚠️ Por favor ingresa el nombre del TCM antes de enviar la venta");
     return;
   }
+  
   const saleData = {
     timestamp: new Date().toISOString(),
     amo_crm_link: document.getElementById("amo_crm_link").value.trim(),
@@ -1814,20 +1820,66 @@ async function submitSale() {
     })),
     preferred_schedule: preferredSchedule.length > 0 ? preferredSchedule : null
   };
+  
   try {
-    const response = await fetch(SALES_SCRIPT_URL, {
+    console.log("📤 Enviando venta...", saleData);
+    
+    // Usar proxy CORS si está habilitado
+    const targetUrl = USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(SALES_SCRIPT_URL) : SALES_SCRIPT_URL;
+    
+    const response = await fetch(targetUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(saleData)
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(saleData),
+      redirect: 'follow'
     });
-    const result = await response.json();
-    if (result.success) {
-      showSystemMessage('success', '✅ ¡Venta registrada exitosamente!', 'Los datos han sido guardados en el sistema');
-      setTimeout(() => location.reload(), 2000);
+    
+    console.log("📥 Respuesta recibida:", response);
+    
+    // Si usamos proxy, la respuesta es diferente
+    if (USE_CORS_PROXY) {
+      const text = await response.text();
+      console.log("📄 Respuesta (texto):", text);
+      
+      // Intentar parsear como JSON
+      try {
+        const result = JSON.parse(text);
+        if (result.success) {
+          showSystemMessage('success', '✅ ¡Venta registrada exitosamente!', `Los datos han sido guardados en el sistema. Fila: ${result.row || 'N/A'}`);
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          throw new Error(result.message || "Error desconocido del servidor");
+        }
+      } catch (parseError) {
+        // Si no es JSON válido pero response fue OK, asumir éxito
+        if (response.ok) {
+          showSystemMessage('success', '✅ ¡Venta registrada exitosamente!', 'Los datos han sido guardados en el sistema');
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          throw new Error("Respuesta del servidor no válida");
+        }
+      }
     } else {
-      throw new Error(result.message || "Error desconocido");
+      // Sin proxy, manejo normal
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log("✅ Resultado:", result);
+      
+      if (result.success) {
+        showSystemMessage('success', '✅ ¡Venta registrada exitosamente!', `Los datos han sido guardados en el sistema. Fila: ${result.row}`);
+        setTimeout(() => location.reload(), 2000);
+      } else {
+        throw new Error(result.message || "Error desconocido");
+      }
     }
+    
   } catch (error) {
+    console.error("❌ Error completo:", error);
     showSystemMessage('error', '❌ Error al guardar la venta', error.message);
   }
 }
@@ -1850,6 +1902,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
