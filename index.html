@@ -95,9 +95,30 @@
         <label for="tcm_name" class="block text-sm font-medium text-gray-700 mb-1">
           👤 Nombre del TCM:
         </label>
-        <input type="text" id="tcm_name" placeholder="Ej: María García"
-               class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500" 
-               required />
+        <select id="tcm_name" required
+               class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">-- Selecciona tu nombre --</option>
+          <option value="TCM 1">TCM 1</option>
+          <option value="TCM 2">TCM 2</option>
+          <option value="TCM 3">TCM 3</option>
+          <option value="TCM 4">TCM 4</option>
+          <option value="TCM 5">TCM 5</option>
+          <option value="TCM 6">TCM 6</option>
+          <option value="TCM 7">TCM 7</option>
+          <option value="TCM 8">TCM 8</option>
+          <option value="TCM 9">TCM 9</option>
+          <option value="TCM 10">TCM 10</option>
+          <option value="TCM 11">TCM 11</option>
+          <option value="TCM 12">TCM 12</option>
+          <option value="TCM 13">TCM 13</option>
+          <option value="TCM 14">TCM 14</option>
+          <option value="TCM 15">TCM 15</option>
+          <option value="TCM 16">TCM 16</option>
+          <option value="TCM 17">TCM 17</option>
+          <option value="TCM 18">TCM 18</option>
+          <option value="TCM 19">TCM 19</option>
+          <option value="TCM 20">TCM 20</option>
+        </select>
         
         <label for="student_age" class="block text-sm font-medium text-gray-700 mb-1">
           Edad del Estudiante (7-17 años):
@@ -108,18 +129,40 @@
         <label for="student_interest" class="block text-sm font-medium text-gray-700 mb-1">
           Interés Principal:
         </label>
-        <select id="student_interest" onchange="updateCourseTypeOptions()"
+        <select id="student_interest"
                 class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
-<option value="coding">Coding y Videojuegos</option>
-<option value="design">Media y Diseño</option>
+                <option value="coding">Coding y Videojuegos</option>
+                <option value="design">Media y Diseño</option>
         </select>
+
+        <label for="client_timezone" class="block text-sm font-medium text-gray-700 mb-1">
+          🌍 Zona Horaria:
+        </label>
+        <select id="client_timezone" onchange="updateTimezoneDisplay()" 
+                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm">
+          </select>
 
         <label for="course_type" class="block text-sm font-medium text-gray-700 mb-1">
           Tipo de Curso Específico:
         </label>
-        <select id="course_type"
-                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
-          <option value="">-- Todos los cursos de este interés --</option>
+        <select id="course_type" class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">-- Selecciona el curso --</option>
+          <option value="python">Python (Básico)</option>
+          <option value="python_pro">Python Pro</option>
+          <option value="scratch">Scratch</option>
+          <option value="roblox">Roblox</option>
+          <option value="roblox_lvl2">Roblox Nivel 2</option>
+          <option value="minecraft">Minecraft</option>
+          <option value="minecraft_lvl2">Minecraft Nivel 2</option>
+          <option value="digital_creativity">Creatividad Digital</option>
+          <option value="digital_creativity_lvl2">Creatividad Digital Nivel 2</option>
+          <option value="drawing">Drawing</option>
+          <option value="ilustracion">Ilustración</option>
+          <option value="graphic_design">Diseño Gráfico</option>
+          <option value="fwd_pro">FWD Pro (Mundos Fantásticos)</option>
+          <option value="unity">Unity</option>
+          <option value="web">Desarrollo Web</option>
+          <option value="funtech">FunTech</option>
         </select>
 
         <label for="group_type" class="block text-sm font-medium text-gray-700 mb-1">
@@ -227,7 +270,7 @@
                 onclick="submitSale()"
                 class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition duration-150 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled>
-          📤 Enviar Venta y Guardar Registro
+        💾 Guardar
         </button>
 
         <p class="text-xs text-gray-500 mt-2 text-center">
@@ -313,22 +356,28 @@
   </div>
 
   <script>
+
 // ============================================
-// CONFIGURACIÓN DE SPREADSHEETS
+// CONFIGURACIÓN DE SPREADSHEETS (MODO PÚBLICO)
 // ============================================
+
+// 1. IDs de las Hojas PUBLICADAS EN LA WEB (Empiezan por 2PACX...)
 const SHEET_ID = "2PACX-1vRiopvWS8N7E_A7G10Y85jND6Pl7n2Acgm4tdeQRImxtRuGS1mUuSHyQavLytAelrP1fsLU_8EcHH6e";
-const SHEET_GID = "2084392899";
+const SHEET_GID = "2084392899"; // GID de la pestaña de Activos en la versión pública
 
 const POSSIBLE_GROUPS_SHEET_ID = "2PACX-1vRfJ1Dc2mTlooFRM6Jc0r-zKyrjmbWFGCOaT3UeiOc0vyihrxBL8UaN3n8Z0QxxJDfSEwzQYn1-YmIM";
 const POSSIBLE_GROUPS_GID = "1601359885";
 
-const SALES_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdXG2XV_YZd_A420I3KN2JSjJsuAbk-TdS-oIOtM-5EFi6mO00xOZFYbq9WZRcD7c-rg/exec";
-    // Proxy CORS para desarrollo
-const USE_CORS_PROXY = false; // Cambiar a false cuando esté en producción sin CORS
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+// 2. Tu Nuevo Script de Registro de Ventas (Este lo dejamos nuevo)
+const SALES_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkhc55bmSOhSDHTQhrLuq4cqC2xJ1oJO5a-xythsjrgMo-KBPACj0zCiDnpHxm_vR0Lg/exec";
+
+// 3. Configuración de Conexión (Sin Proxy)
+const USE_CORS_PROXY = false; 
+const CORS_PROXY = ""; // Ya no se usa
 
 const DATA_SOURCES = {
   active: {
+    // Usamos la estructura /pub que permite acceso directo
     csv: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${SHEET_GID}&single=true&output=csv`,
     json: `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`
   },
@@ -336,6 +385,29 @@ const DATA_SOURCES = {
     csv: `https://docs.google.com/spreadsheets/d/e/${POSSIBLE_GROUPS_SHEET_ID}/pub?gid=${POSSIBLE_GROUPS_GID}&single=true&output=csv`,
     json: `https://docs.google.com/spreadsheets/d/e/${POSSIBLE_GROUPS_SHEET_ID}/gviz/tq?tqx=out:json&gid=${POSSIBLE_GROUPS_GID}`
   }
+};
+
+
+// ==========================================
+// DICCIONARIO MAESTRO (SOLO IDs - LÓGICA PURA) (SOLUCIÓN PROBLEMA 1)
+// ==========================================
+const COURSE_MASTER_MAP = {
+  "python":                  [1116],
+  "python_pro":              [1218],
+  "scratch":                 [1189],
+  "roblox":                  [1210, 1720],
+  "roblox_lvl2":             [1442],
+  "minecraft":               [1618],
+  "minecraft_lvl2":          [1713],
+  "digital_creativity":      [1354], // Nivel 1
+  "digital_creativity_lvl2": [1215], // Nivel 2
+  "drawing":                 [1627],
+  "ilustracion":             [1431],
+  "graphic_design":          [1344],
+  "fwd_pro":                 [1219],
+  "unity":                   [1209],
+  "web":                     [1220],
+  "funtech":                 [1696] // Dejé únicamente el ID de Funtech una vez por semana
 };
 
 // ============================================
@@ -684,41 +756,66 @@ function showSystemMessage(type, title, message) {
 // FUNCIONES DE PARSING MEJORADAS
 // ============================================
 
-// NUEVO: Parser CSV robusto que maneja comillas y comas dentro de celdas
+// ==========================================
+// PARSER CSV AVANZADO (SOPORTA MULTI-LÍNEA)
+// ==========================================
 function parseCSVRobust(text) {
-  const lines = text.trim().split('\n');
   const rows = [];
-  
-  for (let line of lines) {
-    const row = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      const nextChar = line[i + 1];
-      
-      if (char === '"') {
-        if (inQuotes && nextChar === '"') {
-          current += '"';
-          i++; // Skip next quote
-        } else {
-          inQuotes = !inQuotes;
-        }
-      } else if (char === ',' && !inQuotes) {
-        row.push(current.trim());
-        current = '';
+  let currentRow = [];
+  let currentCell = "";
+  let inQuotes = false;
+
+  // Recorremos el texto letra por letra para no confundirnos
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    // 1. Manejo de Comillas
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Si hay doble comilla dentro de comillas, es una comilla literal
+        currentCell += '"';
+        i++; // Saltamos la siguiente
       } else {
-        current += char;
+        // Entramos o salimos del modo "protegido"
+        inQuotes = !inQuotes;
       }
     }
-    row.push(current.trim());
-    rows.push(row);
+    // 2. Manejo de Separador (Coma)
+    else if (char === ',' && !inQuotes) {
+      // Solo separamos columna si NO estamos dentro de comillas
+      currentRow.push(currentCell.trim());
+      currentCell = "";
+    }
+    // 3. Manejo de Fin de Fila (Enter)
+    else if ((char === '\n' || char === '\r') && !inQuotes) {
+      // Solo cambiamos de fila si NO estamos dentro de comillas
+      if (char === '\r' && nextChar === '\n') i++; // Manejo de saltos Windows
+
+      currentRow.push(currentCell.trim());
+      // Guardamos la fila si tiene datos
+      if (currentRow.length > 1 || currentRow[0] !== "") {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentCell = "";
+    }
+    // 4. Carácter normal
+    else {
+      currentCell += char;
+    }
   }
-  
-  const headers = rows[0].map(h => h.replace(/['"]/g, ''));
+
+  // Guardar lo último que quedó en memoria
+  if (currentCell || currentRow.length > 0) {
+    currentRow.push(currentCell.trim());
+    rows.push(currentRow);
+  }
+
+  // Separar encabezados del resto
+  const headers = rows.length > 0 ? rows[0] : [];
   const dataRows = rows.slice(1);
-  
+
   return { headers, rows: dataRows };
 }
 
@@ -870,128 +967,149 @@ function parseDayAbbreviation(dayStr) {
 }
 
 // ============================================
-// MAPEO DE DATOS: GRUPOS ACTIVOS
+// MAPEO DE DATOS: GRUPOS ACTIVOS (CORREGIDO CON NOMBRE EXACTO)
 // ============================================
 function mapRowsToCourses(headers, rows) {
+  // 1. DIAGNÓSTICO DE ENCABEZADOS
+  console.group("🔍 DIAGNÓSTICO DE COLUMNAS");
+  // console.log("Todos los encabezados:", headers); // Descomentar si necesitas ver todos
+
   const findCol = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+  
   const idx_group = findCol("group_title");
   const idx_course = findCol("course_title");
   const idx_age = findCol("age");
   const idx_capacity = findCol("capacity");
   const idx_enrolled = findCol("enrolled");
   const idx_status = findCol("status");
-  const idx_teacher = findCol("teacher") >= 0 ? findCol("teacher") : findCol("tutor");
-  const idx_date = findCol("date");
-  const idx_time = findCol("time");
+  const idx_teacher = findCol("teacher");
+  
+  const idx_date = findCol("first_lesson_date"); 
+  
+  // --- CORRECCIÓN AQUÍ: USAMOS EL NOMBRE EXACTO QUE ENCONTRASTE ---
+  let idx_time = findCol("first_lesson_time_gmt_5"); 
+  
+  // Fallback por si acaso cambia en el futuro
+  if (idx_time === -1) idx_time = findCol("time_gmt"); 
+  if (idx_time === -1) idx_time = findCol("first_lesson_time");
 
+  console.log(`✅ Índice 'course_title': ${idx_course}`);
+  console.log(`✅ Índice 'first_lesson_date': ${idx_date}`);
+  console.log(`✅ Índice 'first_lesson_time_gmt_5': ${idx_time}`); // ESTE YA NO DEBE SER -1
+  console.groupEnd();
+
+  const courses = [];
   const today = new Date();
   today.setHours(0,0,0,0);
   const twoWeeksAgo = new Date(today);
   twoWeeksAgo.setDate(today.getDate() - 14);
 
-  const courses = [];
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
-    const groupTitle = idx_group >= 0 ? (r[idx_group] || "") : "";
-    const name = groupTitle || (idx_course >= 0 ? r[idx_course] : "");
-    const topic = idx_course >= 0 ? r[idx_course] : name;
-    const capacity = idx_capacity >= 0 ? parseInt(r[idx_capacity] || "0") : 0;
-    const enrolled = idx_enrolled >= 0 ? parseInt(r[idx_enrolled] || "0") : 0;
-    const status = idx_status >= 0 ? r[idx_status] : "";
-    const teacher = idx_teacher >= 0 ? r[idx_teacher] : "Tutor N/A";
-    const dateStr = idx_date >= 0 ? r[idx_date] : "";
-    const timeStr = idx_time >= 0 ? r[idx_time] : "";
-
-    if (groupTitle.toLowerCase().includes("error") || name.toLowerCase().includes("error")) continue;
-    if (groupTitle.includes("WRONG") || !name || status.toLowerCase() === "closed") continue;
-    if (capacity > 0 && enrolled > capacity) continue;
     
-    const startDate = parseISODateOnly(dateStr);
-    if (startDate) {
-      if (capacity > 0 && enrolled === capacity) {
-        if (startDate < twoWeeksAgo) continue;
-      } else {
-        if (startDate < twoWeeksAgo) continue;
-      }
+    // OBTENCIÓN DE DATOS
+    const internalCode = idx_group >= 0 ? (r[idx_group] || "") : "";
+    const name = idx_course >= 0 ? (r[idx_course] || internalCode) : internalCode; 
+    
+    // LECTURA DE HORA CON DEBUGGING (Solo primeras 3 filas)
+    const rawDate = idx_date >= 0 ? r[idx_date] : "";
+    const rawTime = idx_time >= 0 ? r[idx_time] : "";
+    
+    // Usamos la función de limpieza formatTimeHHMM que ya tienes
+    const timeStr = formatTimeHHMM(rawTime); 
+
+    if (i < 3) {
+        console.log(`📝 FILA ${i}: Fecha="${rawDate}" | Hora Raw="${rawTime}" | Hora Limpia="${timeStr}"`);
     }
 
-const ageRange = parseAgeRange(idx_age >= 0 ? r[idx_age] : "");
-const dayOfWeek = startDate ? getDayOfWeekFromDate(startDate) : null; // ← NUEVA LÍNEA
+    // FILTROS DE CALIDAD
+    const capacity = idx_capacity >= 0 ? parseInt(r[idx_capacity] || "0") : 0;
+    const enrolled = idx_enrolled >= 0 ? parseInt(r[idx_enrolled] || "0") : 0;
+    const status = idx_status >= 0 ? (r[idx_status] || "").toLowerCase() : "";
+    
+    if (!name || (status && status !== "active")) continue;
+    if (name.includes("WRONG") || name.includes("ERROR")) continue;
+    if (capacity > 0 && enrolled > capacity) continue;
 
-courses.push({
-  id: `active_${i}_${name}_${dateStr}`,
-  name_es: name,
-  topic: topic || name,
-  courseTitle: topic,
-  min_age: ageRange.min,
-  max_age: ageRange.max,
-  interest: inferInterest(topic),
-  courseType: extractCourseType(name, topic),
-  enrolled: enrolled,
-  capacity: capacity,
-  isFull: capacity > 0 && enrolled >= capacity,
-  next_start: dateStr && timeStr ? `${dateStr} | ${timeStr}` : (dateStr || "N/A"),
-  teacher: teacher,
-  startDateObj: startDate,
-  timeStr: timeStr,
-  timeMinutes: parseTimeToMinutes(timeStr),
-  day: dayOfWeek, // ← NUEVA LÍNEA
-  type: 'active'
-});
+    const startDate = parseISODateOnly(rawDate);
+    if (startDate && startDate < twoWeeksAgo) continue;
+
+    // Extracción de ID y Edad
+    const idMatch = name.match(/\[(\d+)\]/);
+    const courseId = idMatch ? parseInt(idMatch[1]) : 0;
+    const ageVal = idx_age >= 0 ? r[idx_age] : "";
+    const ageRange = parseAgeRange(ageVal);
+
+    courses.push({
+      id: `active_${i}_${courseId}`,
+      courseId: courseId,
+      name_es: name,
+      topic: name,
+      internalCode: internalCode,
+      min_age: ageRange.min,
+      max_age: ageRange.max,
+      interest: inferInterest(name),
+      courseType: extractCourseType(name, name),
+      enrolled: enrolled,
+      capacity: capacity,
+      isFull: capacity > 0 && enrolled >= capacity,
+      next_start: rawDate && timeStr ? `${rawDate} | ${timeStr}` : (rawDate || "N/A"),
+      teacher: idx_teacher >= 0 ? r[idx_teacher] : "Tutor N/A",
+      startDateObj: startDate,
+      timeStr: timeStr, // <--- ESTA ES LA VARIABLE CLAVE QUE AHORA SÍ TENDRÁ DATOS
+      timeMinutes: parseTimeToMinutes(timeStr),
+      day: startDate ? getDayOfWeekFromDate(startDate) : null,
+      type: 'active'
+    });
   }
+  
+  console.log(`✅ Loaded ${courses.length} active groups.`);
   return courses;
 }
 
 // ============================================
-// MAPEO DE DATOS: GRUPOS POSIBLES - MEJORADO
+// MAPEO DE DATOS: GRUPOS POSIBLES (CON PUNTAJE COLUMNA M)
 // ============================================
 function mapRowsToPossibleGroups(headers, rows) {
   const groups = [];
   
-  console.log("=== PARSING POSSIBLE GROUPS (DETAILED) ===");
-  console.log("Headers:", headers);
-  console.log("Total rows:", rows.length);
+  console.log("=== PARSING POSSIBLE GROUPS ===");
   
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
+    const semanticId = (r[21] || "").trim(); // Columna V (ID Semántico)
     
-    console.log(`\n--- Row ${i+1} ---`);
-    console.log("Raw data:", r);
-    
-    // Acceso directo por índice (más confiable)
+    // --- NUEVO: LEER PUNTAJE DE COLUMNA M (Índice 12) ---
+    // Convertimos a flotante por si tiene decimales, si falla es 0
+    let rawScore = r[12] || "0";
+    // Limpieza básica por si viene con texto
+    rawScore = rawScore.replace(/,/g, '.').replace(/[^\d.-]/g, ''); 
+    const clusterScore = parseFloat(rawScore) || 0;
+    // ----------------------------------------------------
+
     const courseName = (r[0] || "").trim();
     const format = (r[1] || "").toLowerCase().trim();
     const dayRaw = (r[2] || "").trim();
     const hora = (r[3] || "").trim();
     const students = parseInt(r[4] || "0");
-    const ageRangeStr = r[6] || "";
+    const ageRangeStr = r[6] || ""; 
     
-    console.log("Parsed:", {
-      courseName,
-      format,
-      dayRaw,
-      hora,
-      students,
-      ageRangeStr
-    });
-    
-    if (!courseName) {
-      console.log("❌ Skipping: empty course name");
-      continue;
-    }
+    // ID de referencia Columna U (Índice 20)
+    let idRef = 0;
+    try { idRef = parseInt(r[20] || "0"); } catch (e) { idRef = 0; }
+
+    if (!courseName || courseName.startsWith("•") || !dayRaw) continue;
 
     const day = parseDayAbbreviation(dayRaw);
     const ageRange = parseAgeRange(ageRangeStr);
     const isPremium = format.includes("prm") || format.includes("premium");
     const capacity = isPremium ? 4 : 14;
 
-    if (students > capacity) {
-      console.log("❌ Skipping: oversold");
-      continue;
-    }
+    if (students > capacity) continue;
 
     const group = {
       id: `possible_${i}_${courseName}_${day}_${hora}`,
+      courseId: idRef,
       name_es: courseName,
       topic: courseName,
       courseTitle: courseName,
@@ -1009,48 +1127,39 @@ function mapRowsToPossibleGroups(headers, rows) {
       courseType: extractCourseType(courseName, courseName),
       next_start: `${day} | ${hora}`,
       teacher: "Por asignar",
-      type: 'possible'
+      type: 'possible',
+      semanticId: semanticId,
+      clusterScore: clusterScore // <--- GUARDAMOS EL PUNTAJE AQUÍ
     };
-    
-    console.log("✅ Created group:", {
-      name: group.name_es,
-      courseType: group.courseType,
-      day: group.day,
-      hora: group.hora,
-      format: group.format
-    });
     
     groups.push(group);
   }
   
-  console.log("\n=== SUMMARY ===");
-  console.log("Total groups created:", groups.length);
-  
-  // Agrupar por courseType
-  const byType = {};
-  groups.forEach(g => {
-    byType[g.courseType] = (byType[g.courseType] || 0) + 1;
-  });
-  console.log("Groups by type:", byType);
-  
+  console.log(`✅ Loaded ${groups.length} possible groups.`);
   return groups;
 }
+
 
 // ============================================
 // FUNCIONES DE FETCH - MEJORADAS
 // ============================================
 async function fetchWithCSV(dataSource) {
-  let url = dataSource.csv + "&_=" + Date.now();
-  let resp;
-  try {
-    resp = await fetch(url, { mode: 'cors', cache: "no-store" });
-  } catch {
-    url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-    resp = await fetch(url, { cache: "no-store" });
+  let targetUrl = dataSource.csv + "&_=" + Date.now();
+  
+  if (USE_CORS_PROXY) {
+    // Detectamos qué proxy estamos usando
+    if (CORS_PROXY.includes("allorigins")) {
+        targetUrl = CORS_PROXY + encodeURIComponent(targetUrl);
+    } else {
+        // Para corsproxy.io es directo
+        targetUrl = CORS_PROXY + targetUrl;
+    }
   }
+
+  const resp = await fetch(targetUrl, { cache: "no-store" });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const text = await resp.text();
-  return parseCSVRobust(text); // USANDO PARSER ROBUSTO
+  return parseCSVRobust(text);
 }
 
 async function fetchWithGViz(dataSource) {
@@ -1129,75 +1238,87 @@ async function fetchCourseData(forceRefresh = false) {
 }
 
 // ============================================
-// CÁLCULO DE PRIORIDAD
+// CÁLCULO DE PRIORIDAD (FECHA CERCANA vs PUNTAJE CLUSTER)
 // ============================================
 function calculatePriority(course) {
-  const remaining = course.capacity - course.enrolled;
+  
+  // --- REGLA 1: SI ES GRUPO POSIBLE, USA LA COLUMNA M ---
+  if (course.type === 'possible') {
+      // Retornamos el valor directo del Excel. 
+      // Entre mayor sea el número en Columna M, más arriba saldrá.
+      return course.clusterScore || 0;
+  }
+
+  // --- REGLA 2: SI ES GRUPO ACTIVO, PRIORIZA FECHA MÁS CERCANA ---
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const daysUntilStart = course.startDateObj ? Math.floor((course.startDateObj - today) / (1000 * 60 * 60 * 24)) : 999;
   
-  let urgencyScore = 0;
+  const daysUntilStart = course.startDateObj 
+    ? Math.ceil((course.startDateObj - today) / (1000 * 60 * 60 * 24)) 
+    : 999; 
+
+  if (daysUntilStart < 0) return 0; // Ya pasó
+
+  // Fórmula base: Empezamos en 1000 y restamos los días.
+  // Ejemplo: Empieza mañana (1 día) = 999 pts.
+  // Ejemplo: Empieza en 20 días = 980 pts.
+  let score = 1000 - daysUntilStart;
+
+  // AJUSTE TÉCNICO: Penalización por Overbooking
+  // Aunque priorizamos fecha, si el grupo está LLENO, le quitamos 500 puntos.
+  // ¿Por qué? Para que si tienes un grupo mañana (Lleno) y uno pasado mañana (Libre),
+  // el sistema te muestre el Libre primero.
   if (course.isFull) {
-    urgencyScore = 5;
-  } else if (remaining === 1) {
-    urgencyScore = 1000;
-  } else if (remaining === 2) {
-    urgencyScore = 900;
-  } else if (remaining === 3) {
-    urgencyScore = 800;
-  } else if (remaining === 4) {
-    urgencyScore = 700;
-  } else if (remaining === 5) {
-    urgencyScore = 600;
-  } else if (remaining <= 10) {
-    urgencyScore = 500 - (remaining * 10);
-  } else {
-    urgencyScore = 300 - remaining;
+      score -= 500;
   }
-  
-  let proximityScore = 0;
-  if (daysUntilStart <= 0) proximityScore = 50;
-  else if (daysUntilStart <= 7) proximityScore = 40;
-  else if (daysUntilStart <= 14) proximityScore = 30;
-  else if (daysUntilStart <= 30) proximityScore = 20;
-  else proximityScore = Math.max(0, 10 - (daysUntilStart / 10));
-  
-  return (urgencyScore * 0.95) + (proximityScore * 0.05);
+
+  // Aseguramos que no de negativo
+  if (score < 0) score = 0;
+
+  return score;
 }
+
 
 function calculateScheduleMatchScore(course) {
   if (preferredSchedule.length === 0) return 0;
   
   let bestScore = 0;
-  const courseTime = course.timeMinutes;
+  const courseTimeMinutes = course.timeMinutes; 
   const courseDay = course.day ? course.day.toLowerCase() : null;
   
-  if (!courseTime) return 0;
-  
-  const dayMap = {
-    'mon': 'lunes', 'tue': 'martes', 'wed': 'miércoles',
-    'thu': 'jueves', 'fri': 'viernes', 'sat': 'sábado', 'sun': 'domingo'
-  };
+  if (!courseTimeMinutes) return 0;
   
   for (const pref of preferredSchedule) {
-    const prefTime = pref.hour * 60;
-    const prefDay = dayMap[pref.day];
-    const timeDiff = Math.abs(courseTime - prefTime);
+    const colTime = convertClientToColombia(pref.day, pref.hour);
+    const prefTimeMinutes = colTime.hour * 60;
+    const prefDay = colTime.day;
     
+    const timeDiff = Math.abs(courseTimeMinutes - prefTimeMinutes);
+    let currentScore = 0;
+
+    // Calcular coincidencia pura
     if (courseDay === prefDay && timeDiff <= 30) {
-      bestScore = Math.max(bestScore, 1000 - timeDiff);
+      currentScore = 1000 - timeDiff; 
     } else if (timeDiff <= 30) {
-      bestScore = Math.max(bestScore, 800 - timeDiff);
+      currentScore = 800 - timeDiff;  
     } else if (courseDay === prefDay && timeDiff <= 120) {
-      bestScore = Math.max(bestScore, 600 - timeDiff);
-    } else if (timeDiff <= 120) {
-      bestScore = Math.max(bestScore, 400 - timeDiff);
+      currentScore = 600 - timeDiff;  
     }
+
+    // --- CORRECCIÓN DRÁSTICA ---
+    // Si está lleno, ignoramos el puntaje alto y lo bajamos al piso.
+    // Le damos 100 puntos fijos para que aparezca en la lista (mejor que 0),
+    // pero NUNCA le ganará a un grupo disponible con coincidencia (que tendrá 600+).
+    if (course.isFull && currentScore > 0) {
+        currentScore = 100; 
+    }
+
+    bestScore = Math.max(bestScore, currentScore);
   }
   
   return bestScore;
 }
+
 
 // ============================================
 // FUNCIONES DE ACTUALIZACIÓN DE UI
@@ -1351,7 +1472,7 @@ const exclusions = {
 }
 
 // ============================================
-// DIAGNÓSTICO Y MATCHING - MEJORADO CON LOGS
+// DIAGNÓSTICO Y MATCHING (CON MONITOR DE LOGICA)
 // ============================================
 async function diagnoseAndMatch() {
   const activeDiv = document.getElementById("course_recommendation");
@@ -1360,17 +1481,17 @@ async function diagnoseAndMatch() {
   activeDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> Cargando grupos activos...</span>';
   possibleDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> Cargando grupos posibles...</span>';
   
-    // LIMPIAR MÓDULO 4 
+  // Limpiar pitch output
   const pitchOutput = document.getElementById("pitch_output");
   pitchOutput.innerHTML = `
     <div class="text-center py-8">
       <i class="fas fa-search text-blue-400 text-4xl mb-3"></i>
       <p class="text-gray-600 font-medium">Nueva búsqueda iniciada</p>
-      <p class="text-gray-500 text-sm mt-2">Selecciona un curso de los resultados para generar el pitch de venta.</p>
     </div>
   `;
+
   try {
-    await fetchCourseData(true);
+    await fetchCourseData(false); // No forzamos recarga para ser más rápidos
   } catch {
     activeDiv.innerHTML = '<span class="text-red-600">Error de conexión</span>';
     possibleDiv.innerHTML = '<span class="text-red-600">Error de conexión</span>';
@@ -1382,105 +1503,95 @@ async function diagnoseAndMatch() {
   const courseType = document.getElementById("course_type").value;
   const groupType = document.getElementById("group_type").value;
 
-  if (isNaN(age) || age < 7 || age > 17) {
-    activeDiv.innerHTML = '<span class="text-red-600">Edad inválida</span>';
-    possibleDiv.innerHTML = '<span class="text-red-600">Edad inválida</span>';
-    return;
-  }
-
-  console.log("\n=== FILTERING CRITERIA ===");
-  console.log("Age:", age);
-  console.log("Interest:", interest);
-  console.log("Course Type:", courseType || "All");
-  console.log("Group Type:", groupType);
-  console.log("Preferred Schedule:", preferredSchedule);
-
-  // Filtrar grupos activos
+  // 1. FILTRADO INICIAL
+  const allowedIds = COURSE_MASTER_MAP[courseType] || [];
+  
+  // Filtrar Activos
   let filteredActive = LIVE_COURSE_DATA.filter(c => {
-    const basicMatch = age >= c.min_age && age <= c.max_age && c.interest === interest;
-    if (!basicMatch) return false;
-    
-    if (courseType && !courseMatchesType(c, courseType)) return false;
-    
-    const isPremium = (c.name_es || "").toUpperCase().includes("PRM");
+    if (allowedIds.length > 0 && !allowedIds.includes(c.courseId)) return false;
+    if (age < c.min_age || age > c.max_age) return false;
+    const isPremium = (c.internalCode + c.name_es).toUpperCase().includes("PRM");
     if (groupType === "premium" && !isPremium) return false;
     if (groupType === "regular" && isPremium) return false;
     return true;
   });
 
-  console.log("\n=== FILTERING POSSIBLE GROUPS ===");
-  console.log("Total possible groups before filter:", LIVE_POSSIBLE_GROUPS.length);
-  
-  // Filtrar grupos posibles CON LOGS DETALLADOS
+  // Filtrar Posibles
   let filteredPossible = LIVE_POSSIBLE_GROUPS.filter(c => {
-    console.log(`\nChecking: ${c.name_es}`);
-    
-    const ageMatch = age >= c.min_age && age <= c.max_age;
-    console.log(`  Age match (${age} in ${c.min_age}-${c.max_age}): ${ageMatch}`);
-    
-    const interestMatch = c.interest === interest;
-    console.log(`  Interest match (${c.interest} === ${interest}): ${interestMatch}`);
-    
-    const basicMatch = ageMatch && interestMatch;
-    if (!basicMatch) {
-      console.log("  ❌ Failed basic match");
-      return false;
-    }
-    
-    if (courseType) {
-      const typeMatch = courseMatchesType(c, courseType);
-      console.log(`  Type match ("${courseType}" in "${c.name_es}"): ${typeMatch}`);
-      if (!typeMatch) {
-        console.log("  ❌ Failed type match");
-        return false;
-      }
-    }
-    
+    if (allowedIds.length > 0 && !allowedIds.includes(c.courseId)) return false;
+    if (age < c.min_age || age > c.max_age) return false;
     const formatMatch = groupType === c.format;
-    console.log(`  Format match (${groupType} === ${c.format}): ${formatMatch}`);
-    if (!formatMatch) {
-      console.log("  ❌ Failed format match");
-      return false;
-    }
-    
-    console.log("  ✅ PASSED ALL FILTERS");
+    if (!formatMatch) return false;
     return true;
   });
 
-  console.log("\n=== FILTER RESULTS ===");
-  console.log("Active groups after filter:", filteredActive.length);
-  console.log("Possible groups after filter:", filteredPossible.length);
-
-  // Calcular scores
-  filteredActive.forEach(course => {
-    course.priority = calculatePriority(course);
-    course.scheduleScore = calculateScheduleMatchScore(course);
+  // 2. CÁLCULO DE PUNTAJES (SCORING)
+  filteredActive.forEach(c => {
+    c.priority = calculatePriority(c);            // Lógica de negocio (Llenar vacíos)
+    c.scheduleScore = calculateScheduleMatchScore(c); // Preferencia de cliente
   });
   
-  filteredPossible.forEach(course => {
-    course.priority = calculatePriority(course);
-    course.scheduleScore = calculateScheduleMatchScore(course);
+  filteredPossible.forEach(c => {
+    c.priority = calculatePriority(c);
+    c.scheduleScore = calculateScheduleMatchScore(c);
   });
 
-  if (preferredSchedule.length > 0) {
-    filteredActive.sort((a, b) => {
-      if (b.scheduleScore !== a.scheduleScore) return b.scheduleScore - a.scheduleScore;
-      return b.priority - a.priority;
-    });
-    filteredPossible.sort((a, b) => {
-      if (b.scheduleScore !== a.scheduleScore) return b.scheduleScore - a.scheduleScore;
-      return b.priority - a.priority;
-    });
+  // 3. ORDENAMIENTO (SORTING)
+  const sortFunction = (a, b) => {
+    // Si el cliente eligió horario, manda el Schedule Score
+    if (preferredSchedule.length > 0) {
+        if (b.scheduleScore !== a.scheduleScore) return b.scheduleScore - a.scheduleScore;
+    }
+    // Si no (o si empatan), manda la Prioridad de Negocio
+    return b.priority - a.priority;
+  };
+
+  filteredActive.sort(sortFunction);
+  filteredPossible.sort(sortFunction);
+
+  // ============================================================
+  // 🕵️‍♂️ MONITOR DE LÓGICA (AQUÍ ESTÁ LO QUE PEDISTE)
+  // ============================================================
+  console.group("📊 MONITOR DE PRIORIZACIÓN - TOP 10 ACTIVOS");
+  console.log(`Criterio de Orden: ${preferredSchedule.length > 0 ? "HORARIO DEL CLIENTE (ScheduleScore)" : "URGENCIA DE NEGOCIO (PriorityScore)"}`);
+  
+  const debugData = filteredActive.slice(0, 10).map((c, i) => {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const days = c.startDateObj ? Math.ceil((c.startDateObj - today)/(1000*60*60*24)) : 999;
+      
+      let estado = "Normal";
+      if (c.isFull) estado = "⛔ LLENO (Castigado)";
+      else if (days <= 5 && (c.enrolled/c.capacity) < 0.5) estado = "🔥 URGENTE (Rescate)";
+      else if (days > 30) estado = "📉 LEJANO";
+
+      return {
+          "#": i + 1,
+          "ID": c.internalCode,
+          "Fecha Inicio": c.next_start.split("|")[0].trim(), // Solo la fecha
+          "Días Falta": days,
+          "Ocupación": `${c.enrolled}/${c.capacity} (${Math.round((c.enrolled/c.capacity)*100)}%)`,
+          "ESTADO": estado,
+          "Pts Negocio": Math.round(c.priority),
+          "Pts Horario": Math.round(c.scheduleScore),
+          "SCORE FINAL": preferredSchedule.length > 0 ? Math.round(c.scheduleScore) : Math.round(c.priority)
+      };
+  });
+  
+  if(debugData.length > 0) {
+      console.table(debugData);
+      console.log("👆 Si ves 'LLENO' arriba de 'URGENTE' o 'Normal', hay un error en la lógica.");
   } else {
-    filteredActive.sort((a, b) => b.priority - a.priority);
-    filteredPossible.sort((a, b) => b.priority - a.priority);
+      console.log("⚠️ No hay grupos activos que cumplan los filtros básicos (Edad/Tipo/Curso)");
   }
+  console.groupEnd();
+  // ============================================================
 
   allFilteredCourses = filteredActive;
   allFilteredPossibleGroups = filteredPossible;
   selectedCourses = [];
 
-  // Renderizar grupos activos
+  // 4. RENDERIZADO
   if (filteredActive.length === 0) {
     activeDiv.innerHTML = '<span class="text-gray-600">No hay grupos activos para estos criterios</span>';
   } else {
@@ -1492,7 +1603,6 @@ async function diagnoseAndMatch() {
     activeDiv.innerHTML = html;
   }
 
-  // Renderizar grupos posibles
   if (filteredPossible.length === 0) {
     possibleDiv.innerHTML = '<span class="text-gray-600">No hay grupos posibles para estos criterios</span>';
   } else {
@@ -1506,52 +1616,152 @@ async function diagnoseAndMatch() {
 
   if (preferredSchedule.length > 0) {
     const hasMatches = filteredActive.some(c => c.scheduleScore > 0) || filteredPossible.some(c => c.scheduleScore > 0);
-    if (hasMatches) {
-      showSystemMessage('success', '✅ Coincidencias encontradas', 'Se encontraron cursos que coinciden con los horarios preferidos');
-    } else {
-      showSystemMessage('warning', '⚠️ Sin coincidencias exactas', 'No se encontraron cursos con los horarios exactos, pero aquí están todas las opciones disponibles');
-    }
+    if (hasMatches) showSystemMessage('success', '✅ Coincidencias encontradas', 'Se encontraron cursos según horario');
+    else showSystemMessage('warning', '⚠️ Sin coincidencias exactas', 'Mostrando alternativas cercanas');
   }
 
   updatePitchDropdown();
   updateSaleSummary();
 }
 
+
+// ============================================
+// RENDERIZADO (CON ETIQUETAS DE MATCH DETALLADAS)
+// ============================================
 function renderCourseList(courses, showIndex = true) {
   let html = "";
+  
+  const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const COLOMBIA_OFFSET = -5;
+
   courses.forEach((course, idx) => {
     const remaining = course.capacity - course.enrolled;
     const critical = remaining <= 2 && remaining > 0;
     const almostFull = remaining > 2 && remaining <= 5;
     const isSelected = selectedCourses.some(c => c.id === course.id);
     
+    // Clases base
     let cardClass = "course-option";
     if (course.type === 'possible') cardClass += " possible-group";
     else if (course.isFull) cardClass += " critical";
     else if (critical) cardClass += " critical";
     else if (almostFull) cardClass += " almost-full";
-    
     if (isSelected) cardClass += " selected";
     
+    // Títulos
+    let mainTitle = course.name_es;
+    let subTitle = "";
+    if (course.type === 'active' && course.internalCode) {
+        mainTitle = course.internalCode; 
+        subTitle = course.name_es;       
+    }
+
     const displayIdx = showIndex ? `OPCIÓN ${idx + 1}` : `#${idx + 1}`;
     const badge = course.type === 'possible' 
       ? '<span class="course-option-badge badge-possible">GRUPO POSIBLE</span>'
       : '<span class="course-option-badge badge-active">GRUPO ACTIVO</span>';
+
+    // 1. CÁLCULO DE HORA VISUAL
+    let displayTime = "";
+    let colTimeLabel = course.timeStr || course.hora || "??:??";
+    const hasValidTime = colTimeLabel.includes(":"); 
+
+    if (course.startDateObj && hasValidTime && course.timeStr) {
+       const clientOffset = parseInt(document.getElementById("client_timezone").value);
+       const diff = clientOffset - COLOMBIA_OFFSET;
+       const clientDate = new Date(course.startDateObj);
+       const [h, m] = course.timeStr.split(':');
+       clientDate.setHours(parseInt(h), parseInt(m));
+       clientDate.setHours(clientDate.getHours() + diff);
+       
+       const dName = dayNames[clientDate.getDay()];
+       const dNum = clientDate.getDate();
+       const mName = monthNames[clientDate.getMonth()];
+       const finalH = clientDate.getHours().toString().padStart(2, '0');
+       const finalM = clientDate.getMinutes().toString().padStart(2, '0');
+       const finalDateStr = `${dName} ${dNum} ${mName}, ${finalH}:${finalM}`;
+       
+       displayTime = `<b>${finalDateStr}</b> <span class="text-xs text-blue-600">(Tu hora)</span> <span class="text-gray-400 text-xs">| ${colTimeLabel} COL</span>`;
     
+    } else if (course.day && course.hora && hasValidTime) {
+       const days = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+       const targetDayIdx = days.indexOf(course.day.toLowerCase());
+       const tempDate = new Date();
+       if (targetDayIdx !== -1) {
+           const currentDayIdx = tempDate.getDay();
+           const distance = targetDayIdx - currentDayIdx;
+           tempDate.setDate(tempDate.getDate() + distance);
+       }
+       const [h, m] = course.hora.split(':');
+       tempDate.setHours(h, m, 0); 
+       const clientTimeFull = convertColombiaToClient(tempDate); 
+       displayTime = `<b>${clientTimeFull}</b> <span class="text-xs text-blue-600">(Tu hora)</span> <span class="text-gray-400 text-xs">| ${colTimeLabel} COL</span>`;
+    } else {
+       const safeDate = course.next_start || "Fecha Pendiente";
+       displayTime = `${safeDate} <span class="text-gray-400 text-xs">| ${colTimeLabel} COL</span>`;
+    }
+
+    // 2. CONSTRUCCIÓN DE LA TARJETA
     html += `<div class="${cardClass}" id="course-card-${course.id}">
-      <div class="course-option-title">${displayIdx}: ${course.name_es} ${badge}</div>
-      <div class="course-option-row">⏰ ${course.next_start}</div>
+      <div class="course-option-title text-lg">${displayIdx}: ${mainTitle} ${badge}</div>
+      ${subTitle ? `<div class="text-xs text-gray-500 mb-2 font-mono border-b pb-1 truncate" title="${subTitle}">${subTitle}</div>` : ""}
+      
+      <div class="course-option-row">📅 ${displayTime}</div>
       <div class="course-option-row ${critical || course.isFull ? "text-orange-600 font-semibold" : ""}">💻 ${course.enrolled}/${course.capacity} (${remaining} restantes)</div>
       <div class="course-option-row">👨‍🏫 ${course.teacher}</div>`;
     
-    if (preferredSchedule.length > 0 && course.scheduleScore > 0) {
-      let matchText = "✨ Coincidencia de horario";
-      if (course.scheduleScore >= 900) matchText = "🎯 Coincidencia EXACTA";
-      else if (course.scheduleScore >= 700) matchText = "✨ Muy similar a tu horario";
-      else if (course.scheduleScore >= 500) matchText = "📍 Horario cercano";
-      html += `<div class="course-option-row text-green-600 font-semibold">${matchText}</div>`;
+    // 3. LOGICA DE MENSAJES DE COINCIDENCIA (AQUÍ ESTÁ EL CAMBIO)
+    if (preferredSchedule.length > 0) {
+      // Recalculamos la "razón" del match para mostrar el texto correcto
+      // (Porque el score numérico ya está 'sucio' por la penalización de lleno)
+      
+      let matchLabel = "";
+      let matchIcon = "";
+      let isExact = false;
+      
+      // Buscamos cuál fue la mejor coincidencia que generó este curso
+      for (const pref of preferredSchedule) {
+         const colTime = convertClientToColombia(pref.day, pref.hour);
+         const prefTimeMinutes = colTime.hour * 60;
+         const courseTimeMinutes = course.timeMinutes;
+         const prefDay = colTime.day;
+         const courseDay = course.day ? course.day.toLowerCase() : "";
+         
+         const timeDiff = Math.abs(courseTimeMinutes - prefTimeMinutes);
+
+         if (courseDay === prefDay && timeDiff <= 30) {
+             matchLabel = "🎯 Coincidencia EXACTA";
+             matchIcon = "🎯";
+             isExact = true;
+             break; // Encontramos la mejor, salimos
+         } else if (timeDiff <= 30 && !isExact) {
+             matchLabel = "⏰ Misma hora, diferente día";
+             matchIcon = "⏰";
+         } else if (courseDay === prefDay && timeDiff <= 120 && !isExact && matchLabel !== "⏰ Misma hora, diferente día") {
+             matchLabel = "🗓️ Mismo día, diferente hora";
+             matchIcon = "🗓️";
+         }
+      }
+
+      // Renderizamos la etiqueta si hubo algún match
+      if (matchLabel) {
+        let colorClass = "text-green-700 bg-green-50 border border-green-200";
+        let extraText = "";
+
+        // Si está lleno, cambiamos el color y agregamos advertencia
+        if (course.isFull) {
+            colorClass = "text-orange-700 bg-orange-50 border border-orange-200";
+            extraText = " (Pero grupo lleno ⚠️)";
+        }
+        
+        html += `<div class="course-option-row mt-2 p-1 rounded text-center text-sm font-bold ${colorClass}">
+            ${matchLabel}${extraText}
+        </div>`;
+      }
     }
     
+    // Alertas de cupo
     if (course.isFull) {
       html += '<div class="course-option-urgency critical-text">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN</div>';
     } else if (remaining === 1) {
@@ -1569,6 +1779,7 @@ function renderCourseList(courses, showIndex = true) {
   });
   return html;
 }
+
 
 // [CONTINÚA con las funciones restantes: toggleCourseSelection, modales, pitch, etc...]
 // Por brevedad, mantengo el resto igual que en la versión anterior
@@ -1649,21 +1860,31 @@ function updateSaleSummary() {
   let html = '<div class="space-y-2">';
   if (amoCrm) html += `<div><strong>amo CRM:</strong> <a href="${amoCrm}" target="_blank" class="text-blue-600 hover:underline">Ver lead</a></div>`;
   html += `<div><strong>Edad:</strong> ${age} años</div>`;
-  html += `<div><strong>Interés:</strong> ${interest}</div>`;
-  html += `<div><strong>Tipo:</strong> ${groupType}</div>`;
-  if (isSen) html += '<div><strong>SEN:</strong> ⭐ Sí</div>';
-  if (preferredSchedule.length > 0) {
-    html += `<div><strong>Horarios preferidos:</strong> ${preferredSchedule.length} seleccionados</div>`;
+  
+  // --- NUEVO: MOSTRAR CLUSTER ID SI EXISTE ---
+  // Buscamos si hay algún grupo posible seleccionado con ID
+  const possibleGroup = selectedCourses.find(c => c.type === 'possible' && c.semanticId);
+  if (possibleGroup) {
+      html += `<div class="bg-yellow-100 p-2 rounded border border-yellow-300 text-yellow-800">
+        <strong>🆔 Cluster ID:</strong> <span class="font-mono text-lg font-bold">${possibleGroup.semanticId}</span>
+        <div class="text-xs mt-1 text-gray-600">(Se copiará al portapapeles al guardar)</div>
+      </div>`;
   }
-  html += `<div class="mt-2"><strong>Cursos seleccionados:</strong> ${selectedCourses.length}</div>`;
+  // -------------------------------------------
+
+  if (preferredSchedule.length > 0) {
+    html += `<div><strong>Horarios:</strong> ${preferredSchedule.length} opciones</div>`;
+  }
+  
+  html += `<div class="mt-2 border-t pt-2"><strong>Selección:</strong></div>`;
   selectedCourses.forEach((c, idx) => {
-    const remaining = c.capacity - c.enrolled;
     const typeLabel = c.type === 'possible' ? ' [POSIBLE]' : ' [ACTIVO]';
-    html += `<div class="text-sm pl-4">• <strong>Opción ${idx + 1}:</strong> ${c.name_es} (${remaining} cupos)${typeLabel}</div>`;
+    html += `<div class="text-sm pl-2">• ${c.name_es}${typeLabel}</div>`;
   });
   html += '</div>';
   summaryContent.innerHTML = html;
 }
+
 
 function openCoursesModal() {
   const modal = document.getElementById("courses-modal");
@@ -1721,26 +1942,45 @@ function closeScheduleModal() {
   document.getElementById("schedule-modal-overlay").classList.remove("active");
 }
 
+// ============================================
+// GUARDAR HORARIOS PREFERIDOS (CON RESUMEN VISUAL)
+// ============================================
 function submitPreferredSchedule() {
   const checkboxes = document.querySelectorAll('.schedule-checkbox:checked');
   if (checkboxes.length === 0) {
     alert("⚠️ Selecciona al menos un horario preferido");
     return;
   }
+  
   preferredSchedule = [];
+  // Mapa para traducir códigos a nombres cortos
+  const dayMap = {'mon': 'Lun', 'tue': 'Mar', 'wed': 'Mié', 'thu': 'Jue', 'fri': 'Vie', 'sat': 'Sáb', 'sun': 'Dom'};
+  let summaryParts = [];
+
   checkboxes.forEach(cb => {
-    preferredSchedule.push({ day: cb.dataset.day, hour: parseInt(cb.dataset.hour) });
+    const d = cb.dataset.day;
+    const h = cb.dataset.hour;
+    preferredSchedule.push({ day: d, hour: parseInt(h) });
+    
+    // Construimos el texto: "Lun 17:00"
+    summaryParts.push(`${dayMap[d] || d} ${h}:00`);
   });
   
   const btn = document.getElementById("btn_select_schedule");
   btn.classList.add("selected");
   btn.innerHTML = `✅ ${checkboxes.length} horarios seleccionados`;
   
+  // AQUÍ ESTÁ EL CAMBIO VISUAL
   const summary = document.getElementById("schedule-summary");
   summary.classList.remove("hidden");
-  summary.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${checkboxes.length} horarios guardados - Se buscarán coincidencias`;
+  summary.className = "mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800";
+  summary.innerHTML = `
+    <div class="font-bold mb-1"><i class="fas fa-clock"></i> Selección (Hora Cliente):</div>
+    <div class="text-gray-700">${summaryParts.join(", ")}</div>
+    <div class="text-xs text-gray-500 mt-1 italic">El sistema buscará coincidencias basadas en estos horarios.</div>
+  `;
   
-  showSystemMessage('success', '✅ Horarios guardados', `${checkboxes.length} horarios seleccionados. Presiona "Sugerir Cursos" para buscar coincidencias`);
+  showSystemMessage('success', '✅ Horarios guardados', 'Presiona "Sugerir Cursos" para ver las coincidencias.');
   closeScheduleModal();
 }
 
@@ -1871,69 +2111,88 @@ async function generatePitch() {
 
 async function submitSale() {
   if (selectedCourses.length === 0) {
-    alert("⚠️ Selecciona al menos un curso antes de enviar la venta");
+    alert("⚠️ Selecciona al menos un curso antes de guardar");
     return;
   }
   
-  if (!SALES_SCRIPT_URL) {
-    alert("⚠️ Sistema de guardado no conectado.\n\nContacta al administrador para configurar la integración con Google Sheets.");
-    return;
-  }
-  
-  // Validar que el nombre del TCM esté completo
+  // 1. Preparar datos (Igual que antes) ...
   const tcmName = document.getElementById("tcm_name").value.trim();
-  if (!tcmName) {
-    alert("⚠️ Por favor ingresa el nombre del TCM antes de enviar la venta");
-    return;
+  if (!tcmName) { alert("⚠️ Ingresa el nombre del TCM"); return; }
+
+  let scheduleText = "";
+  if (preferredSchedule && preferredSchedule.length > 0) {
+    const dayMap = {'mon': 'Lun', 'tue': 'Mar', 'wed': 'Mié', 'thu': 'Jue', 'fri': 'Vie', 'sat': 'Sáb', 'sun': 'Dom'};
+    scheduleText = preferredSchedule.map(s => `${dayMap[s.day] || s.day} ${s.hour}:00`).join(", ");
   }
-  
+
   const saleData = {
     timestamp: new Date().toISOString(),
     amo_crm_link: document.getElementById("amo_crm_link").value.trim(),
+    tcm_name: tcmName,
     student_age: document.getElementById("student_age").value,
     interest: document.getElementById("student_interest").value,
     course_type: document.getElementById("course_type").value,
     group_type: document.getElementById("group_type").value,
     is_sen: document.getElementById("is_sen").checked,
-    tcm_name: tcmName,
-    selected_courses: selectedCourses.map(c => ({
-      id: c.id,
-      name: c.name_es,
-      type: c.type,
-      schedule: c.next_start,
-      teacher: c.teacher,
-      enrolled: c.enrolled,
-      capacity: c.capacity,
-      remaining: c.capacity - c.enrolled
-    })),
-    preferred_schedule: preferredSchedule.length > 0 ? preferredSchedule : null
+    preferred_schedule_text: scheduleText, 
+    selected_courses: selectedCourses.map(c => {
+        let finalName = c.name_es;
+        if (c.type === 'active' && c.internalCode) finalName = `${c.internalCode} - ${c.name_es}`;
+        return {
+          id: c.id,
+          name: finalName,
+          type: c.type,
+          schedule: c.next_start,
+          teacher: c.teacher,
+          semantic_id: c.semanticId || "" // Enviamos ID al sheet también
+        };
+    })
   };
   
+  // 2. Interfaz de carga
+  const btn = document.getElementById("btn_submit_sale");
+  const originalText = btn.innerHTML; // Guardamos el HTML original (icono + texto)
+  btn.disabled = true;
+  btn.innerText = "⏳ Guardando...";
+
   try {
-    console.log("📤 Enviando venta a Google Sheets...");
-    console.log("Datos:", saleData);
-    
-    const response = await fetch(SALES_SCRIPT_URL, {
+    // 3. Enviar a Google Sheets
+    await fetch(SALES_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors', // Evita problemas de CORS
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(saleData)
     });
     
-    // Con no-cors no podemos leer la respuesta, pero si llegamos aquí sin error, funcionó
-    console.log("✅ Petición enviada sin errores");
-    showSystemMessage('success', '✅ ¡Venta registrada!', 'Los datos han sido guardados. Verifica el Google Sheet para confirmar.');
+    // 4. LÓGICA DE COPIADO AL PORTAPAPELES (NUEVO)
+    const possibleGroup = selectedCourses.find(c => c.type === 'possible' && c.semanticId);
+    let copyMessage = "";
     
-    // Recargar la página después de 3 segundos
-    setTimeout(() => {
-      location.reload();
-    }, 3000);
+    if (possibleGroup) {
+        // Texto exacto solicitado: "Selector Tool - Cluster [ID]"
+        const textToCopy = `Selector Tool - Cluster ${possibleGroup.semanticId}`;
+        
+        // Usamos la API del portapapeles
+        await navigator.clipboard.writeText(textToCopy);
+        copyMessage = `\n\n📋 COPIADO AL PORTAPAPELES:\n"${textToCopy}"`;
+    }
+
+    // 5. Feedback Final
+    showSystemMessage('success', '✅ Guardado Exitoso', 'El registro se envió correctamente.' + (copyMessage ? ' Cluster ID copiado.' : ''));
+    
+    // Alerta visual para confirmar el copiado antes de recargar
+    if (copyMessage) {
+        alert("✅ ¡Registro Guardado!\n" + copyMessage + "\n\nYa puedes pegarlo en el Formulario de Pago.");
+    }
+    
+    // Recargar
+    setTimeout(() => { location.reload(); }, 2000); // Un poco menos de tiempo para agilidad
     
   } catch (error) {
-    console.error("❌ Error al enviar:", error);
-    showSystemMessage('error', '❌ Error al guardar la venta', 'Error: ' + error.message + '. Intenta de nuevo o contacta al administrador.');
+    console.error("❌ Error:", error);
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+    showSystemMessage('error', '❌ Error', 'Hubo un problema de conexión.');
   }
 }
 
@@ -1941,12 +2200,111 @@ function setLanguage(lang) {
   currentLang = lang;
 }
 
+// ============================================
+// LÓGICA DE ZONA HORARIA
+// ============================================
+
+// Offset de Colombia (UTC-5)
+const COLOMBIA_OFFSET = -5; 
+
+function populateTimezones() {
+  const select = document.getElementById("client_timezone");
+  let html = "";
+  
+  // Generar de UTC-12 a UTC+14
+  for (let i = -12; i <= 14; i++) {
+    const sign = i >= 0 ? "+" : "";
+    const label = `UTC${sign}${i}:00`;
+    // Seleccionar Colombia/Perú/EST (UTC-5) por defecto
+    const isSelected = i === -5 ? "selected" : "";
+    
+    // Agregamos algunas referencias comunes para ayudar al TCM (opcional, pero recomendado)
+    let ref = "";
+    if (i === -5) ref = " (Colombia/Perú/Miami)";
+    else if (i === -6) ref = " (México CDMX)";
+    else if (i === 1) ref = " (España)";
+    else if (i === -3) ref = " (Argentina/Chile)";
+    
+    html += `<option value="${i}" ${isSelected}>${label}${ref}</option>`;
+  }
+  select.innerHTML = html;
+}
+
+// Convierte (Día/Hora Cliente) -> (Día/Hora Colombia) para BUSCAR en la base de datos
+function convertClientToColombia(dayStr, hourInt) {
+  const clientOffset = parseInt(document.getElementById("client_timezone").value);
+  const diff = COLOMBIA_OFFSET - clientOffset; // Ej: España (+1). Diff = -5 - 1 = -6 horas.
+  
+  // Días numéricos para manejar cambios de día (0=Dom, 1=Lun...)
+  const days = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  
+  // Normalizar día de entrada
+  let dayIndex = days.indexOf(parseDayAbbreviation(dayStr));
+  if (dayIndex === -1) return { day: dayStr, hour: hourInt }; // Fallback
+
+  let newHour = hourInt + diff;
+  let newDayIndex = dayIndex;
+
+  // Ajuste de cambio de día
+  if (newHour < 0) {
+    newHour += 24;
+    newDayIndex = dayIndex - 1;
+    if (newDayIndex < 0) newDayIndex = 6;
+  } else if (newHour >= 24) {
+    newHour -= 24;
+    newDayIndex = dayIndex + 1;
+    if (newDayIndex > 6) newDayIndex = 0;
+  }
+
+  return { day: days[newDayIndex], hour: newHour };
+}
+
+// Convierte (Hora Colombia) -> (Hora Cliente) para MOSTRAR en la tarjeta
+function convertColombiaToClient(colDateObj) {
+  if (!colDateObj) return "N/A";
+  
+  const clientOffset = parseInt(document.getElementById("client_timezone").value);
+  const diff = clientOffset - COLOMBIA_OFFSET; // Ej: España (+1). Diff = 1 - (-5) = +6 horas.
+  
+  // Clonamos la fecha para no modificar la original
+  const clientDate = new Date(colDateObj);
+  clientDate.setHours(clientDate.getHours() + diff);
+  
+  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const dayName = days[clientDate.getDay()];
+  
+  const h = clientDate.getHours().toString().padStart(2, '0');
+  const m = clientDate.getMinutes().toString().padStart(2, '0');
+  
+  return `${dayName} ${h}:${m}`;
+}
+
+function updateTimezoneDisplay() {
+  // Cuando cambia la zona horaria, refrescamos los cálculos si hay resultados
+  if (allFilteredCourses.length > 0 || allFilteredPossibleGroups.length > 0) {
+    diagnoseAndMatch(); 
+  }
+}
+
+// ============================================
+// FUNCIÓN PARA FORMATEAR HORA (HH:MM:SS -> HH:MM)
+// ============================================
+function formatTimeHHMM(timeStr) {
+  if (!timeStr) return "";
+  // Busca patrones como 17:00 o 17:00:00
+  const match = String(timeStr).match(/(\d{1,2}):(\d{2})/);
+  if (match) {
+    return `${match[1].padStart(2, '0')}:${match[2].padStart(2, '0')}`;
+  }
+  return ""; 
+}
+
 window.onload = () => {
   setLanguage("es");
+  populateTimezones();
   document.getElementById("student_age").value = 10;
   fetchCourseData().then(() => {
     updateDataSourceInfo();
-    updateCourseTypeOptions();
   }).catch(() => {
     showSystemMessage('warning', '⚠️ Conexión limitada', 'No se pudo cargar la base de datos de cursos. Intenta refrescar la página.');
   });
@@ -1955,22 +2313,6 @@ window.onload = () => {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
