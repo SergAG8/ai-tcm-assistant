@@ -1012,15 +1012,44 @@ function mapRowsToCourses(headers, rows) {
     const name = idx_course >= 0 ? (r[idx_course] || internalCode) : internalCode; 
     
     // LECTURA DE HORA CON DEBUGGING (Solo primeras 3 filas)
-    const rawDate = idx_date >= 0 ? r[idx_date] : "";
-    const rawTime = idx_time >= 0 ? r[idx_time] : "";
-    
-    // Usamos la función de limpieza formatTimeHHMM que ya tienes
-    const timeStr = formatTimeHHMM(rawTime); 
+ const rawDate = idx_date >= 0 ? r[idx_date] : "";
+const rawTime = idx_time >= 0 ? r[idx_time] : "";
+let timeStr = formatTimeHHMM(rawTime);
 
-    if (i < 3) {
-        console.log(`📝 FILA ${i}: Fecha="${rawDate}" | Hora Raw="${rawTime}" | Hora Limpia="${timeStr}"`);
-    }
+// ============================================
+// FALLBACK: EXTRAER DÍA Y HORA DEL group_title
+// Patrón: COL1176_LU-17 → Lunes 17:00
+// ============================================
+let dayFromTitle = null;
+let timeStrFromTitle = "";
+
+const titleMatch = internalCode.match(/_([A-Z]{2})-(\d{1,2})(?:\D|$)/);
+if (titleMatch) {
+  const dayCode = titleMatch[1].toUpperCase();
+  const hourNum = parseInt(titleMatch[2]);
+  
+  const dayCodeMap = {
+    'LU': 'lunes',
+    'MA': 'martes', 
+    'MI': 'miércoles',
+    'JU': 'jueves',
+    'VI': 'viernes',
+    'SA': 'sábado',
+    'DO': 'domingo'
+  };
+  
+  dayFromTitle = dayCodeMap[dayCode] || null;
+  timeStrFromTitle = `${hourNum.toString().padStart(2, '0')}:00`;
+}
+
+// Usar columna del sheet si existe, sino usar el título
+if (!timeStr && timeStrFromTitle) {
+  timeStr = timeStrFromTitle;
+}
+
+if (i < 3) {
+  console.log(`📝 FILA ${i}: TitleCode="${internalCode}" | DíaExtraído="${dayFromTitle}" | HoraExtraída="${timeStr}"`);
+}
 
     // FILTROS DE CALIDAD
     const capacity = idx_capacity >= 0 ? parseInt(r[idx_capacity] || "0") : 0;
@@ -1056,9 +1085,9 @@ function mapRowsToCourses(headers, rows) {
       next_start: rawDate && timeStr ? `${rawDate} | ${timeStr}` : (rawDate || "N/A"),
       teacher: idx_teacher >= 0 ? r[idx_teacher] : "Tutor N/A",
       startDateObj: startDate,
-      timeStr: timeStr, // <--- ESTA ES LA VARIABLE CLAVE QUE AHORA SÍ TENDRÁ DATOS
+      timeStr: timeStr,
       timeMinutes: parseTimeToMinutes(timeStr),
-      day: startDate ? getDayOfWeekFromDate(startDate) : null,
+      day: startDate ? getDayOfWeekFromDate(startDate) : dayFromTitle,
       type: 'active'
     });
   }
@@ -2313,6 +2342,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
