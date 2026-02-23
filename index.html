@@ -126,6 +126,14 @@
         <input type="number" id="student_age" min="7" max="17" value="10"
                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500" />
 
+        <label for="student_interest" class="block text-sm font-medium text-gray-700 mb-1">
+          Interés Principal:
+        </label>
+        <select id="student_interest"
+                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
+                <option value="coding">Coding y Videojuegos</option>
+                <option value="design">Media y Diseño</option>
+        </select>
 
         <label for="client_timezone" class="block text-sm font-medium text-gray-700 mb-1">
           🌍 Zona Horaria:
@@ -1004,44 +1012,15 @@ function mapRowsToCourses(headers, rows) {
     const name = idx_course >= 0 ? (r[idx_course] || internalCode) : internalCode; 
     
     // LECTURA DE HORA CON DEBUGGING (Solo primeras 3 filas)
- const rawDate = idx_date >= 0 ? r[idx_date] : "";
-const rawTime = idx_time >= 0 ? r[idx_time] : "";
-let timeStr = formatTimeHHMM(rawTime);
+    const rawDate = idx_date >= 0 ? r[idx_date] : "";
+    const rawTime = idx_time >= 0 ? r[idx_time] : "";
+    
+    // Usamos la función de limpieza formatTimeHHMM que ya tienes
+    const timeStr = formatTimeHHMM(rawTime); 
 
-// ============================================
-// FALLBACK: EXTRAER DÍA Y HORA DEL group_title
-// Patrón: COL1176_LU-17 → Lunes 17:00
-// ============================================
-let dayFromTitle = null;
-let timeStrFromTitle = "";
-
-const titleMatch = internalCode.match(/_([A-Z]{2})-(\d{1,2})(?:\D|$)/);
-if (titleMatch) {
-  const dayCode = titleMatch[1].toUpperCase();
-  const hourNum = parseInt(titleMatch[2]);
-  
-  const dayCodeMap = {
-    'LU': 'lunes',
-    'MA': 'martes', 
-    'MI': 'miércoles',
-    'JU': 'jueves',
-    'VI': 'viernes',
-    'SA': 'sábado',
-    'DO': 'domingo'
-  };
-  
-  dayFromTitle = dayCodeMap[dayCode] || null;
-  timeStrFromTitle = `${hourNum.toString().padStart(2, '0')}:00`;
-}
-
-// Usar columna del sheet si existe, sino usar el título
-if (!timeStr && timeStrFromTitle) {
-  timeStr = timeStrFromTitle;
-}
-
-if (i < 3) {
-  console.log(`📝 FILA ${i}: TitleCode="${internalCode}" | DíaExtraído="${dayFromTitle}" | HoraExtraída="${timeStr}"`);
-}
+    if (i < 3) {
+        console.log(`📝 FILA ${i}: Fecha="${rawDate}" | Hora Raw="${rawTime}" | Hora Limpia="${timeStr}"`);
+    }
 
     // FILTROS DE CALIDAD
     const capacity = idx_capacity >= 0 ? parseInt(r[idx_capacity] || "0") : 0;
@@ -1077,9 +1056,9 @@ if (i < 3) {
       next_start: rawDate && timeStr ? `${rawDate} | ${timeStr}` : (rawDate || "N/A"),
       teacher: idx_teacher >= 0 ? r[idx_teacher] : "Tutor N/A",
       startDateObj: startDate,
-      timeStr: timeStr,
+      timeStr: timeStr, // <--- ESTA ES LA VARIABLE CLAVE QUE AHORA SÍ TENDRÁ DATOS
       timeMinutes: parseTimeToMinutes(timeStr),
-      day: startDate ? getDayOfWeekFromDate(startDate) : dayFromTitle,
+      day: startDate ? getDayOfWeekFromDate(startDate) : null,
       type: 'active'
     });
   }
@@ -1344,7 +1323,14 @@ function calculateScheduleMatchScore(course) {
 // ============================================
 // FUNCIONES DE ACTUALIZACIÓN DE UI
 // ============================================
-
+function updateCourseTypeOptions() {
+  const interest = document.getElementById("student_interest").value;
+  const courseTypeSelect = document.getElementById("course_type");
+  
+  if (!LIVE_COURSE_DATA.length && !LIVE_POSSIBLE_GROUPS.length) {
+    courseTypeSelect.innerHTML = '<option value="">-- Cargando... --</option>';
+    return;
+  }
   
   const types = new Set();
   
@@ -1513,6 +1499,7 @@ async function diagnoseAndMatch() {
   }
 
   const age = parseInt(document.getElementById("student_age").value, 10);
+  const interest = document.getElementById("student_interest").value;
   const courseType = document.getElementById("course_type").value;
   const groupType = document.getElementById("group_type").value;
 
@@ -2143,7 +2130,8 @@ async function submitSale() {
     amo_crm_link: document.getElementById("amo_crm_link").value.trim(),
     tcm_name: tcmName,
     student_age: document.getElementById("student_age").value,
-       course_type: document.getElementById("course_type").value,
+    interest: document.getElementById("student_interest").value,
+    course_type: document.getElementById("course_type").value,
     group_type: document.getElementById("group_type").value,
     is_sen: document.getElementById("is_sen").checked,
     preferred_schedule_text: scheduleText, 
@@ -2325,7 +2313,6 @@ window.onload = () => {
 </script>
 </body>
 </html>
-
 
 
 
