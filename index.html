@@ -1261,9 +1261,12 @@ function calculatePriority(course) {
   // Aunque priorizamos fecha, si el grupo está LLENO, le quitamos 500 puntos.
   // ¿Por qué? Para que si tienes un grupo mañana (Lleno) y uno pasado mañana (Libre),
   // el sistema te muestre el Libre primero.
-  if (course.isFull) {
-      score -= 500;
-  }
+  const isPremium = course.format === 'premium' || 
+                  (course.internalCode + (course.name_es || "")).toUpperCase().includes("PRM");
+const criticalThreshold = isPremium ? 1 : 2;
+if (course.isFull) {
+    score -= 500;
+}
 
   // Aseguramos que no de negativo
   if (score < 0) score = 0;
@@ -1630,8 +1633,10 @@ function renderCourseList(courses, showIndex = true) {
 
   courses.forEach((course, idx) => {
     const remaining = course.capacity - course.enrolled;
-    const critical = remaining <= 2 && remaining > 0;
-    const almostFull = remaining > 2 && remaining <= 5;
+    const isPremium = course.format === 'premium' || 
+                  (course.internalCode + (course.name_es || "")).toUpperCase().includes("PRM");
+    const critical = isPremium ? remaining === 1 : (remaining <= 2 && remaining > 0);
+    const almostFull = isPremium ? false : (remaining > 2 && remaining <= 5);
     const isSelected = selectedCourses.some(c => c.id === course.id);
     
     // Clases base
@@ -1755,17 +1760,17 @@ function renderCourseList(courses, showIndex = true) {
     }
     
     // Alertas de cupo
-    if (course.isFull) {
-      html += '<div class="course-option-urgency critical-text">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN</div>';
-    } else if (remaining === 1) {
-      html += '<div class="course-option-urgency critical-text">🚨 ¡ÚLTIMO CUPO DISPONIBLE! 🚨</div>';
-    } else if (remaining === 2) {
-      html += '<div class="course-option-urgency critical-text">🚨 URGENTE - 2 cupos 🚨</div>';
-    } else if (remaining === 3) {
-      html += '<div class="course-option-urgency warning-text">⚠️ Casi lleno - 3 cupos</div>';
-    } else if (almostFull) {
-      html += `<div class="course-option-urgency warning-text">⚠️ Casi lleno - ${remaining} cupos</div>`;
-    }
+if (course.isFull) {
+  html += '<div class="course-option-urgency critical-text">⚠️ GRUPO LLENO - REQUIERE AUTORIZACIÓN</div>';
+} else if (remaining === 1) {
+  html += '<div class="course-option-urgency critical-text">🚨 ¡ÚLTIMO CUPO DISPONIBLE! 🚨</div>';
+} else if (!isPremium && remaining === 2) {
+  html += '<div class="course-option-urgency critical-text">🚨 URGENTE - 2 cupos 🚨</div>';
+} else if (!isPremium && remaining === 3) {
+  html += '<div class="course-option-urgency warning-text">⚠️ Casi lleno - 3 cupos</div>';
+} else if (!isPremium && almostFull) {
+  html += `<div class="course-option-urgency warning-text">⚠️ Casi lleno - ${remaining} cupos</div>`;
+}
     
     html += `<button onclick="toggleCourseSelection('${course.id}')" class="btn-select mt-3 w-full ${isSelected ? "selected" : "unselected"}" id="btn-select-${course.id}">${isSelected ? "✓ Seleccionado" : "Seleccionar"}</button>
     </div>`;
@@ -1825,10 +1830,12 @@ function updatePitchDropdown() {
   selectedCourses.forEach((course, idx) => {
     const remaining = course.capacity - course.enrolled;
     let urgencyTag = "";
-    if (remaining === 1) urgencyTag = " (¡ÚLTIMO CUPO!)";
-    else if (remaining === 2) urgencyTag = " (URGENTE - 2 cupos)";
-    else if (remaining === 3) urgencyTag = " (Casi lleno - 3 cupos)";
-    else if (remaining <= 5) urgencyTag = ` (${remaining} cupos)`;
+const isPremium = c.format === 'premium' || 
+                  (c.internalCode + (c.name_es || "")).toUpperCase().includes("PRM");
+if (remaining === 1) urgencyTag = " (¡ÚLTIMO CUPO!)";
+else if (!isPremium && remaining === 2) urgencyTag = " (URGENTE - 2 cupos)";
+else if (!isPremium && remaining === 3) urgencyTag = " (Casi lleno - 3 cupos)";
+else if (!isPremium && remaining <= 5) urgencyTag = ` (${remaining} cupos)`;
     
     const typeTag = course.type === 'possible' ? " [GRUPO POSIBLE]" : "";
     
@@ -2306,6 +2313,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
