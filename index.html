@@ -1828,29 +1828,10 @@ function updateSelectionUI() {
 }
 
 function updatePitchDropdown() {
-  const selectElement = document.getElementById("selected_course");
   const submitBtn = document.getElementById("btn_submit_sale");
-  if (selectedCourses.length === 0) {
-    selectElement.innerHTML = '<option value="">-- Selecciona un curso primero --</option>';
-    submitBtn.disabled = true;
-    return;
+  if (submitBtn) {
+    submitBtn.disabled = selectedCourses.length === 0;
   }
-  selectElement.innerHTML = '<option value="">-- Elige cuál pitch generar --</option>';
-  selectedCourses.forEach((course, idx) => {
-    const remaining = course.capacity - course.enrolled;
-    let urgencyTag = "";
-const isPremium = c.format === 'premium' || 
-                  (c.internalCode + (c.name_es || "")).toUpperCase().includes("PRM");
-if (remaining === 1) urgencyTag = " (¡ÚLTIMO CUPO!)";
-else if (!isPremium && remaining === 2) urgencyTag = " (URGENTE - 2 cupos)";
-else if (!isPremium && remaining === 3) urgencyTag = " (Casi lleno - 3 cupos)";
-else if (!isPremium && remaining <= 5) urgencyTag = ` (${remaining} cupos)`;
-    
-    const typeTag = course.type === 'possible' ? " [GRUPO POSIBLE]" : "";
-    
-    selectElement.innerHTML += `<option value="${course.id}">Curso ${idx + 1}: ${course.name_es}${urgencyTag}${typeTag}</option>`;
-  });
-  submitBtn.disabled = false;
 }
 
 function updateSaleSummary() {
@@ -2312,7 +2293,8 @@ window.onload = () => {
   setLanguage("es");
   populateTimezones();
   document.getElementById("student_age").value = 10;
-  fetchCourseData().then(() => {fetchTCMList();
+  fetchTCMList();
+fetchCourseData().then(() => {
     updateDataSourceInfo();
   }).catch(() => {
     showSystemMessage('warning', '⚠️ Conexión limitada', 'No se pudo cargar la base de datos de cursos. Intenta refrescar la página.');
@@ -2322,6 +2304,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
