@@ -221,32 +221,9 @@
     </div>
 
     <!-- FILA INFERIOR: 2 COLUMNAS -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6">
 
-      <!-- COLUMNA 1: ARGUMENTO DE VENTA -->
-      <div class="card">
-        <div class="step-header">4. Argumento de Venta (Output de IA)</div>
 
-        <label for="selected_course" class="block text-sm font-medium text-gray-700 mb-1">
-          Selecciona la Opción para Generar el Pitch:
-        </label>
-        <select id="selected_course"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-4">
-          <option value="">-- Selecciona un curso primero --</option>
-        </select>
-
-        <button id="btn_pitch"
-                onclick="generatePitch()"
-                class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition duration-150">
-          🎤 Generar Pitch (AI Venta)
-        </button>
-
-        <div id="pitch_output" class="ai-result-box text-gray-800 text-sm mt-4">
-          El argumento de venta aparecerá aquí. Seleccione un curso y presione 'Generar Pitch'.
-        </div>
-
-        
-      </div>
 
       <!-- COLUMNA 2: ENVIAR VENTA -->
       <div class="card bg-gradient-to-br from-blue-50 to-purple-50">
@@ -1477,14 +1454,7 @@ async function diagnoseAndMatch() {
   activeDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> Cargando grupos activos...</span>';
   possibleDiv.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin"></i> Cargando grupos posibles...</span>';
   
-  // Limpiar pitch output
-  const pitchOutput = document.getElementById("pitch_output");
-  pitchOutput.innerHTML = `
-    <div class="text-center py-8">
-      <i class="fas fa-search text-blue-400 text-4xl mb-3"></i>
-      <p class="text-gray-600 font-medium">Nueva búsqueda iniciada</p>
-    </div>
-  `;
+
 
   try {
     await fetchCourseData(false); // No forzamos recarga para ser más rápidos
@@ -2313,6 +2283,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
