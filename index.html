@@ -126,14 +126,7 @@
         <input type="number" id="student_age" min="7" max="17" value="10"
                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500" />
 
-        <label for="student_interest" class="block text-sm font-medium text-gray-700 mb-1">
-          Interés Principal:
-        </label>
-        <select id="student_interest"
-                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
-                <option value="coding">Coding y Videojuegos</option>
-                <option value="design">Media y Diseño</option>
-        </select>
+
 
         <label for="client_timezone" class="block text-sm font-medium text-gray-700 mb-1">
           🌍 Zona Horaria:
@@ -1499,7 +1492,7 @@ async function diagnoseAndMatch() {
   }
 
   const age = parseInt(document.getElementById("student_age").value, 10);
-  const interest = document.getElementById("student_interest").value;
+  
   const courseType = document.getElementById("course_type").value;
   const groupType = document.getElementById("group_type").value;
 
@@ -2313,6 +2306,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
