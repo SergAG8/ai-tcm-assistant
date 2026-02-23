@@ -94,31 +94,18 @@
 
         <label for="tcm_name" class="block text-sm font-medium text-gray-700 mb-1">
           👤 Nombre del TCM:
-        </label>
-        <select id="tcm_name" required
-               class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500">
-          <option value="">-- Selecciona tu nombre --</option>
-          <option value="TCM 1">TCM 1</option>
-          <option value="TCM 2">TCM 2</option>
-          <option value="TCM 3">TCM 3</option>
-          <option value="TCM 4">TCM 4</option>
-          <option value="TCM 5">TCM 5</option>
-          <option value="TCM 6">TCM 6</option>
-          <option value="TCM 7">TCM 7</option>
-          <option value="TCM 8">TCM 8</option>
-          <option value="TCM 9">TCM 9</option>
-          <option value="TCM 10">TCM 10</option>
-          <option value="TCM 11">TCM 11</option>
-          <option value="TCM 12">TCM 12</option>
-          <option value="TCM 13">TCM 13</option>
-          <option value="TCM 14">TCM 14</option>
-          <option value="TCM 15">TCM 15</option>
-          <option value="TCM 16">TCM 16</option>
-          <option value="TCM 17">TCM 17</option>
-          <option value="TCM 18">TCM 18</option>
-          <option value="TCM 19">TCM 19</option>
-          <option value="TCM 20">TCM 20</option>
-        </select>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+  👤 Nombre del TCM:
+</label>
+<input type="text" id="tcm_search"
+       placeholder="Escribe tu código o nombre (ej: L382)..."
+       oninput="filterTCMList(this.value)"
+       autocomplete="off"
+       class="w-full p-2 border border-gray-300 rounded-lg mb-1 focus:ring-blue-500 focus:border-blue-500"/>
+<div id="tcm_dropdown"
+     class="hidden border border-gray-200 rounded-lg max-h-48 overflow-y-auto bg-white shadow-lg mb-3 z-50 relative">
+</div>
+<input type="hidden" id="tcm_name"/>
         
         <label for="student_age" class="block text-sm font-medium text-gray-700 mb-1">
           Edad del Estudiante (7-17 años):
@@ -340,6 +327,7 @@ const POSSIBLE_GROUPS_GID = "1601359885";
 
 // 2. Tu Nuevo Script de Registro de Ventas (Este lo dejamos nuevo)
 const SALES_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkhc55bmSOhSDHTQhrLuq4cqC2xJ1oJO5a-xythsjrgMo-KBPACj0zCiDnpHxm_vR0Lg/exec";
+const TCM_LIST_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRmilalgl45zdxkUNF1V5xe4jivECd6BGyqg4vTV5ZJ0S3zzi0IjSgstlZXjTGjJenxEU93tjDb4RxI/pub?gid=208053934&single=true&output=csv";
 
 // 3. Configuración de Conexión (Sin Proxy)
 const USE_CORS_PROXY = false; 
@@ -702,6 +690,7 @@ let allFilteredCourses = [];
 let allFilteredPossibleGroups = [];
 let selectedCourses = [];
 let preferredSchedule = [];
+let TCM_LIST = [];
 
 // ============================================
 // FUNCIONES DE UI Y CONEXIÓN
@@ -1160,6 +1149,106 @@ function updateDataSourceInfo() {
 }
 
 async function fetchCourseData(forceRefresh = false) {
+  async function fetchTCMList() {
+  try {
+    const resp = await fetch(TCM_LIST_CSV + "&_=" + Date.now(), { cache: "no-store" });
+    const text = await resp.text();
+    const { rows } = parseCSVRobust(text);
+    TCM_LIST = rows
+      .filter(r => r[0] && r[1] && r[1].toLowerCase().trim() === "active")
+      .map(r => {
+        const parts = r[0].trim().split(' ');
+        const code = parts[0];
+        const name = parts.slice(1).join(' ');
+        return { code, name, full: r[0].trim() };
+      });
+    console.log(`✅ TCM List loaded: ${TCM_LIST.length} activos`);
+  } catch(e) {
+    console.warn("⚠️ No se pudo cargar lista de TCMs", e);
+  }
+}
+
+function filterTCMList(query) {
+  const dropdown = document.getElementById("tcm_dropdown");
+  document.getElementById("tcm_name").value = "";
+
+  if (!query || query.length < 2) {
+    dropdown.classList.add("hidden");
+    return;
+  }
+
+  const q = query.toLowerCase();
+  const matches = TCM_LIST.filter(t =>
+    t.code.toLowerCase().includes(q) ||
+    t.name.toLowerCase().includes(q)
+  ).slice(0, 10);
+
+  if (matches.length === 0) {
+    dropdown.innerHTML = '<div class="p-2 text-sm text-gray-500">Sin resultados</div>';
+    dropdown.classList.remove("hidden");
+    return;
+  }
+
+  dropdown.innerHTML = matches.map(t => `
+    <div onclick="selectTCM('${t.code}', '${t.name}')"
+         class="p-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-0">
+      <span class="font-mono font-bold text-blue-600">${t.code}</span>
+      <span class="text-gray-700 ml-1">${t.name}</span>
+    </div>
+  `).join("");
+
+  dropdown.classList.remove("hidden");
+}
+
+function selectTCM(code, name) {
+  document.getElementById("tcm_search").value = `${code} — ${name}`;
+  document.getElementById("tcm_name").value = `${code} — ${name}`;
+  document.getElementById("tcm_dropdown").classList.add("hidden");
+}
+
+async function fetchCourseData(forceRefresh = false) {
+  if (isFetching && !forceRefresh) return;
+  isFetching = true;
+  updateConnectionStatus('loading');
+  
+  const methods = [
+    { name: 'CSV Export', fn: fetchWithCSV }, 
+    { name: 'GViz JSON', fn: fetchWithGViz }
+  ];
+  for (const method of methods) {
+    try {
+      const result = await method.fn(DATA_SOURCES.active);
+      LIVE_COURSE_DATA = mapRowsToCourses(result.headers, result.rows);
+      if (LIVE_COURSE_DATA.length === 0) throw new Error("No hay cursos activos");
+      console.log(`✅ Active groups loaded: ${LIVE_COURSE_DATA.length}`);
+      break;
+    } catch (err) {
+      console.warn(`✗ Active ${method.name}:`, err.message);
+    }
+  }
+  for (const method of methods) {
+    try {
+      console.log(`\n🔄 Trying to fetch Possible Groups with ${method.name}...`);
+      const result = await method.fn(DATA_SOURCES.possible);
+      LIVE_POSSIBLE_GROUPS = mapRowsToPossibleGroups(result.headers, result.rows);
+      console.log(`✅ Possible groups loaded: ${LIVE_POSSIBLE_GROUPS.length}`);
+      break;
+    } catch (err) {
+      console.warn(`✗ Possible ${method.name}:`, err.message);
+    }
+  }
+  if (LIVE_COURSE_DATA.length === 0 && LIVE_POSSIBLE_GROUPS.length === 0) {
+    connectionStatus = { connected: false, method: null };
+    isFetching = false;
+    updateConnectionStatus('disconnected');
+    throw new Error("Error de conexión");
+  }
+  connectionStatus = { connected: true, method: 'Multi-source' };
+  lastFetchTime = new Date();
+  updateConnectionStatus('connected');
+  updateDataSourceInfo();
+  isFetching = false;
+}
   if (isFetching && !forceRefresh) return;
   isFetching = true;
   updateConnectionStatus('loading');
@@ -2273,7 +2362,7 @@ window.onload = () => {
   setLanguage("es");
   populateTimezones();
   document.getElementById("student_age").value = 10;
-  fetchCourseData().then(() => {
+  fetchCourseData().then(() => {fetchTCMList();
     updateDataSourceInfo();
   }).catch(() => {
     showSystemMessage('warning', '⚠️ Conexión limitada', 'No se pudo cargar la base de datos de cursos. Intenta refrescar la página.');
@@ -2283,6 +2372,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
