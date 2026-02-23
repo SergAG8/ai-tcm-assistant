@@ -1148,8 +1148,7 @@ function updateDataSourceInfo() {
   }
 }
 
-async function fetchCourseData(forceRefresh = false) {
-  async function fetchTCMList() {
+async function fetchTCMList() {
   try {
     const resp = await fetch(TCM_LIST_CSV + "&_=" + Date.now(), { cache: "no-store" });
     const text = await resp.text();
@@ -1249,53 +1248,6 @@ async function fetchCourseData(forceRefresh = false) {
   updateDataSourceInfo();
   isFetching = false;
 }
-  if (isFetching && !forceRefresh) return;
-  isFetching = true;
-  updateConnectionStatus('loading');
-  
-  const methods = [
-    { name: 'CSV Export', fn: fetchWithCSV }, 
-    { name: 'GViz JSON', fn: fetchWithGViz }
-  ];
-
-  for (const method of methods) {
-    try {
-      const result = await method.fn(DATA_SOURCES.active);
-      LIVE_COURSE_DATA = mapRowsToCourses(result.headers, result.rows);
-      if (LIVE_COURSE_DATA.length === 0) throw new Error("No hay cursos activos");
-      console.log(`✅ Active groups loaded: ${LIVE_COURSE_DATA.length}`);
-      break;
-    } catch (err) {
-      console.warn(`✗ Active ${method.name}:`, err.message);
-    }
-  }
-
-  for (const method of methods) {
-    try {
-      console.log(`\n🔄 Trying to fetch Possible Groups with ${method.name}...`);
-      const result = await method.fn(DATA_SOURCES.possible);
-      LIVE_POSSIBLE_GROUPS = mapRowsToPossibleGroups(result.headers, result.rows);
-      console.log(`✅ Possible groups loaded: ${LIVE_POSSIBLE_GROUPS.length}`);
-      break;
-    } catch (err) {
-      console.warn(`✗ Possible ${method.name}:`, err.message);
-    }
-  }
-
-  if (LIVE_COURSE_DATA.length === 0 && LIVE_POSSIBLE_GROUPS.length === 0) {
-    connectionStatus = { connected: false, method: null };
-    isFetching = false;
-    updateConnectionStatus('disconnected');
-    throw new Error("Error de conexión");
-  }
-
-  connectionStatus = { connected: true, method: 'Multi-source' };
-  lastFetchTime = new Date();
-  updateConnectionStatus('connected');
-  updateDataSourceInfo();
-  isFetching = false;
-}
-
 // ============================================
 // CÁLCULO DE PRIORIDAD (FECHA CERCANA vs PUNTAJE CLUSTER)
 // ============================================
@@ -2372,6 +2324,7 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
 
 
