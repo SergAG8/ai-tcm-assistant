@@ -1838,8 +1838,7 @@ function updateSaleSummary() {
   const summaryContent = document.getElementById("summary-content");
   const amoCrm = document.getElementById("amo_crm_link").value.trim();
   const age = document.getElementById("student_age").value;
-  const interest = document.getElementById("student_interest").value;
-  const groupType = document.getElementById("group_type").value;
+    const groupType = document.getElementById("group_type").value;
   const isSen = document.getElementById("is_sen").checked;
   
   if (selectedCourses.length === 0) {
@@ -2120,7 +2119,7 @@ async function submitSale() {
     amo_crm_link: document.getElementById("amo_crm_link").value.trim(),
     tcm_name: tcmName,
     student_age: document.getElementById("student_age").value,
-    interest: document.getElementById("student_interest").value,
+    interest: document.getElementById("course_type").value,
     course_type: document.getElementById("course_type").value,
     group_type: document.getElementById("group_type").value,
     is_sen: document.getElementById("is_sen").checked,
@@ -2304,6 +2303,7 @@ fetchCourseData().then(() => {
 </script>
 </body>
 </html>
+
 
 
 
