@@ -958,8 +958,8 @@ function mapRowsToCourses(headers, rows) {
   const courses = [];
   const today = new Date();
   today.setHours(0,0,0,0);
-  const twoWeeksAgo = new Date(today);
-  twoWeeksAgo.setDate(today.getDate() - 14);
+  const oneWeekAgo = new Date(today);
+  oneWeekAgo.setDate(today.getDate() - 7);
 
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
@@ -989,7 +989,7 @@ function mapRowsToCourses(headers, rows) {
     if (capacity > 0 && enrolled > capacity) continue;
 
     const startDate = parseISODateOnly(rawDate);
-    if (startDate && startDate < twoWeeksAgo) continue;
+    if (startDate && startDate < oneWeekAgo) continue;
 
     // Extracción de ID y Edad
     const idMatch = name.match(/\[(\d+)\]/);
