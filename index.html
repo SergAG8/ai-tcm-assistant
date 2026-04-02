@@ -2209,10 +2209,11 @@ function populateTimezones() {
     
     // Agregamos algunas referencias comunes para ayudar al TCM (opcional, pero recomendado)
     let ref = "";
-    if (i === -5) ref = " (Colombia/Perú/Miami)";
-    else if (i === -6) ref = " (México CDMX)";
-    else if (i === 1) ref = " (España)";
-    else if (i === -3) ref = " (Argentina/Chile)";
+if (i === -5) ref = " (Colombia/Perú)";
+else if (i === -6) ref = " (México CDMX)";
+else if (i === 2) ref = " (España)";
+else if (i === -3) ref = " (Argentina)";
+else if (i === -4) ref = " (Chile)";
     
     html += `<option value="${i}" ${isSelected}>${label}${ref}</option>`;
   }
